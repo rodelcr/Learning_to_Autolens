@@ -1,0 +1,175 @@
+\documentclass[11pt, letterpaper]{article}
+\input{../preamble}
+
+\fancyhead[C]{\small\textbf{Module 06: Multi-Component Mass Models}}
+
+\title{\textbf{Module 06: Multi-Component Mass Models}\\[0.5em]
+\large Theory Companion --- Learning to Autolens}
+\author{Rodrigo C\'ordova Rosado\\
+\small Harvard-Smithsonian Center for Astrophysics\\
+\small \texttt{rodrigo.cordova\_rosado@cfa.harvard.edu}}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This document covers the theory of decomposed (stellar + dark matter) mass
+models for strong gravitational lenses. We derive the mass-to-light ratio
+scaling, NFW convergence, the bulge-halo conspiracy, and the dark matter
+fraction. References: \CK\ Ch.~4; Treu \& Koopmans (2004);
+Navarro, Frenk \& White (1996).
+\end{abstract}
+
+\tableofcontents
+\newpage
+
+% ============================================================
+\section{Mass Decomposition}
+\label{sec:decomposition}
+% ============================================================
+
+The total convergence of a lens galaxy is the sum of its components:
+\begin{keyresult}
+\begin{equation}
+\kappa_{\rm total}(\vtheta) = \kappa_*(\vtheta) + \kappa_{\rm DM}(\vtheta)
+\label{eq:kappa-total}
+\end{equation}
+\end{keyresult}
+
+\noindent where $\kappa_*$ is the stellar convergence and $\kappa_{\rm DM}$ is
+the dark matter convergence. The deflection angles add by superposition:
+$\valpha_{\rm total} = \valpha_* + \valpha_{\rm DM} + \valpha_{\rm shear}$.
+
+% ============================================================
+\section{Stellar Mass: Light Traces Mass}
+\label{sec:stellar}
+% ============================================================
+
+The stellar mass surface density follows the light distribution:
+\begin{equation}
+\Sigma_*(\vtheta) = \Upsilon_* \cdot I(\vtheta)
+\label{eq:mass-to-light}
+\end{equation}
+where $\Upsilon_*$ is the stellar mass-to-light ratio ($M_\odot/L_\odot$).
+The stellar convergence is:
+\begin{equation}
+\kappa_*(\vtheta) = \frac{\Upsilon_* \cdot I(\vtheta)}{\SigmaCr}
+\label{eq:kappa-stellar}
+\end{equation}
+
+For a S\'ersic profile with index $n$ and effective radius $R_e$, the
+enclosed mass within radius $\theta$ is:
+\begin{equation}
+M_*(<\theta) = 2\pi \Upsilon_* \int_0^\theta I(\theta')\,\theta'\,d\theta'
+= \Upsilon_* \cdot L(<\theta)
+\end{equation}
+
+Typical values: $\Upsilon_* \sim 2$--$8\,M_\odot/L_\odot$ for ellipticals
+(depends on stellar age, metallicity, and IMF).
+
+% ============================================================
+\section{Dark Matter: NFW Profile}
+\label{sec:nfw}
+% ============================================================
+
+\subsection{3D Density}
+
+The NFW profile (Navarro et al.\ 1996):
+\begin{equation}
+\rho(r) = \frac{\rho_s}{(r/r_s)(1+r/r_s)^2}
+\label{eq:nfw-3d}
+\end{equation}
+
+The halo is characterized by the virial mass $M_{200}$ (mass within the
+radius where the mean density is 200$\times$ the critical density) and
+concentration $c = r_{200}/r_s$.
+
+\subsection{Projected Convergence}
+
+The 2D convergence for an NFW halo (Bartelmann 1996; \CK\ eq.~4.62):
+\begin{equation}
+\kappa_{\rm NFW}(x) = \frac{2\rho_s r_s}{\SigmaCr} \cdot f(x)
+\label{eq:nfw-kappa}
+\end{equation}
+where $x = \theta/\theta_s$ ($\theta_s = r_s/\Dd$) and:
+\begin{equation}
+f(x) = \begin{cases}
+\frac{1}{x^2-1}\left(1 - \frac{1}{\sqrt{1-x^2}}\text{arccosh}\frac{1}{x}\right)
+& x < 1 \\[6pt]
+\frac{1}{3} & x = 1 \\[6pt]
+\frac{1}{x^2-1}\left(1 - \frac{1}{\sqrt{x^2-1}}\arctan\frac{\sqrt{x^2-1}}{1}\right)
+& x > 1
+\end{cases}
+\end{equation}
+
+In PyAutoLens, $\kappa_s = 2\rho_s r_s / \SigmaCr$ is the characteristic
+convergence, so $\kappa_{\rm NFW}(x) = \kappa_s \cdot f(x)$.
+
+% ============================================================
+\section{The Bulge-Halo Conspiracy}
+\label{sec:conspiracy}
+% ============================================================
+
+Observations show that the total density profile of massive ellipticals
+is remarkably isothermal: $\rho_{\rm tot} \propto r^{-\gamma'}$ with
+$\gamma' \approx 2.0 \pm 0.1$ (Koopmans et al.\ 2006, 2009).
+
+This arises from a \textbf{conspiracy} between the stellar and dark
+components:
+\begin{itemize}[nosep]
+  \item Stellar: $\rho_*(r) \propto r^{-3}$ at small $r$ (steeper than isothermal)
+  \item Dark matter: $\rho_{\rm DM}(r) \propto r^{-1}$ (shallower than isothermal)
+  \item Sum: the steeper-declining stars compensate the flatter dark matter,
+    producing an approximately isothermal total profile
+\end{itemize}
+
+This conspiracy is not fully understood theoretically --- it may arise from
+adiabatic contraction of the halo by baryons during galaxy formation.
+
+% ============================================================
+\section{Dark Matter Fraction}
+\label{sec:dm-fraction}
+% ============================================================
+
+The dark matter fraction within the Einstein radius:
+\begin{keyresult}
+\begin{equation}
+f_{\rm DM}(\thetaE) = \frac{M_{\rm DM}(<\thetaE)}{M_{\rm total}(<\thetaE)}
+= 1 - \frac{M_*(<\thetaE)}{M_{\rm total}(<\thetaE)}
+\label{eq:fdm}
+\end{equation}
+\end{keyresult}
+
+For SLACS lenses (Auger et al.\ 2010): $f_{\rm DM}(\thetaE) \sim 0.2$--$0.5$,
+increasing with Einstein radius (more massive galaxies have higher dark
+matter fractions).
+
+\subsection{The $\Upsilon_*$--$\kappa_s$ Degeneracy}
+
+Lensing constrains the \textbf{total} mass $\kappa_* + \kappa_{\rm DM}$
+at the Einstein radius. Increasing $\Upsilon_*$ (more stellar mass)
+must be compensated by decreasing $\kappa_s$ (less dark matter), and
+vice versa. Breaking this degeneracy requires:
+\begin{itemize}[nosep]
+  \item Stellar kinematics (velocity dispersion $\sigma_v$ constrains
+    the mass profile slope)
+  \item Stellar population synthesis (independent $\Upsilon_*$ estimate)
+  \item Multiple Einstein radii (compound lenses with two source planes)
+\end{itemize}
+
+% ============================================================
+\section*{References}
+% ============================================================
+
+\begin{itemize}[nosep, leftmargin=*]
+  \item Auger, M.W.\ et al.\ (2010), ApJ, 724, 511
+  \item Bartelmann, M.\ (1996), A\&A, 313, 697
+  \item Congdon, A.B.\ \& Keeton, C.R.\ (2018), \emph{Principles of Gravitational Lensing}
+  \item Koopmans, L.V.E.\ et al.\ (2006), ApJ, 649, 599
+  \item Navarro, J.F., Frenk, C.S.\ \& White, S.D.M.\ (1996), ApJ, 462, 563
+  \item Nightingale, J.W.\ et al.\ (2019), MNRAS, 489, 2049
+  \item Treu, T.\ \& Koopmans, L.V.E.\ (2004), ApJ, 611, 739
+\end{itemize}
+
+\end{document}
