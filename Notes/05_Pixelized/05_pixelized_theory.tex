@@ -1,0 +1,215 @@
+\documentclass[11pt, letterpaper]{article}
+\input{../preamble}
+
+\fancyhead[C]{\small\textbf{Module 05: Pixelized Source Reconstructions}}
+
+\title{\textbf{Module 05: Pixelized Source Reconstructions}\\[0.5em]
+\large Theory Companion --- Learning to Autolens}
+\author{Rodrigo C\'ordova Rosado\\
+\small Harvard-Smithsonian Center for Astrophysics\\
+\small \texttt{rodrigo.cordova\_rosado@cfa.harvard.edu}}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This document develops the mathematical framework for non-parametric
+(pixelized) source reconstructions in strong gravitational lensing.
+We derive the linear inversion, regularization, and Bayesian evidence
+that underpin the pixelized source fitting in PyAutoLens.
+References: Suyu et al.\ (2006), Vegetti \& Koopmans (2009),
+\Night\ Sec.~5.
+\end{abstract}
+
+\tableofcontents
+\newpage
+
+% ============================================================
+\section{The Forward Problem as a Linear System}
+\label{sec:linear-system}
+% ============================================================
+
+The observed image $\mathbf{d}$ (vector of $N_d$ image pixels) relates
+to the source pixel brightnesses $\mathbf{s}$ (vector of $N_s$ source
+pixels) via:
+
+\begin{keyresult}
+\begin{equation}
+\mathbf{d} = \mathbf{B}\,\mathbf{F}\,\mathbf{s} + \mathbf{n}
+\label{eq:linear-forward}
+\end{equation}
+\end{keyresult}
+
+\noindent where:
+\begin{itemize}[nosep]
+  \item $\mathbf{F}$ ($N_d \times N_s$): the \textbf{lensing operator}.
+    Entry $F_{ij}$ is the fractional area of image pixel $i$ that maps
+    to source pixel $j$ via ray-tracing.
+  \item $\mathbf{B}$ ($N_d \times N_d$): the \textbf{PSF blurring operator}.
+    Implements 2D convolution with the PSF kernel.
+  \item $\mathbf{n}$: noise vector with covariance
+    $\mathbf{C} = \mathrm{diag}(\sigma_1^2, \ldots, \sigma_{N_d}^2)$.
+\end{itemize}
+
+We define the combined operator $\mathbf{M} = \mathbf{B}\mathbf{F}$
+so that $\mathbf{d} = \mathbf{M}\mathbf{s} + \mathbf{n}$.
+
+% ============================================================
+\section{The Regularized Inversion}
+\label{sec:inversion}
+% ============================================================
+
+\subsection{Unregularized Solution}
+
+The maximum-likelihood source is obtained by minimizing $\chisq$:
+\begin{equation}
+\chisq(\mathbf{s}) = (\mathbf{d} - \mathbf{M}\mathbf{s})^T
+\mathbf{C}^{-1} (\mathbf{d} - \mathbf{M}\mathbf{s})
+\end{equation}
+
+Setting $\partial\chisq/\partial\mathbf{s} = 0$ gives:
+\begin{equation}
+\hat{\mathbf{s}}_{\rm ML} = (\mathbf{M}^T \mathbf{C}^{-1} \mathbf{M})^{-1}
+\mathbf{M}^T \mathbf{C}^{-1} \mathbf{d}
+\label{eq:ml-solution}
+\end{equation}
+
+This is ill-conditioned when $N_s$ is large: the matrix
+$\mathbf{M}^T \mathbf{C}^{-1} \mathbf{M}$ is nearly singular,
+and the solution fits the noise (Suyu+06 Sec.~2.1).
+
+\subsection{Regularization}
+
+We add a smoothness penalty $\lambda\,\mathbf{s}^T\mathbf{H}\mathbf{s}$
+to the objective function:
+\begin{equation}
+\text{minimize}\quad
+\chisq(\mathbf{s}) + \lambda\,\mathbf{s}^T\mathbf{H}\mathbf{s}
+\end{equation}
+
+The regularized (MAP) solution is:
+
+\begin{keyresult}
+\begin{equation}
+\hat{\mathbf{s}} = (\mathbf{M}^T \mathbf{C}^{-1} \mathbf{M}
++ \lambda\mathbf{H})^{-1}\,\mathbf{M}^T \mathbf{C}^{-1} \mathbf{d}
+\label{eq:map-solution}
+\end{equation}
+\end{keyresult}
+
+\noindent (Suyu+06 eq.~4). The term $\lambda\mathbf{H}$ regularizes
+the matrix, making it well-conditioned.
+
+\subsection{Regularization Matrix}
+
+For \textbf{constant regularization}, $\mathbf{H}$ penalizes differences
+between neighboring pixels:
+\begin{equation}
+H_{ij} = \begin{cases}
+  N_i & \text{if } i = j \\
+  -1  & \text{if pixels } i, j \text{ are neighbors} \\
+  0   & \text{otherwise}
+\end{cases}
+\label{eq:H-constant}
+\end{equation}
+where $N_i$ is the number of neighbors of pixel $i$. This is the
+discrete Laplacian on the mesh (Suyu+06 eq.~5).
+
+For \textbf{adaptive brightness regularization}, $\lambda$ varies
+per pixel based on the source brightness:
+\begin{equation}
+\lambda_i = \lambda_{\rm inner}
++ (\lambda_{\rm outer} - \lambda_{\rm inner})
+\exp\!\left(-\frac{s_i^{\rm adapt}}{\sigma_s}\right)
+\label{eq:adaptive-reg}
+\end{equation}
+where $s_i^{\rm adapt}$ is the brightness of pixel $i$ in the adapt
+image (\Night\ Sec.~5.3).
+
+% ============================================================
+\section{Bayesian Evidence}
+\label{sec:evidence}
+% ============================================================
+
+The marginal likelihood (evidence) for the pixelized source model,
+after integrating out $\mathbf{s}$, is (Suyu+06 eq.~19):
+
+\begin{keyresult}
+\begin{equation}
+\ln\Evid = -\frac{1}{2}\chisq(\hat{\mathbf{s}})
+- \frac{1}{2}\hat{\mathbf{s}}^T \lambda\mathbf{H}\,\hat{\mathbf{s}}
++ \frac{1}{2}\ln\det(\lambda\mathbf{H})
+- \frac{1}{2}\ln\det(\mathbf{M}^T\mathbf{C}^{-1}\mathbf{M} + \lambda\mathbf{H})
++ \text{const}
+\label{eq:evidence}
+\end{equation}
+\end{keyresult}
+
+The terms have intuitive meanings:
+\begin{enumerate}[nosep]
+  \item $-\frac{1}{2}\chisq$: reward for fitting the data
+  \item $-\frac{1}{2}\hat{\mathbf{s}}^T\lambda\mathbf{H}\hat{\mathbf{s}}$:
+    penalty for non-smooth source
+  \item Determinant terms: Occam factor (penalizes unnecessary complexity)
+\end{enumerate}
+
+The evidence is maximized at the optimal $\lambda$ --- implementing
+Occam's razor automatically.
+
+% ============================================================
+\section{Mesh Types}
+\label{sec:meshes}
+% ============================================================
+
+\subsection{Rectangular}
+A uniform grid in the source plane with spacing $\Delta\beta$.
+Simple but wasteful: many pixels fall in empty regions.
+
+\subsection{Delaunay Triangulation}
+Given scattered points $\{\vbeta_j\}$ in the source plane, the Delaunay
+triangulation maximizes the minimum angle of all triangles --- producing
+well-shaped pixels that adapt to the point distribution.
+
+\subsection{Voronoi Tessellation}
+The dual of the Delaunay triangulation. Each Voronoi cell contains
+all points closer to its generator than to any other. Natural pixel
+shapes, but more complex to implement.
+
+\subsection{Hilbert Image Mesh}
+Places $N_s$ points along a Hilbert space-filling curve in the
+\emph{image} plane, weighted by an adapt image (so more points
+fall on bright arc regions). These points are then ray-traced to
+the source plane, where a Delaunay triangulation is computed.
+This is the default in the SLaM SOURCE PIX stage.
+
+% ============================================================
+\section{Connection to Mass Modeling}
+\label{sec:mass-connection}
+% ============================================================
+
+The lensing operator $\mathbf{F}$ depends on the mass model (through
+the deflection angles). When the mass model is free, the problem is
+\textbf{semi-linear}: linear in $\mathbf{s}$ (solved analytically)
+but non-linear in the mass parameters (searched by nested sampling).
+
+This is the key efficiency gain: the non-linear search explores only
+the mass parameters ($\sim$5--8 dimensions) while the source pixels
+($\sim$500--1000 dimensions) are handled analytically.
+
+A wrong mass model produces characteristic artifacts in the source
+reconstruction: ringing, elongation, or artificial substructure.
+These can be used diagnostically to assess mass model quality.
+
+% ============================================================
+\section*{References}
+% ============================================================
+
+\begin{itemize}[nosep, leftmargin=*]
+  \item Dye, S.\ \& Warren, S.J.\ (2005), ApJ, 623, 31
+  \item Nightingale, J.W., Dye, S.\ \& Massey, R.J.\ (2018), MNRAS, 478, 4738
+  \item Suyu, S.H.\ et al.\ (2006), MNRAS, 371, 983
+  \item Vegetti, S.\ \& Koopmans, L.V.E.\ (2009), MNRAS, 392, 945
+\end{itemize}
+
+\end{document}

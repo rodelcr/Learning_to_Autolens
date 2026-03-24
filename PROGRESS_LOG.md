@@ -55,3 +55,17 @@ Timestamped record of major milestones and work completed.
 ### LaTeX infrastructure
 - Shared `Notes/preamble.tex` with physics macros (θ_E, Σ_cr, etc.), tcolorbox environments (keyresult, pythonbox, exercisebox), code listing style
 - `Notes/build.sh` script for compiling individual or all module PDFs
+- All 4 module PDFs compiled successfully to `Output/`
+
+---
+
+## 2026-03-24 — Module 05: Pixelized Source Reconstructions
+
+- **Notebook** (`Modules/05_.../05_pixelized_sources.ipynb`): 8 sections — why pixelized sources, linear inversion theory, mesh types (Rectangular/Delaunay/Voronoi), regularization comparison (under/well/over-regularized), Hilbert adaptive mesh, Bayesian evidence for complexity, hands-on fitting workflow, 4 exercises
+- **LaTeX** (`Notes/05_Pixelized/05_pixelized_theory.tex`): Linear forward model, regularized MAP inversion (Suyu+06), regularization matrix (constant + adaptive), Bayesian evidence derivation, mesh types, connection to mass modeling. PDF compiled.
+- TODO: Mathematica .wl script for Module 05 (matrix inversion verification)
+
+### Remaining modules (TODO):
+- Module 06: Multi-Component Mass Models
+- Module 07: Real Data: FITS to Model
+- Module 08: Results, Diagnostics & Figures
