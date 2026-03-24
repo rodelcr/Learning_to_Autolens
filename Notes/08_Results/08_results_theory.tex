@@ -1,0 +1,157 @@
+\documentclass[11pt, letterpaper]{article}
+\input{../preamble}
+
+\fancyhead[C]{\small\textbf{Module 08: Results, Diagnostics \& Figures}}
+
+\title{\textbf{Module 08: Results, Diagnostics, and Publication Figures}\\[0.5em]
+\large Theory Companion --- Learning to Autolens}
+\author{Rodrigo C\'ordova Rosado\\
+\small Harvard-Smithsonian Center for Astrophysics\\
+\small \texttt{rodrigo.cordova\_rosado@cfa.harvard.edu}}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This document covers the statistical framework for interpreting lens
+model results: goodness-of-fit diagnostics, parameter uncertainties,
+Bayesian model comparison, and the physical quantities extracted from
+lens models. These are the foundations for presenting lens modeling
+results in scientific publications.
+\end{abstract}
+
+\tableofcontents
+\newpage
+
+% ============================================================
+\section{Goodness-of-Fit Diagnostics}
+% ============================================================
+
+\subsection{Reduced Chi-Squared}
+
+The primary fit diagnostic:
+\begin{equation}
+\chisqred = \frac{\chisq}{N_{\rm dof}} = \frac{\chisq}{N_{\rm pix} - N_{\rm params}}
+\end{equation}
+
+\begin{itemize}[nosep]
+  \item $\chisqred \approx 1$: model fits the data at the noise level (good)
+  \item $\chisqred \gg 1$: systematic residuals remain (model too simple)
+  \item $\chisqred \ll 1$: overfitting or noise overestimated
+\end{itemize}
+
+\subsection{Normalized Residuals}
+
+The normalized residual for pixel $i$:
+\begin{equation}
+r_i = \frac{d_i - m_i}{\sigma_i}
+\end{equation}
+should follow $\mathcal{N}(0, 1)$ for a good fit. Spatial structure in
+$r_i$ indicates model mismatch.
+
+% ============================================================
+\section{Parameter Uncertainties}
+% ============================================================
+
+From nested sampling posterior samples $\{\bm{\eta}^{(k)}\}_{k=1}^K$:
+
+\begin{itemize}[nosep]
+  \item \textbf{Point estimate}: median of $\{\eta_i^{(k)}\}$
+  \item \textbf{1$\sigma$ uncertainty}: 16th and 84th percentiles
+  \item \textbf{Reporting convention}:
+    $\eta = \text{median}^{+\sigma_+}_{-\sigma_-}$
+    where $\sigma_+ = P_{84} - P_{50}$ and $\sigma_- = P_{50} - P_{16}$
+\end{itemize}
+
+\subsection{Correlated Parameters}
+
+The corner plot reveals parameter correlations. Common degeneracies:
+\begin{itemize}[nosep]
+  \item $\thetaE$ vs.\ source size: larger lens + smaller source can mimic
+    smaller lens + larger source
+  \item $\epsilon$ vs.\ $\gamma$: lens ellipticity and external shear
+    produce similar quadrupole distortions
+  \item $\Upsilon_*$ vs.\ $\kappa_s$: stellar and dark mass trade off
+\end{itemize}
+
+% ============================================================
+\section{Bayesian Model Comparison}
+% ============================================================
+
+The \textbf{Bayes factor} compares two models:
+\begin{keyresult}
+\begin{equation}
+\ln B_{12} = \ln\Evid_1 - \ln\Evid_2
+\label{eq:bayes-factor}
+\end{equation}
+\end{keyresult}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{ll}
+\toprule
+$|\ln B_{12}|$ & Interpretation \\
+\midrule
+$< 1$ & Not significant \\
+$1$--$2.5$ & Moderate evidence \\
+$2.5$--$5$ & Strong evidence \\
+$> 5$ & Decisive evidence \\
+\bottomrule
+\end{tabular}
+\caption{Jeffreys' scale for Bayes factor interpretation.}
+\end{table}
+
+The evidence automatically penalizes unnecessary model complexity
+(Occam's razor), so a more complex model must fit significantly better
+to be preferred.
+
+% ============================================================
+\section{Physical Quantities from Lens Models}
+% ============================================================
+
+\subsection{Einstein Mass}
+
+The total projected mass within the Einstein radius (\CK\ eq.~4.26):
+\begin{keyresult}
+\begin{equation}
+M(\thetaE) = \pi\,\thetaE^2\,\Dd^2\,\SigmaCr
+\label{eq:einstein-mass}
+\end{equation}
+\end{keyresult}
+
+For a typical AGEL lens ($\thetaE = 1.5''$, $z_d = 0.5$, $z_s = 1.0$):
+$M \sim 10^{11}$--$10^{12}\,M_\odot$.
+
+\subsection{Velocity Dispersion}
+
+For an SIE, the Einstein radius relates to the velocity dispersion
+(\CK\ eq.~4.28):
+\begin{equation}
+\sigma_v = c\,\sqrt{\frac{\thetaE}{4\pi} \frac{\Ds}{\Dds}}
+\approx 250\,\text{km/s}\,\left(\frac{\thetaE}{1.5''}\right)^{1/2}
+\end{equation}
+
+\subsection{Magnification}
+
+The total magnification of the source:
+\begin{equation}
+\mu_{\rm total} = \frac{\text{observed flux}}{\text{intrinsic flux}}
+= \sum_{\rm images} |\mu_i|
+\end{equation}
+
+For extended sources, this is computed by comparing the source-plane and
+image-plane flux integrals.
+
+% ============================================================
+\section*{References}
+% ============================================================
+
+\begin{itemize}[nosep, leftmargin=*]
+  \item Congdon, A.B.\ \& Keeton, C.R.\ (2018), \emph{Principles of Gravitational Lensing}
+  \item Foreman-Mackey, D.\ (2016), JOSS, 1, 24 --- corner.py
+  \item Jeffreys, H.\ (1961), \emph{Theory of Probability}, Oxford Univ.\ Press
+  \item Nightingale, J.W., Dye, S.\ \& Massey, R.J.\ (2018), MNRAS, 478, 4738
+\end{itemize}
+
+\end{document}

@@ -65,7 +65,21 @@ Timestamped record of major milestones and work completed.
 - **LaTeX** (`Notes/05_Pixelized/05_pixelized_theory.tex`): Linear forward model, regularized MAP inversion (Suyu+06), regularization matrix (constant + adaptive), Bayesian evidence derivation, mesh types, connection to mass modeling. PDF compiled.
 - TODO: Mathematica .wl script for Module 05 (matrix inversion verification)
 
-### Remaining modules (TODO):
-- Module 06: Multi-Component Mass Models
-- Module 07: Real Data: FITS to Model
-- Module 08: Results, Diagnostics & Figures
+---
+
+## 2026-03-24 — Modules 07 & 08: Tutorial Suite COMPLETE!
+
+### Module 07: Real Data — From FITS to Model
+- **Notebook** (`Modules/07_.../07_real_data_fits_to_model.ipynb`): 9 sections — real vs simulated data comparison, loading FITS with astropy, cutouts & pixel scales, empirical PSF handling, noise map conversions (weight/variance/ivar → σ), masking strategy, complete preparation workflow template, AGEL target template, 4 exercises
+- **LaTeX** (`Notes/07_RealData/07_real_data_theory.tex`): FITS structure, pixel scale & WCS, PSF requirements & mismatch effects, noise map construction, mask sizing formula
+- **Mathematica** (`Mathematica/07_data_preparation_formulas.wl`): Pixel scale conversions, noise map conversions (Poisson verification), mask size from θ_E for different instruments
+
+### Module 08: Results, Diagnostics & Publication Figures
+- **Notebook** (`Modules/08_.../08_results_diagnostics_figures.ipynb`): 9 sections — result object anatomy, corner plots, residual analysis (histogram + χ²_red), Einstein mass & velocity dispersion, source-plane reconstruction, publication-quality 3-panel figures, Bayesian model comparison (Bayes factor), JSON export, 4 exercises. Includes congratulations/next-steps section.
+- **LaTeX** (`Notes/08_Results/08_results_theory.tex`): χ² distribution & expected scatter, parameter uncertainties (percentile reporting), Bayes factor & Jeffreys' scale, Einstein mass formula, SIE velocity dispersion, magnification
+- **Mathematica** (`Mathematica/08_model_comparison_and_diagnostics.wl`): χ² distribution properties, Bayes factor odds ratios, Einstein mass for θ_E = 0.5"–3.0", velocity dispersion from θ_E
+
+### TUTORIAL SUITE COMPLETE
+- **8 modules**, each with: Jupyter notebook + LaTeX theory companion + Mathematica symbolic verification
+- **8 PDFs** compiled in `Output/`
+- All pushed to https://github.com/rodelcr/Learning_to_Autolens (private)
