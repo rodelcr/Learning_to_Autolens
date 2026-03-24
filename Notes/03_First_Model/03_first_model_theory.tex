@@ -1,0 +1,220 @@
+\documentclass[11pt, letterpaper]{article}
+\input{../preamble}
+
+\fancyhead[C]{\small\textbf{Module 03: Your First Lens Model}}
+
+\title{\textbf{Module 03: Your First Lens Model}\\[0.5em]
+\large Theory Companion — Learning to Autolens}
+\author{Rodrigo C\'ordova Rosado\\
+\small Harvard-Smithsonian Center for Astrophysics\\
+\small \texttt{rodrigo.cordova\_rosado@cfa.harvard.edu}}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This document covers the Bayesian framework for lens modeling: the
+Gaussian likelihood, prior specification, posterior inference via nested
+sampling, and the key degeneracies that arise in strong lensing. This
+is the theoretical foundation for the inverse problem solved
+computationally in Module~03.
+References: \CK\ Ch.~8; \Night\ Sec.~4--5; Skilling (2004).
+\end{abstract}
+
+\tableofcontents
+\newpage
+
+% ============================================================
+\section{Bayesian Framework}
+\label{sec:bayes}
+% ============================================================
+
+\subsection{Bayes' Theorem}
+
+Given observed data $\mathbf{d}$ and model parameters $\bm{\eta}$,
+Bayes' theorem gives the \textbf{posterior} probability:
+
+\begin{keyresult}
+\begin{equation}
+P(\bm{\eta} \mid \mathbf{d}) = \frac{\Like(\mathbf{d} \mid \bm{\eta})\,\pi(\bm{\eta})}{\Evid}
+\label{eq:bayes}
+\end{equation}
+\end{keyresult}
+
+\noindent where:
+\begin{itemize}[nosep]
+  \item $\Like(\mathbf{d} \mid \bm{\eta})$ is the \textbf{likelihood}:
+    how well parameters $\bm{\eta}$ reproduce the data
+  \item $\pi(\bm{\eta})$ is the \textbf{prior}: what we know before
+    seeing data
+  \item $\Evid = \int \Like \, \pi \, d\bm{\eta}$ is the
+    \textbf{evidence}: normalizes the posterior and is used for model
+    comparison
+\end{itemize}
+
+\subsection{The Gaussian Likelihood}
+
+For imaging data with per-pixel Gaussian noise (valid when photon
+counts are large), the log-likelihood is (\Night\ eq.~3; \CK\ eq.~8.7):
+
+\begin{keyresult}
+\begin{equation}
+\ln \Like = -\frac{1}{2} \sum_{i=1}^{N_{\rm pix}}
+\left[ \frac{(d_i - m_i)^2}{\sigma_i^2} + \ln(2\pi\sigma_i^2) \right]
+= -\frac{1}{2}\chisq + \text{const}
+\label{eq:log-likelihood}
+\end{equation}
+\end{keyresult}
+
+\noindent where $d_i$ is the observed pixel value, $m_i$ is the model
+prediction (PSF-convolved tracer image), $\sigma_i$ is the noise in
+pixel $i$, and:
+\begin{equation}
+\chisq = \sum_{i=1}^{N_{\rm pix}} \frac{(d_i - m_i)^2}{\sigma_i^2}
+\label{eq:chi-squared}
+\end{equation}
+
+The \textbf{reduced chi-squared} is:
+\begin{equation}
+\chisqred = \frac{\chisq}{N_{\rm dof}}
+= \frac{\chisq}{N_{\rm pix} - N_{\rm params}}
+\label{eq:chi-squared-red}
+\end{equation}
+A good fit has $\chisqred \approx 1$. Significantly larger values
+indicate an inadequate model; significantly smaller values suggest
+overfitting or overestimated noise.
+
+% ============================================================
+\section{Priors}
+\label{sec:priors}
+% ============================================================
+
+PyAutoLens supports three prior types:
+
+\begin{table}[H]
+\centering
+\begin{tabular}{lll}
+\toprule
+Prior & Distribution & Use case \\
+\midrule
+Uniform & $\pi(\eta) = 1/(b-a)$ for $\eta \in [a,b]$ & Bounded range, no preference \\
+Gaussian & $\pi(\eta) \propto \exp[-(\eta-\mu)^2/(2\sigma^2)]$ & Peaked at expected value \\
+Log-Uniform & $\pi(\eta) \propto 1/\eta$ for $\eta \in [a,b]$ & Scale-invariant \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Physical priors} for galaxy-scale lenses:
+\begin{itemize}[nosep]
+  \item $\thetaE \in [0.5'', 3.0'']$ (Uniform) — typical galaxy-scale range
+  \item Lens centre: $\mathcal{N}(0, 0.1'')$ (Gaussian) — near cutout center
+  \item Source position: $\mathcal{N}(0, 0.3'')$ — within caustic
+  \item External shear: $|\gamma| < 0.2$ — environment contribution
+\end{itemize}
+
+% ============================================================
+\section{Nested Sampling}
+\label{sec:nested-sampling}
+% ============================================================
+
+\subsection{The Algorithm (Skilling 2004)}
+
+Nested sampling computes the evidence integral by transforming the
+$N$-dimensional integral into a 1D integral over \textbf{prior volume}
+$X$:
+\begin{equation}
+\Evid = \int \Like(\bm{\eta})\,\pi(\bm{\eta})\,d\bm{\eta}
+= \int_0^1 \Like(X)\,dX
+\label{eq:evidence-integral}
+\end{equation}
+where $X(\lambda) = \int_{\Like(\bm{\eta}) > \lambda} \pi(\bm{\eta})\,d\bm{\eta}$
+is the prior volume with likelihood above threshold $\lambda$.
+
+The algorithm maintains $n_{\rm live}$ \textbf{live points} drawn from
+the prior. At each iteration, the lowest-likelihood point is removed
+and replaced with a new point drawn from the prior subject to
+$\Like > \Like_{\rm min}$. The prior volume contracts as:
+\begin{equation}
+X_k \approx e^{-k/n_{\rm live}}
+\label{eq:volume-contraction}
+\end{equation}
+
+\subsection{Why Nested Sampling for Lensing?}
+
+\begin{enumerate}[nosep]
+  \item Computes the evidence $\Evid$ directly — enables model comparison
+  \item Explores the full prior volume — robust against multimodality
+  \item Naturally produces posterior samples (as a byproduct)
+  \item Handles the non-smooth likelihood surfaces common in lensing
+\end{enumerate}
+
+% ============================================================
+\section{Key Degeneracies}
+\label{sec:degeneracies}
+% ============================================================
+
+\subsection{Mass-Sheet Degeneracy (MSD)}
+
+The \textbf{fundamental degeneracy} of strong lensing (\CK\ Sec.~9.1;
+S92 Sec.~5.4). The transformation:
+\begin{align}
+\kappa'(\vtheta) &= \lambda\kappa(\vtheta) + (1-\lambda) \label{eq:msd-kappa} \\
+\vbeta' &= \lambda\vbeta \label{eq:msd-beta}
+\end{align}
+leaves all image positions unchanged. This means lensing alone cannot
+determine the absolute mass normalization.
+
+\textbf{Breaking the MSD} requires external information:
+\begin{itemize}[nosep]
+  \item Time delays: $\Delta t' = \lambda\,\Delta t$ (\CK\ Sec.~9.2)
+  \item Stellar kinematics: independent mass measurement
+  \item Extended source morphology: constrains the source-plane magnification
+\end{itemize}
+
+\subsection{Source Size--Magnification Degeneracy}
+
+A larger, fainter source with higher magnification can mimic a smaller,
+brighter source with lower magnification. This is related to the MSD
+and is partially broken by resolved source structure.
+
+\subsection{Ellipticity--Shear Degeneracy}
+
+Lens ellipticity and external shear produce similar quadrupole
+distortions and are partially degenerate. This manifests as a banana-shaped
+posterior in the $(\epsilon, \gamma)$ plane.
+
+% ============================================================
+\section{Fisher Information and Parameter Uncertainties}
+\label{sec:fisher}
+% ============================================================
+
+Near the maximum likelihood, the posterior is approximately Gaussian with
+covariance given by the inverse \textbf{Fisher information matrix}:
+\begin{equation}
+F_{ij} = -\left\langle \frac{\partial^2 \ln\Like}{\partial\eta_i \partial\eta_j} \right\rangle
+\label{eq:fisher}
+\end{equation}
+
+The marginal uncertainty on parameter $\eta_i$ is:
+\begin{equation}
+\sigma_{\eta_i} \geq (F^{-1})_{ii}^{1/2}
+\label{eq:cramer-rao}
+\end{equation}
+(Cram\'er-Rao bound). This gives a lower limit on achievable precision
+for a given dataset and model.
+
+% ============================================================
+\section*{References}
+% ============================================================
+
+\begin{itemize}[nosep, leftmargin=*]
+  \item Congdon, A.B.\ \& Keeton, C.R.\ (2018), \emph{Principles of Gravitational Lensing}, Springer
+  \item Narayan, R.\ \& Bartelmann, M.\ (1997), arXiv:astro-ph/9606001
+  \item Nightingale, J.W., Dye, S.\ \& Massey, R.J.\ (2018), MNRAS, 478, 4738
+  \item Schneider, P., Ehlers, J.\ \& Falco, E.E.\ (1992), \emph{Gravitational Lenses}, Springer
+  \item Skilling, J.\ (2004), AIP Conf.\ Proc.\ 735, 395
+  \item Speagle, J.S.\ (2020), MNRAS, 493, 3132
+\end{itemize}
+
+\end{document}

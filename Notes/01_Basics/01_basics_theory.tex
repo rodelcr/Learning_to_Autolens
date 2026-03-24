@@ -1,0 +1,272 @@
+\documentclass[11pt, letterpaper]{article}
+\input{../preamble}
+
+\fancyhead[C]{\small\textbf{Module 01: Grids, Galaxies, and Ray-Tracing}}
+
+\title{\textbf{Module 01: Grids, Galaxies, and Ray-Tracing}\\[0.5em]
+\large Theory Companion — Learning to Autolens}
+\author{Rodrigo C\'ordova Rosado\\
+\small Harvard-Smithsonian Center for Astrophysics\\
+\small \texttt{rodrigo.cordova\_rosado@cfa.harvard.edu}}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This document provides the mathematical background for Module~01 of
+\emph{Learning to Autolens}. We derive the gravitational lens equation,
+define the key lensing quantities (convergence, shear, magnification),
+and describe the mass and light profile models used in PyAutoLens.
+All results are self-contained; companion references are
+Congdon \& Keeton (2018, hereafter \CK), Narayan \& Bartelmann (1997,
+hereafter \NB), and Schneider, Ehlers \& Falco (1992, hereafter S92).
+\end{abstract}
+
+\tableofcontents
+\newpage
+
+% ============================================================
+\section{The Gravitational Lens Equation}
+\label{sec:lens-equation}
+% ============================================================
+
+The fundamental equation of gravitational lensing maps angular positions
+in the \textbf{image plane} $\vtheta$ to the \textbf{source plane}
+$\vbeta$ via the scaled deflection angle $\valpha$:
+
+\begin{keyresult}
+\begin{equation}
+\vbeta = \vtheta - \valpha(\vtheta)
+\label{eq:lens-equation}
+\end{equation}
+\end{keyresult}
+
+\noindent where $\vtheta$ and $\vbeta$ are two-dimensional angular
+positions (in arc-seconds), and $\valpha(\vtheta)$ is the scaled
+deflection angle at position $\vtheta$ (\CK\ eq.~4.1; \NB\ eq.~3).
+
+The deflection angle is related to the physical deflection
+$\hat{\valpha}$ by the distance ratio:
+\begin{equation}
+\valpha = \frac{\Dds}{\Ds} \hat{\valpha}
+\label{eq:scaled-deflection}
+\end{equation}
+where $\Dd$, $\Ds$, and $\Dds$ are the angular diameter distances to
+the lens, to the source, and between the lens and source, respectively.
+
+\subsection{Critical Surface Density}
+
+The strength of lensing is governed by the \textbf{critical surface
+mass density}:
+\begin{equation}
+\SigmaCr = \frac{c^2}{4\pi G} \frac{\Ds}{\Dd \Dds}
+\label{eq:sigma-cr}
+\end{equation}
+(\CK\ eq.~4.5; \NB\ eq.~10). This sets the scale: a lens with
+projected surface density $\Sigma \geq \SigmaCr$ produces multiple
+images (strong lensing).
+
+\subsection{Einstein Radius}
+
+The \textbf{Einstein radius} is the characteristic angular scale of
+strong lensing:
+\begin{equation}
+\thetaE = \sqrt{\frac{4GM(\thetaE)}{c^2} \frac{\Dds}{\Dd \Ds}}
+\label{eq:einstein-radius}
+\end{equation}
+where $M(\thetaE)$ is the projected mass enclosed within $\thetaE$
+(\CK\ eq.~4.9). For a typical galaxy-scale lens,
+$\thetaE \sim 0.5''$--$3''$.
+
+% ============================================================
+\section{Convergence, Shear, and Magnification}
+\label{sec:convergence-shear}
+% ============================================================
+
+\subsection{Convergence}
+
+The \textbf{convergence} is the dimensionless projected surface mass density:
+\begin{equation}
+\kappa(\vtheta) = \frac{\Sigma(\vtheta)}{\SigmaCr}
+\label{eq:convergence}
+\end{equation}
+
+\subsection{Lensing Potential}
+
+The deflection angle derives from a 2D potential $\psi(\vtheta)$:
+\begin{equation}
+\valpha = \nabla \psi, \qquad \nabla^2 \psi = 2\kappa
+\label{eq:lensing-potential}
+\end{equation}
+(\CK\ eqs.~4.14--4.15; \NB\ eq.~8). The 2D Poisson equation
+$\nabla^2 \psi = 2\kappa$ is the central equation relating mass to
+deflection.
+
+\subsection{Jacobian Matrix and Magnification}
+
+The lens mapping $\vtheta \to \vbeta$ has the Jacobian matrix:
+\begin{equation}
+\mathbf{A} = \frac{\partial \vbeta}{\partial \vtheta}
+= \delta_{ij} - \frac{\partial^2 \psi}{\partial \theta_i \partial \theta_j}
+= \begin{pmatrix}
+1 - \kappa - \gamma_1 & -\gamma_2 \\
+-\gamma_2 & 1 - \kappa + \gamma_1
+\end{pmatrix}
+\label{eq:jacobian}
+\end{equation}
+where $\gamma_1$ and $\gamma_2$ are the components of the \textbf{shear}
+$\gamma = \gamma_1 + i\gamma_2$ (\CK\ eq.~5.7; \NB\ eqs.~17--19).
+
+The \textbf{magnification} is the inverse determinant:
+\begin{keyresult}
+\begin{equation}
+\mu = \frac{1}{\det \mathbf{A}} = \frac{1}{(1-\kappa)^2 - |\gamma|^2}
+\label{eq:magnification}
+\end{equation}
+\end{keyresult}
+
+\subsection{Critical Curves and Caustics}
+
+\textbf{Critical curves} are the loci in the image plane where
+$\det \mathbf{A} = 0$ (infinite magnification). There are two types:
+\begin{align}
+\text{Tangential:}\quad & 1 - \kappa - |\gamma| = 0 \label{eq:tangential-cc} \\
+\text{Radial:}\quad     & 1 - \kappa + |\gamma| = 0 \label{eq:radial-cc}
+\end{align}
+
+The image of a critical curve under the lens mapping $\vtheta \to \vbeta$
+is called a \textbf{caustic}. When a source crosses a caustic, images are
+created or destroyed in pairs (\CK\ Ch.~5; Petters et al.\ 2001).
+
+% ============================================================
+\section{Light Profiles: The S\'ersic Function}
+\label{sec:sersic}
+% ============================================================
+
+Galaxy surface brightness is described by the \textbf{S\'ersic profile}
+(S\'ersic 1963):
+\begin{equation}
+I(R) = I_e \exp\left\{ -b_n \left[ \left(\frac{R}{R_e}\right)^{1/n} - 1 \right] \right\}
+\label{eq:sersic}
+\end{equation}
+where $R_e$ is the effective (half-light) radius, $n$ is the S\'ersic
+index, and $b_n \approx 2n - 1/3 + 4/(405n)$ ensures that $R_e$
+encloses half the total light (Ciotti \& Bertin 1999).
+
+Special cases:
+\begin{itemize}[nosep]
+  \item $n = 1$: exponential profile (disk galaxies)
+  \item $n = 4$: de Vaucouleurs profile (elliptical galaxies)
+\end{itemize}
+
+\subsection{Ellipticity Parameterization}
+
+PyAutoLens parameterizes ellipticity using components
+$(\epsilon_1, \epsilon_2)$ rather than axis ratio $q$ and position
+angle $\phi$:
+\begin{equation}
+\epsilon_1 = \frac{1-q}{1+q} \sin(2\phi), \qquad
+\epsilon_2 = \frac{1-q}{1+q} \cos(2\phi)
+\label{eq:ell-comps}
+\end{equation}
+with total ellipticity $|\epsilon| = (1-q)/(1+q)$. This avoids
+discontinuities at $\phi = 0, \pi$ and is standard in weak lensing
+(\NB\ Sec.~4.1).
+
+% ============================================================
+\section{Mass Profiles}
+\label{sec:mass-profiles}
+% ============================================================
+
+\subsection{Singular Isothermal Sphere (SIS)}
+
+The SIS has density $\rho(r) = \sigma_v^2 / (2\pi G r^2)$, giving:
+\begin{align}
+\kappa(\theta) &= \frac{\thetaE}{2\theta} \label{eq:sis-kappa} \\
+\alpha(\theta) &= \thetaE \quad \text{(constant!)} \label{eq:sis-alpha}
+\end{align}
+with Einstein radius (\CK\ eq.~4.28):
+\begin{equation}
+\thetaE = 4\pi \left(\frac{\sigma_v}{c}\right)^2 \frac{\Dds}{\Ds}
+\label{eq:sis-thetaE}
+\end{equation}
+
+The mean convergence inside $\thetaE$ is $\langle\kappa\rangle = 1$,
+which is the defining property of the Einstein radius.
+
+\subsection{Singular Isothermal Ellipsoid (SIE)}
+
+The SIE generalizes the SIS to elliptical isodensity contours
+(Kormann, Schneider \& Bartelmann 1994). It is the workhorse model for
+galaxy-scale lenses because it produces the correct image configurations
+(doubles and quads) with physically motivated mass distributions.
+
+In PyAutoLens, the SIE is \texttt{al.mp.Isothermal} with parameters:
+\texttt{centre}, \texttt{ell\_comps}, \texttt{einstein\_radius}.
+
+\subsection{NFW Profile}
+
+The Navarro-Frenk-White (1996) profile describes dark matter halos:
+\begin{equation}
+\rho(r) = \frac{\rho_s}{(r/r_s)(1 + r/r_s)^2}
+\label{eq:nfw-density}
+\end{equation}
+with known analytic convergence (Bartelmann 1996; \CK\ Sec.~4.5).
+
+% ============================================================
+\section{Multi-Plane Lensing}
+\label{sec:multiplane}
+% ============================================================
+
+For mass at multiple redshifts, light is deflected sequentially at each
+lens plane. The multi-plane lens equation (S92, Ch.~9):
+\begin{equation}
+\vtheta_{j+1} = \vtheta_1 - \sum_{i=1}^{j} \beta_{ij} \valpha_i(\vtheta_i)
+\label{eq:multiplane}
+\end{equation}
+where $\beta_{ij} = D_{ij} D_s / (D_j D_{is})$ are the distance ratios.
+PyAutoLens handles this automatically via the \texttt{Tracer} object.
+
+% ============================================================
+\section{Cosmological Distances}
+\label{sec:distances}
+% ============================================================
+
+All lensing distances are \textbf{angular diameter distances} in a
+Friedmann-Lema\^itre-Robertson-Walker cosmology:
+\begin{equation}
+D_A(z_1, z_2) = \frac{1}{1+z_2} \int_{z_1}^{z_2} \frac{c\,dz'}{H(z')}
+\label{eq:angular-diameter-distance}
+\end{equation}
+for a flat universe, where $H(z) = H_0\sqrt{\Omega_m(1+z)^3 + \Omega_\Lambda}$.
+
+\begin{pythonbox}
+PyAutoLens wraps \texttt{astropy} cosmology:
+\begin{lstlisting}
+cosmo = al.cosmo.Planck15()
+D_d = cosmo.angular_diameter_distance_to_earth_in_kpc_from(redshift=0.5)
+Sigma_cr = cosmo.critical_surface_density_between_redshifts_solar_mass_per_kpc2_from(
+    redshift_0=0.5, redshift_1=1.0
+)
+\end{lstlisting}
+\end{pythonbox}
+
+% ============================================================
+\section*{References}
+% ============================================================
+
+\begin{itemize}[nosep, leftmargin=*]
+  \item Bartelmann, M.\ (1996), A\&A, 313, 697 — NFW lensing properties
+  \item Ciotti, L.\ \& Bertin, G.\ (1999), A\&A, 352, 447 — S\'ersic $b_n$ approximation
+  \item Congdon, A.B.\ \& Keeton, C.R.\ (2018), \emph{Principles of Gravitational Lensing}, Springer
+  \item Kormann, R., Schneider, P.\ \& Bartelmann, M.\ (1994), A\&A, 284, 285 — SIE model
+  \item Narayan, R.\ \& Bartelmann, M.\ (1997), arXiv:astro-ph/9606001
+  \item Navarro, J.F., Frenk, C.S.\ \& White, S.D.M.\ (1996), ApJ, 462, 563
+  \item Nightingale, J.W., Dye, S.\ \& Massey, R.J.\ (2018), MNRAS, 478, 4738
+  \item Petters, A.O., Levine, H.\ \& Wambsganss, J.\ (2001), \emph{Singularity Theory and Gravitational Lensing}, Birkh\"auser
+  \item Schneider, P., Ehlers, J.\ \& Falco, E.E.\ (1992), \emph{Gravitational Lenses}, Springer
+  \item S\'ersic, J.L.\ (1963), Bolet\'in de la Asociaci\'on Argentina de Astronom\'ia, 6, 41
+\end{itemize}
+
+\end{document}

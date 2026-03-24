@@ -1,0 +1,98 @@
+% ============================================================
+% preamble.tex — Shared LaTeX preamble for Learning to Autolens
+% ============================================================
+% Contains: packages, physics notation macros, formatting.
+% Include in each module via \input{../preamble}
+% ============================================================
+
+% --- Packages ---
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{physics}       % \vb, \grad, \div, \curl, \dd, etc.
+\usepackage{mathtools}     % \coloneqq, \prescript
+\usepackage{bm}            % \bm for bold math
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{booktabs}      % Professional tables
+\usepackage{hyperref}
+\usepackage{cleveref}      % \cref for smart cross-refs
+\usepackage{xcolor}
+\usepackage[margin=1in]{geometry}
+\usepackage{enumitem}      % Custom list formatting
+\usepackage{fancyhdr}      % Headers and footers
+\usepackage{tcolorbox}     % Colored boxes for key results
+\usepackage{listings}      % Code listings
+
+% --- Color scheme ---
+\definecolor{codeblue}{RGB}{31, 119, 180}
+\definecolor{codegray}{RGB}{128, 128, 128}
+\definecolor{keyresult}{RGB}{39, 123, 69}
+\definecolor{exercise}{RGB}{178, 102, 0}
+
+% --- tcolorbox environments ---
+\newtcolorbox{keyresult}[1][]{
+  colback=keyresult!5, colframe=keyresult!70,
+  fonttitle=\bfseries, title={Key Result}, #1
+}
+
+\newtcolorbox{pythonbox}[1][]{
+  colback=codeblue!5, colframe=codeblue!50,
+  fonttitle=\bfseries, title={PyAutoLens Implementation}, #1
+}
+
+\newtcolorbox{exercisebox}[1][]{
+  colback=exercise!5, colframe=exercise!50,
+  fonttitle=\bfseries, title={Exercise}, #1
+}
+
+% --- Code listing style ---
+\lstset{
+  language=Python,
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{codeblue}\bfseries,
+  commentstyle=\color{codegray}\itshape,
+  stringstyle=\color{keyresult},
+  breaklines=true,
+  frame=single,
+  framerule=0.5pt,
+  rulecolor=\color{codegray!50},
+}
+
+% --- Physics macros ---
+% Vectors (bold upright)
+\newcommand{\vtheta}{\bm{\theta}}       % Image-plane position
+\newcommand{\vbeta}{\bm{\beta}}         % Source-plane position
+\newcommand{\valpha}{\bm{\alpha}}       % Deflection angle
+\newcommand{\vx}{\bm{x}}               % Generic position
+
+% Lensing quantities
+\newcommand{\thetaE}{\theta_{\rm E}}    % Einstein radius
+\newcommand{\SigmaCr}{\Sigma_{\rm cr}}  % Critical surface density
+\newcommand{\Dd}{D_{\rm d}}             % Angular diameter distance to lens
+\newcommand{\Ds}{D_{\rm s}}             % Angular diameter distance to source
+\newcommand{\Dds}{D_{\rm ds}}           % Angular diameter distance lens-source
+
+% Statistical quantities
+\newcommand{\chisq}{\chi^2}             % Chi-squared
+\newcommand{\chisqred}{\chi^2_{\rm red}} % Reduced chi-squared
+\newcommand{\Like}{\mathcal{L}}         % Likelihood
+\newcommand{\Evid}{\mathcal{Z}}         % Evidence
+\newcommand{\Post}{\mathcal{P}}         % Posterior
+
+% Abbreviations for references
+\newcommand{\CK}{C\&K}                  % Congdon & Keeton (2018)
+\newcommand{\NB}{N\&B}                  % Narayan & Bartelmann (1997)
+\newcommand{\Night}{Nightingale+18}     % Nightingale, Dye & Massey (2018)
+
+% --- Headers ---
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\textit{Learning to Autolens}}
+\fancyhead[R]{\small\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+% --- Theorem environments ---
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}[section]
+\newtheorem{example}{Example}[section]

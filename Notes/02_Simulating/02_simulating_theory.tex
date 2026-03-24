@@ -1,0 +1,186 @@
+\documentclass[11pt, letterpaper]{article}
+\input{../preamble}
+
+\fancyhead[C]{\small\textbf{Module 02: Simulating Lens Data}}
+
+\title{\textbf{Module 02: Simulating Lens Data}\\[0.5em]
+\large Theory Companion — Learning to Autolens}
+\author{Rodrigo C\'ordova Rosado\\
+\small Harvard-Smithsonian Center for Astrophysics\\
+\small \texttt{rodrigo.cordova\_rosado@cfa.harvard.edu}}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This document covers the image formation model: how a true lensed
+surface brightness distribution is transformed into a CCD image through
+PSF convolution and noise addition. Understanding this forward model is
+essential for the inverse problem of lens modeling (Module~03).
+References: \Night\ Sec.~3; Meneghetti (2021) Ch.~8.
+\end{abstract}
+
+\tableofcontents
+\newpage
+
+% ============================================================
+\section{The Forward Model}
+\label{sec:forward-model}
+% ============================================================
+
+The observed image $\mathbf{d}$ relates to the true surface brightness
+$\mathbf{I}$ by:
+
+\begin{keyresult}
+\begin{equation}
+\mathbf{d} = \mathrm{PSF} \ast \mathbf{I}(\bm{\eta}) + \mathbf{n}
+\label{eq:forward-model}
+\end{equation}
+\end{keyresult}
+
+\noindent where $\bm{\eta}$ are the model parameters (lens mass, source
+light, etc.), $\ast$ denotes 2D convolution, and $\mathbf{n}$ is the
+noise realization (\Night\ eq.~1).
+
+The true lensed image is computed by ray-tracing (Module~01):
+\begin{equation}
+I(\vtheta) = I_s\bigl(\vbeta(\vtheta)\bigr) + I_\ell(\vtheta)
+\label{eq:lensed-image}
+\end{equation}
+where $I_s$ is the source surface brightness evaluated at the
+deflected position $\vbeta = \vtheta - \valpha(\vtheta)$, and $I_\ell$
+is the lens galaxy's own light.
+
+% ============================================================
+\section{Point Spread Function}
+\label{sec:psf}
+% ============================================================
+
+\subsection{Gaussian Approximation}
+
+For a circular Gaussian PSF with standard deviation $\sigma$:
+\begin{equation}
+\mathrm{PSF}(x, y) = \frac{1}{2\pi\sigma^2}
+\exp\!\left(-\frac{x^2 + y^2}{2\sigma^2}\right)
+\label{eq:gaussian-psf}
+\end{equation}
+
+The PSF is normalized: $\iint \mathrm{PSF}\,dx\,dy = 1$. The
+\textbf{FWHM} (full width at half maximum) is:
+\begin{equation}
+\mathrm{FWHM} = 2\sqrt{2\ln 2}\,\sigma \approx 2.355\,\sigma
+\label{eq:fwhm}
+\end{equation}
+
+\subsection{Convolution via Fourier Transform}
+
+Convolution in real space corresponds to multiplication in Fourier space
+(the convolution theorem):
+\begin{equation}
+\mathcal{F}[\mathrm{PSF} \ast I] = \mathcal{F}[\mathrm{PSF}] \cdot \mathcal{F}[I]
+\label{eq:convolution-theorem}
+\end{equation}
+
+For a Gaussian PSF, the Fourier transform is also Gaussian:
+$\mathcal{F}[\mathrm{Gauss}(\sigma_x)] = \mathrm{Gauss}(\sigma_k)$ with
+$\sigma_k = 1/(2\pi\sigma_x)$. A narrow PSF (sharp image) preserves
+high spatial frequencies; a broad PSF (blurry image) suppresses them.
+
+\subsection{Nyquist Sampling}
+
+To properly sample the PSF without aliasing, the pixel scale $\Delta\theta$
+must satisfy:
+\begin{equation}
+\Delta\theta \leq \frac{\mathrm{FWHM}}{2}
+\label{eq:nyquist}
+\end{equation}
+
+\subsection{Instrument Parameters}
+
+\begin{table}[H]
+\centering
+\caption{Typical parameters for common instruments.}
+\begin{tabular}{lcccc}
+\toprule
+Instrument & Pixel scale & PSF FWHM & Exposure & Sky level \\
+\midrule
+HST ACS/WFC3 & $0.05''$/pix & $0.07''$--$0.10''$ & 2000\,s & 0.01 \\
+Euclid VIS   & $0.10''$/pix & $0.16''$           & 2260\,s & 0.04 \\
+Keck AO      & $0.01''$--$0.04''$/pix & $0.05''$--$0.08''$ & 600\,s & 0.5 \\
+Seeing       & $0.10''$--$0.25''$/pix & $0.5''$--$1.5''$ & 900\,s & 1.0 \\
+\bottomrule
+\end{tabular}
+\label{tab:instruments}
+\end{table}
+
+% ============================================================
+\section{Noise Model}
+\label{sec:noise}
+% ============================================================
+
+\subsection{CCD Noise Components}
+
+The total noise variance per pixel is:
+\begin{equation}
+\sigma_{\rm total}^2 = F_{\rm src}\,t\,\Omega_{\rm pix}
++ F_{\rm sky}\,t\,\Omega_{\rm pix} + \sigma_{\rm read}^2
+\label{eq:noise-model}
+\end{equation}
+where $F_{\rm src}$ and $F_{\rm sky}$ are flux rates
+(e$^-$/s/arcsec$^2$), $t$ is the exposure time, $\Omega_{\rm pix}$ is
+the pixel solid angle, and $\sigma_{\rm read}$ is the read noise
+(Howell 2006, Ch.~4).
+
+\subsection{Signal-to-Noise Ratio}
+
+The SNR per pixel is:
+\begin{equation}
+\mathrm{SNR} = \frac{F_{\rm src}\,t\,\Omega_{\rm pix}}{\sigma_{\rm total}}
+\label{eq:snr}
+\end{equation}
+
+In the \textbf{background-limited} regime ($F_{\rm sky} \gg F_{\rm src}$),
+$\mathrm{SNR} \propto \sqrt{t}$. In the \textbf{source-limited} regime,
+$\mathrm{SNR} \propto \sqrt{t}$ as well (Poisson statistics).
+
+% ============================================================
+\section{Over-Sampling}
+\label{sec:oversampling}
+% ============================================================
+
+A single pixel integrates the surface brightness over its area. For
+steep profiles or thin arcs, evaluating $I(\vtheta)$ only at the pixel
+center introduces bias. \textbf{Over-sampling} subdivides each pixel
+into $N \times N$ sub-pixels, evaluates the profile at each, and
+averages:
+\begin{equation}
+I_{\rm pixel} = \frac{1}{N^2} \sum_{k=1}^{N^2} I(\vtheta_k)
+\label{eq:oversampling}
+\end{equation}
+
+PyAutoLens uses \textbf{adaptive radial over-sampling}: high $N$ near
+the center (where profiles are steep), low $N$ in the outskirts.
+
+\begin{pythonbox}
+\begin{lstlisting}
+over_sample = al.util.over_sample.over_sample_size_via_radial_bins_from(
+    grid=grid,
+    sub_size_list=[32, 8, 2],  # 32x32 near center, 2x2 at edge
+    radial_list=[0.3, 0.6],   # Transition radii (arcsec)
+    centre_list=[(0.0, 0.0)],
+)
+\end{lstlisting}
+\end{pythonbox}
+
+% ============================================================
+\section*{References}
+% ============================================================
+
+\begin{itemize}[nosep, leftmargin=*]
+  \item Howell, S.B.\ (2006), \emph{Handbook of CCD Astronomy}, Cambridge Univ.\ Press
+  \item Meneghetti, M.\ (2021), \emph{Introduction to Gravitational Lensing}, Springer
+  \item Nightingale, J.W., Dye, S.\ \& Massey, R.J.\ (2018), MNRAS, 478, 4738
+\end{itemize}
+
+\end{document}
