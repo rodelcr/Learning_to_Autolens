@@ -79,7 +79,56 @@ Timestamped record of major milestones and work completed.
 - **LaTeX** (`Notes/08_Results/08_results_theory.tex`): χ² distribution & expected scatter, parameter uncertainties (percentile reporting), Bayes factor & Jeffreys' scale, Einstein mass formula, SIE velocity dispersion, magnification
 - **Mathematica** (`Mathematica/08_model_comparison_and_diagnostics.wl`): χ² distribution properties, Bayes factor odds ratios, Einstein mass for θ_E = 0.5"–3.0", velocity dispersion from θ_E
 
-### TUTORIAL SUITE COMPLETE
+### TUTORIAL SUITE COMPLETE (Modules 01–08)
 - **8 modules**, each with: Jupyter notebook + LaTeX theory companion + Mathematica symbolic verification
 - **8 PDFs** compiled in `Output/`
 - All pushed to https://github.com/rodelcr/Learning_to_Autolens (private)
+
+---
+
+## 2026-04-07 — Module 05 Bug Fixes
+
+- Fixed pixelized source fit (Section 7): added `PositionsLH` for demagnified solutions, `use_jax=False` for JAX tracing issues, `SafeAnalysisImaging` wrapper for `LinAlgError`, restructured to two-search chain (parametric → pixelized)
+- Fixed `mesh=al.mesh.Delaunay` (class) → `al.mesh.Delaunay()` (instance) to avoid `missing 'self'` error
+- Applied same fixes to Solutions notebook
+
+---
+
+## 2026-04-08 — Module 09: Multi-Gaussian Expansion & Linear Light Profiles
+
+- Upgraded PyAutoLens to 2026.2.26.4 (from 2025.11.18.1) with all auto* packages
+- Cloned latest autolens_workspace into `autolens_workspace_latest/` (sandboxed)
+- **Notebook** (`Modules/09_.../09_mge_linear_light_profiles.ipynb`): 10 sections — linear light profiles, linear inversion theory, Basis functions, manual MGE fit (60 Gaussians, 0 nonlinear params), MGE modeling with non-linear search, running the fit, `mge_model_from` utility, MGE SLaM pipeline (3-stage), Sérsic vs MGE comparison, 4 exercises
+- **LaTeX** (`Notes/09_MGE/09_mge_theory.tex`): Linear algebra of light profile fitting, NNLS positive-only constraint, MGE theory (Emsellem+ 1994, Cappellari 2002), basis expansion & sigma grid, parameter space reduction, MGE in SLaM
+- **Mathematica** (`Mathematica/09_mge_and_basis_functions.wl`): Gaussian normalization & half-light radius, PSF convolution property, MGE approximation of Sérsic n=4, linear system condition number, 3D deprojection (Abel transform)
+- **Solutions** (`Solutions/09_mge_linear_light_profiles_SOLVED.ipynb`): 4 exercise solutions (Gaussian count, manual vs utility, MGE+pixelized, decomposition analysis)
+
+---
+
+## 2026-04-17 — v2026.2.26.4 Full-Suite Port
+
+Goal: rewrite the tutorial suite to run end-to-end against PyAutoLens **2026.2.26.4** (the version we pinned alongside Module 09), eliminating v2025-era API calls that were left behind in Modules 04 and 05.
+
+### New: `slam_v2026.py` shim
+- Bundles the inline SLaM functions from `autolens_workspace_latest/scripts/guides/modeling/slam_start_here.py` as a single importable module
+- Exposes `source_lp`, `source_pix`, `light_lp`, `mass_total` via `SimpleNamespace` so Module 04 can keep calling `.run()` / `.run_1()` / `.run_2()` as before
+- Defaults: `mesh_init=RectangularAdaptDensity(28,28)` → `mesh=RectangularAdaptImage(28,28)`, `regularization=al.reg.Adapt`, `use_jax=False`
+
+### Module 04 + Solution 04 — inline SLaM port
+- Swapped imports from `autolens_workspace_original/slam` (v2025) to the new `slam_v2026` shim
+- Removed all `al.AnalysisImaging(...)` construction at call sites — the shim now takes `dataset=dataset` and builds its own analysis
+- Deleted v2025-only kwargs from SOURCE PIX runs: `adapt_image_maker=al.AdaptImageMaker(...)`, `mesh_init=al.mesh.Delaunay`, `mesh=al.mesh.Delaunay`, `image_mesh=al.image_mesh.Hilbert`, `regularization=al.reg.AdaptSplit`, `settings_inversion=al.SettingsInversion(...)` — v2026 uses the shim's defaults
+- Dropped `SLAM_AVAILABLE` guard cells
+
+### Module 05 + Solution 05 — Pixelization v2026 port
+- `al.mesh.Delaunay(pixels=N)` → `al.mesh.RectangularAdaptDensity(shape=(N,N))` for the initial adaptive mesh
+- `al.reg.AdaptiveBrightnessSplit` / `AdaptSplit` → `al.reg.Adapt`
+- `al.SettingsInversion` → `al.Settings`
+- `al.AdaptImageMaker` → `al.AdaptImages` + `al.galaxy_name_image_dict_via_result_from`
+
+### Verification
+- All 9 Modules + 9 Solutions re-executed under `PYAUTOFIT_TEST_MODE=1` against PyAutoLens 2026.2.26.4 — exit code 0 on every notebook
+- Notebooks re-saved with v2026 outputs embedded
+
+### Repo hygiene
+- `.gitignore`: exclude `autolens_workspace_latest/` (300 MB pip-install reference copy), local `check_install.py`, and `Modules/**/*_debug.py` scratch scripts

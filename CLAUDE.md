@@ -26,12 +26,15 @@ Learning_to_Autolens/
 ├── Mathematica/                          # Symbolic derivations (.wl scripts, .nb notebooks)
 ├── Figures/                              # Exported figures (PDF/PNG)
 ├── Output/                               # Generated fitting output (git-ignored)
-├── autolens_workspace_original/          # Unmodified PyAutoLens workspace (reference copy)
+├── autolens_workspace_original/          # PyAutoLens workspace (v2025.11 reference copy)
 │   ├── scripts/                          # Original PyAutoLens tutorial scripts
 │   ├── notebooks/                        # Original PyAutoLens tutorial notebooks
 │   ├── slam/                             # SLaM pipeline modules
 │   ├── config/                           # PyAutoLens YAML configuration
 │   └── dataset/                          # Example lens datasets
+├── autolens_workspace_latest/            # PyAutoLens workspace (v2026.2, for Module 09+)
+│   ├── scripts/                          # Latest tutorial scripts (MGE, SLaM, etc.)
+│   └── dataset/                          # Latest example datasets
 ├── CLAUDE.md                             # This file
 ├── PROGRESS_LOG.md                       # Timestamped work log
 └── README.md                             # Setup instructions and module curriculum
@@ -49,6 +52,7 @@ Learning_to_Autolens/
 | 06 | Multi-Component Mass Models | Stellar + dark matter, NFW + Sersic, scaling relations | C&K Ch.4, Meneghetti Ch.5 |
 | 07 | Real Data: FITS to Model | Data preparation, masking, PSF handling, AGEL targets | — |
 | 08 | Results, Diagnostics & Figures | Corner plots, residuals, publication figures | — |
+| 09 | MGE & Linear Light Profiles | lp_linear, lp_basis.Basis, mge_model_from, MGE SLaM | Cappellari 2002, Emsellem+ 1994 |
 
 **Key:** C&K = Congdon & Keeton (2018), N&B = Narayan & Bartelmann (1997)
 
