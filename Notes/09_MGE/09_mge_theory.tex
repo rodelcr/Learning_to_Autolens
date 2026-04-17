@@ -1,0 +1,372 @@
+\documentclass[11pt, letterpaper]{article}
+\input{../preamble}
+
+\fancyhead[C]{\small\textbf{Module 09: MGE \& Linear Light Profiles}}
+
+\title{\textbf{Module 09: Multi-Gaussian Expansion \& Linear Light Profiles}\\[0.5em]
+\large Theory Companion --- Learning to Autolens}
+\author{Rodrigo C\'ordova Rosado\\
+\small Harvard-Smithsonian Center for Astrophysics\\
+\small \texttt{rodrigo.cordova\_rosado@cfa.harvard.edu}}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This document develops the mathematical framework for linear light
+profile fitting and Multi-Gaussian Expansions (MGEs) as used in
+PyAutoLens.  We show that solving for light profile intensities is
+a linear algebra problem identical in structure to the pixelized
+source inversion of Module~05, derive the maximum-likelihood and
+NNLS solutions, and explain why Gaussians form a particularly
+efficient basis.
+References: Emsellem, Monnet \& Bacon (1994); Cappellari (2002);
+Lawson \& Hanson (1974).
+\end{abstract}
+
+\tableofcontents
+\newpage
+
+% ============================================================
+\section{Linear Algebra of Light Profile Fitting}
+\label{sec:linear-algebra}
+% ============================================================
+
+In a traditional lens model every light profile has an \texttt{intensity}
+parameter that the non-linear search must explore.  A \emph{linear light
+profile} removes intensity from the search: given fixed shape parameters,
+the optimal intensity is found by solving a linear system.
+
+\subsection{The Forward Model}
+
+Suppose we have $K$ light profile components (e.g.\ bulge, disk, lensed
+arcs), each with a known 2D shape but unknown intensity $a_k$.  Let
+$\mathbf{b}_k$ be the PSF-convolved image of component $k$ evaluated at
+unit intensity --- a column vector of $N_d$ image pixels.  Stack these
+into the \textbf{blurring matrix}
+$\mathbf{B} = [\mathbf{b}_1 \mid \cdots \mid \mathbf{b}_K]$, which has
+dimensions $N_d \times K$.  The model image is then:
+
+\begin{keyresult}[title={Forward Model}]
+\begin{equation}
+  \mathbf{d} = \mathbf{B}\,\mathbf{a} + \mathbf{n},
+  \label{eq:forward}
+\end{equation}
+where $\mathbf{a} = (a_1,\ldots,a_K)^T$ is the intensity vector and
+$\mathbf{n}$ is the noise with covariance
+$\mathbf{C} = \mathrm{diag}(\sigma_1^2,\ldots,\sigma_{N_d}^2)$.
+\end{keyresult}
+
+This is \emph{exactly} the same structure as the pixelized source
+inversion from Module~05 (\cref{eq:forward} $\leftrightarrow$
+Module~05 eq.~1), with the replacement
+\[
+  \underbrace{\mathbf{M}}_{\text{lensing+PSF}} \mathbf{s}
+  \;\longleftrightarrow\;
+  \underbrace{\mathbf{B}}_{\text{PSF-convolved basis}} \mathbf{a}.
+\]
+The source pixels $\mathbf{s}$ are replaced by intensities $\mathbf{a}$,
+and the lensing operator by the basis image matrix.  All the linear
+algebra carries over.
+
+\subsection{Maximum-Likelihood Solution}
+
+Minimizing $\chisq(\mathbf{a}) = (\mathbf{d} - \mathbf{B}\mathbf{a})^T
+\mathbf{C}^{-1}(\mathbf{d} - \mathbf{B}\mathbf{a})$ and setting
+$\partial\chisq/\partial\mathbf{a} = 0$ gives the weighted
+least-squares solution:
+
+\begin{keyresult}[title={ML Intensity Solution}]
+\begin{equation}
+  \hat{\mathbf{a}}_{\rm ML}
+  = \bigl(\mathbf{B}^T \mathbf{C}^{-1} \mathbf{B}\bigr)^{-1}
+    \mathbf{B}^T \mathbf{C}^{-1} \mathbf{d}
+  \label{eq:ml-solution}
+\end{equation}
+\end{keyresult}
+
+\noindent The matrix $\mathbf{B}^T\mathbf{C}^{-1}\mathbf{B}$ is only
+$K \times K$ (typically $K \sim 20$--60 for an MGE), so the solve is
+trivially cheap.  Unlike the pixelized source case, \emph{no
+regularization is needed} because $K \ll N_d$ and the system is
+well-conditioned.
+
+% ============================================================
+\section{Positive-Only Constraint (NNLS)}
+\label{sec:nnls}
+% ============================================================
+
+The unconstrained solution~\eqref{eq:ml-solution} can yield negative
+$a_k$.  While mathematically valid, a negative surface brightness is
+unphysical for a stellar light component.
+
+PyAutoLens therefore solves the \textbf{Non-Negative Least Squares}
+(NNLS) problem by default:
+\begin{equation}
+  \hat{\mathbf{a}}_{\rm NNLS}
+  = \arg\min_{\mathbf{a} \ge 0}
+    \bigl\|\mathbf{C}^{-1/2}(\mathbf{d} - \mathbf{B}\mathbf{a})\bigr\|^2
+  \label{eq:nnls}
+\end{equation}
+
+The standard algorithm is that of Lawson \& Hanson (1974): an active-set
+method that iteratively partitions the indices into a ``free'' set
+(non-zero coefficients) and a ``fixed'' set (zeroed coefficients),
+solving the unconstrained sub-problem on the free set at each step.
+Convergence is guaranteed in a finite number of iterations.
+
+\begin{exercisebox}
+Construct a toy 1D example with three Gaussian basis functions where
+the unconstrained least-squares solution gives one negative amplitude.
+Verify that NNLS sets it to zero and redistributes flux to the
+remaining components.
+\end{exercisebox}
+
+% ============================================================
+\section{Multi-Gaussian Expansion Theory}
+\label{sec:mge-theory}
+% ============================================================
+
+\subsection{The MGE Ansatz}
+
+A Multi-Gaussian Expansion represents a surface brightness profile as a
+sum of 2D Gaussians:
+\begin{equation}
+  I(R) = \sum_{j=1}^{K} a_j \,
+  \exp\!\left(-\frac{R^2}{2\sigma_j^2}\right)
+  \label{eq:mge-ansatz}
+\end{equation}
+where $R$ is the elliptical radius appropriate to each component and
+$\{\sigma_j\}$ are the Gaussian widths (dispersions).
+
+Historically, MGEs were developed for stellar dynamical modeling
+(Emsellem, Monnet \& Bacon 1994) and efficient fitting algorithms were
+given by Cappellari (2002).  Their adoption in lens modeling is more
+recent.
+
+\subsection{Why Gaussians Are Special}
+
+Three properties make Gaussians a uniquely convenient basis:
+
+\begin{enumerate}[nosep]
+  \item \textbf{Analytic PSF convolution.}  If the PSF is itself
+    approximated by a Gaussian with dispersion $\sigma_p$, the
+    convolution of a basis Gaussian ($\sigma_j$) with the PSF is another
+    Gaussian:
+
+    \begin{keyresult}[title={Gaussian Convolution Property}]
+    \begin{equation}
+      \sigma_{\rm eff} = \sqrt{\sigma_j^2 + \sigma_p^2}
+      \label{eq:conv-property}
+    \end{equation}
+    The convolved image is a Gaussian with the same centre and
+    ellipticity, but broadened dispersion $\sigma_{\rm eff}$.
+    \end{keyresult}
+
+    In practice, PyAutoLens convolves numerically with an arbitrary PSF
+    kernel (not necessarily Gaussian), but the near-Gaussian shape of
+    each basis image means the convolution is well-behaved.
+
+  \item \textbf{Analytic deprojection.}  A 2D Gaussian deprojects to a
+    3D Gaussian (with the same $\sigma$ along the projected axis),
+    enabling analytic computation of the gravitational potential and
+    forces --- critical for dynamical modeling (Emsellem+94 Sec.~3).
+
+  \item \textbf{Computational speed.}  Evaluating $\exp(-R^2/2\sigma^2)$
+    is fast and numerically stable; no special functions (incomplete
+    gamma, hypergeometric) are needed, unlike S\'ersic profiles.
+\end{enumerate}
+
+% ============================================================
+\section{MGE as a Basis Expansion}
+\label{sec:mge-basis}
+% ============================================================
+
+\subsection{The Sigma Grid}
+
+PyAutoLens constructs the Gaussian widths on a logarithmic grid spanning
+from sub-pixel scales to the mask radius:
+\[
+  \sigma_j \in \bigl\{\sigma_{\min},\;
+  \sigma_{\min}\cdot r,\;
+  \sigma_{\min}\cdot r^2,\;
+  \ldots,\;
+  \sigma_{\max}\bigr\}
+\]
+where $r$ is the common ratio.  Typical values: $\sigma_{\min} \approx
+0.01''$ (sub-pixel), $\sigma_{\max} \approx$ mask radius, and
+$K \sim 20$--30 Gaussians per group.  The log-spacing ensures roughly
+equal sensitivity per octave of angular scale.
+
+\subsection{Groups and \texttt{gaussian\_per\_basis}}
+
+For multi-component morphologies (e.g.\ bulge + disk, or lens galaxy +
+lensed arcs), the Gaussians are divided into \textbf{groups}.  Each
+group shares:
+\begin{itemize}[nosep]
+  \item a common centre (\texttt{centre}),
+  \item common ellipticity components (\texttt{ell\_comps}).
+\end{itemize}
+
+Within each group, the $K_g$ Gaussian widths $\{\sigma_j\}$ are fixed
+(non-linear parameters would be needed only to adjust the grid, which
+is not done), and the $K_g$ intensities $\{a_j\}$ are solved linearly.
+The only non-linear parameters per group are:
+\[
+  \underbrace{x_c,\; y_c}_{\text{centre}} \;+\;
+  \underbrace{e_1,\; e_2}_{\text{ellipticity}}
+  \;=\; 4 \text{ parameters/group.}
+\]
+
+\begin{pythonbox}
+A two-group MGE (lens light + source light) is set up as:
+\begin{lstlisting}
+# Group 1: lens galaxy (30 Gaussians)
+lens_bulge = af.Model(
+    al.lp_linear.Gaussian,
+    sigma=af.LogUniformPrior(
+        lower_limit=0.01, upper_limit=10.0
+    ),
+)
+# Group 2: source galaxy (20 Gaussians)
+source = af.Model(
+    al.lp_linear.Gaussian,
+    sigma=af.LogUniformPrior(
+        lower_limit=0.01, upper_limit=5.0
+    ),
+)
+\end{lstlisting}
+In practice, the \texttt{al.util.model.mge\_model\_from()} utility
+constructs the full model automatically (see Sec.~\ref{sec:reduction}).
+\end{pythonbox}
+
+% ============================================================
+\section{Parameter Space Reduction}
+\label{sec:reduction}
+% ============================================================
+
+The central advantage of MGE + linear solving is the dramatic reduction
+in the dimensionality of the non-linear search.
+
+\begin{table}[h]
+\centering
+\caption{Non-linear parameter count comparison for a bulge + disk
+lens light model.}
+\label{tab:param-count}
+\begin{tabular}{lcc}
+\toprule
+\textbf{Approach} & \textbf{Non-linear params} & \textbf{Linear params} \\
+\midrule
+S\'ersic bulge + S\'ersic disk & 14 & 0 \\
+\quad (each: $x, y, e_1, e_2, R_e, n, I$) & & \\
+\addlinespace
+MGE 2-group (30+30 Gaussians) & $2 \times 4 = 8$ & 60 \\
+\quad (each group: $x, y, e_1, e_2$) & & \\
+\addlinespace
+MGE 1-group (shared geometry) & 4 & 30 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent The trade-off:
+\begin{itemize}[nosep]
+  \item \textbf{Fewer non-linear dimensions} $\Rightarrow$ the sampler
+    converges faster and explores the posterior more efficiently.
+  \item \textbf{Each likelihood evaluation is more expensive}: computing
+    $K$ basis images and solving the $K \times K$ linear system adds
+    overhead compared to evaluating a single S\'ersic profile.
+\end{itemize}
+In practice the dimensionality reduction dominates, and MGE models
+typically complete 5--10$\times$ faster than equivalent S\'ersic models.
+
+\begin{pythonbox}[title={The \texttt{mge\_model\_from} Utility}]
+\begin{lstlisting}
+import autolens as al
+from autolens.util.model import mge_model_from
+
+# Build an MGE model for the lens light
+lens_bulge = mge_model_from(
+    model=al.lp_linear.Gaussian,
+    gaussian_per_basis=30,
+)
+# Returns an af.Collection of 30 Gaussian
+# models sharing centre and ell_comps,
+# with log-spaced sigma values.
+\end{lstlisting}
+\end{pythonbox}
+
+% ============================================================
+\section{MGE in the SLaM Pipeline}
+\label{sec:slam}
+% ============================================================
+
+The standard SLaM (Source, Light, Mass) pipeline has four stages when
+using pixelized sources (Module~04).  When MGE linear profiles are used
+for \emph{both} lens light and source light, the pipeline simplifies to
+three stages:
+
+\begin{enumerate}[nosep]
+  \item \textbf{SOURCE LP} --- Fit a parametric (MGE) source with a
+    simple mass model (SIE + shear).  The source MGE intensities are
+    solved linearly; the non-linear search explores only mass parameters
+    and source geometry (centre, ellipticity).
+  \item \textbf{LIGHT LP} --- Fix the mass model from Stage~1 and fit
+    the lens galaxy light with an MGE.  This decouples the lens light
+    from the mass, allowing a flexible multi-Gaussian representation
+    without destabilizing the mass model.
+  \item \textbf{MASS TOTAL} --- Fit the total mass model (e.g.\
+    power-law ellipsoid + shear) with lens light and source light
+    initialised from previous stages.
+\end{enumerate}
+
+\noindent \textbf{Why no SOURCE PIX stage?}  The pixelized source stage
+exists to capture irregular source morphology that parametric profiles
+miss.  When the source is already represented by an MGE with $\sim$20--30
+Gaussians, it has enough flexibility to represent most source
+morphologies without a pixelized reconstruction.  The SOURCE~PIX stage
+is needed only when the source has structure on scales finer than the
+densest Gaussian in the grid (e.g.\ highly irregular merging galaxies).
+
+\subsection{Decision Guide}
+
+\begin{table}[h]
+\centering
+\caption{When to use each source representation.}
+\label{tab:decision}
+\begin{tabular}{lp{8cm}}
+\toprule
+\textbf{Method} & \textbf{Best for} \\
+\midrule
+S\'ersic & Quick initial models; sources with known smooth morphology;
+  when only 1--2 light components are needed. \\
+\addlinespace
+MGE (linear) & Default choice for most lenses; multi-component
+  morphologies; fast convergence when the non-linear parameter
+  budget is tight. \\
+\addlinespace
+Pixelized & Highly irregular or merging sources; when residuals from
+  parametric fits show systematic structure; substructure studies. \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{exercisebox}
+Take the SLaM pipeline from Module~04 and replace the SOURCE~PIX stage
+with a SOURCE~LP stage using an MGE source.  Compare the Bayesian
+evidence of the two approaches on the same dataset.
+\end{exercisebox}
+
+% ============================================================
+\section*{References}
+% ============================================================
+
+\begin{itemize}[nosep, leftmargin=*]
+  \item Cappellari, M.\ (2002), MNRAS, 333, 400
+  \item Emsellem, E., Monnet, G.\ \& Bacon, R.\ (1994), A\&A, 285, 723
+  \item Lawson, C.L.\ \& Hanson, R.J.\ (1974),
+    \textit{Solving Least Squares Problems}, Prentice-Hall
+  \item Nightingale, J.W., Dye, S.\ \& Massey, R.J.\ (2018), MNRAS, 478, 4738
+\end{itemize}
+
+\end{document}
