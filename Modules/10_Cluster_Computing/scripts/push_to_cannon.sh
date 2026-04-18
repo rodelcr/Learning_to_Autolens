@@ -12,7 +12,7 @@
 
 set -euo pipefail
 
-CANNON_USER="${CANNON_USER:-rcordovarosado}"
+CANNON_USER="${CANNON_USER:-rcordova}"
 CANNON_HOST="${CANNON_HOST:-login.rc.fas.harvard.edu}"
 CANNON_DEST="${CANNON_DEST:-learning_to_autolens}"
 

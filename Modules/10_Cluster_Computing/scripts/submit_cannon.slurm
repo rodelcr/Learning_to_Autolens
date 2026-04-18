@@ -1,6 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=autolens
 #SBATCH --partition=shared
+#SBATCH --account=siag_lab
 #SBATCH --time=24:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
@@ -29,8 +30,13 @@ set -euo pipefail
 MODULE="${MODULE:-04}"
 
 # ---- Paths (EDIT for your Cannon account) -----------------------------------
+# On Cannon, $HOME = /n/home02/<user>/ (small quota — code only).
+# Compute is billed to --account=siag_lab (fast scheduling), but heavy output
+# is written to the Hernquist lab storage on holystore02. If the path below
+# doesn't exist on your first run, check `ls /n/holystore02/LABS/hernquist_lab/`
+# to confirm the exact layout and override OUTPUT_ROOT at submit time.
 REPO_ROOT="${REPO_ROOT:-${HOME}/learning_to_autolens}"
-OUTPUT_ROOT="${OUTPUT_ROOT:-${SCRATCH:-$HOME/scratch}/learning_to_autolens/output}"
+OUTPUT_ROOT="${OUTPUT_ROOT:-/n/holystore02/LABS/hernquist_lab/Users/${USER}/learning_to_autolens/output}"
 CONDA_ENV="${CONDA_ENV:-autolens}"
 
 # Dataset root differs by module:
@@ -48,10 +54,14 @@ if [[ ! -f "${FIT_SCRIPT}" ]]; then
 fi
 
 # ---- Environment ------------------------------------------------------------
-module purge
-module load python/3.11.8-fasrc01
-module load Anaconda3/2024.06-fasrc01 || module load python
-source activate "${CONDA_ENV}"
+# FASRC conda lives under Miniforge, not a module. Source the activate script
+# rather than `module load Anaconda3` (which is out of date / gone on Cannon 2.0).
+source /n/sw/Miniforge3-25.3.1-0/etc/profile.d/conda.sh
+conda activate "${CONDA_ENV}"
+
+# Unbuffered Python output so logs appear live instead of in bursts when the
+# job ends — essential for monitoring multi-hour Nautilus runs via `tail -f`.
+export PYTHONUNBUFFERED=1
 
 mkdir -p logs "${OUTPUT_ROOT}"
 
