@@ -2,11 +2,11 @@
 
 **Strong Gravitational Lens Modeling with PyAutoLens — A Step-by-Step Tutorial Suite**
 
-A 9-module tutorial series teaching computational strong lens modeling from first principles through publication-ready results. Each module pairs detailed **Jupyter notebooks** (with thorough physics commentary) with **LaTeX theory notes** and optional **Wolfram Mathematica** scripts for symbolic verification.
+A 10-module tutorial series teaching computational strong lens modeling from first principles through publication-ready results, with a dedicated cluster-computing module (Mod 10) showing how to run the heavy searches on Harvard FASRC Cannon. Each module pairs detailed **Jupyter notebooks** (with thorough physics commentary) with **LaTeX theory notes** and optional **Wolfram Mathematica** scripts for symbolic verification.
 
 This project is a companion to [Learning to Lens](https://github.com/rodelcr/Learning_to_Lens) (GR & lensing theory in Mathematica), but is fully self-contained — all necessary theory is developed inline with references to the primary literature.
 
-> **Alpha build (v0.91)** — April 2026. Modules 01–09 complete. Run `python check_install.py` before starting. Feedback welcome at rodrigo.cordova_rosado@cfa.harvard.edu.
+> **Alpha build (v0.92)** — April 2026. Modules 01–10 complete; cluster runs for Mods 04/05/09 pending. Run `python check_install.py` before starting. Feedback welcome at rodrigo.cordova_rosado@cfa.harvard.edu.
 
 ---
 
@@ -99,7 +99,17 @@ Symbolic derivation scripts in `Mathematica/` require Mathematica 13.0+ or Wolfr
 | 07 | [Real Data: FITS to Model](Modules/07_Real_Data_FITS_to_Model/) | Data preparation, masking, PSF handling, noise maps, AGEL survey examples | < 5 min |
 | 08 | [Results, Diagnostics & Figures](Modules/08_Results_Diagnostics_Figures/) | Corner plots, residual analysis, Einstein mass, publication figures, Bayes factors | < 5 min |
 
-> **Runtimes** are approximate for a laptop with 8+ cores. Modules with non-linear searches (03–06, 09) take longer on first run; results are cached for subsequent runs.
+### Part V: Production at Scale
+
+| # | Module | What You'll Learn | Runtime |
+|---|--------|-------------------|---------|
+| 10 | [Cluster Computing on Cannon](Modules/10_Cluster_Computing/) | Converting notebooks to Slurm jobs, Nautilus checkpoint resume, rsync patterns, `export_results.py` for git-trackable artifacts, FASRC-specific filesystem and partition guidance | reading ~30 min; end-to-end cluster run ~5–12 h |
+
+> **Runtimes** are approximate for a laptop with 8+ cores. Modules with non-linear searches (03–06, 09) take longer on first run; results are cached for subsequent runs. **Modules 04, 05, 09** have ready-made cluster drop-ins (`Modules/10_Cluster_Computing/scripts/fit_module{04,05,09}.py`) if your laptop can't keep up.
+
+### Viewing pre-computed results without running anything
+
+Every module that requires a non-trivial fit publishes its finished results under `Modules/XX_*/results/` as small PDFs and JSON files (fit subplot, corner plot, `info.txt`, `summary.json`). These are committed to the repo and can be viewed directly — no cluster account, no multi-hour wait. See Module 10 §8 (Results Viewer) for the pattern and loader snippet.
 
 ---
 
@@ -116,7 +126,9 @@ Learning_to_Autolens/
 │   ├── 06_Multi_Component_Mass_Models/
 │   ├── 07_Real_Data_FITS_to_Model/
 │   ├── 08_Results_Diagnostics_Figures/
-│   └── 09_MGE_Linear_Light_Profiles/
+│   ├── 09_MGE_Linear_Light_Profiles/
+│   └── 10_Cluster_Computing/             # Slurm jobs + rsync + export_results
+│       └── scripts/                      # fit_module{04,05,09}.py, submit_cannon.slurm, ...
 ├── Solutions/                            # Solved exercise notebooks
 ├── Notes/                                # LaTeX theory companions (one per module)
 │   ├── preamble.tex                      # Shared macros & environments

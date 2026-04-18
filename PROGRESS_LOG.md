@@ -156,3 +156,67 @@ Goal: rewrite the tutorial suite to run end-to-end against PyAutoLens **2026.2.2
 
 - **Machine-sleep gotcha**: laptop auto-sleep stalled all runs for ~2 h around 19:00–21:00. Fix: `caffeinate -dims -w <kernel_pid>` tied to each Python kernel PID — exits automatically when the kernel dies. All six current runs have caffeinate guards active.
 - 16-core / 48 GB machine, load avg ~5 with 6 nbconvert kernels; headroom OK.
+
+---
+
+## 2026-04-18 — Module 10 (Cluster Computing) + retreat from local runs
+
+### The tipping point
+After ~11 h of parallel local runs (Mod 05, Mod 09, Sol 09), the MacBook hit:
+- Load average **390** on a 12-core machine (healthy ~12)
+- **0.24% idle**; 62% user + 37% sys
+- **47/48 GB RAM in use**, active swap thrashing (17M swapouts cumulative)
+- Each Python kernel pegging 400–500% CPU (~5 cores)
+
+Decision: kill all three, preserve Nautilus checkpoints, move the remaining compute to the Cannon cluster.
+
+### Module 10: Cluster Computing
+New tutorial module (`Modules/10_Cluster_Computing/`) — the cluster bridge for every prior module. Three-part pattern plus a post-processor.
+
+**Scripts shipped** (`scripts/`):
+- `fit_module04.py` — Mod 04 as CLI-driven standalone (two-search chain + 5-stage SLaM)
+- `fit_module05.py` — Mod 05 (parametric + pixelized) with `SafeAnalysisImaging` inline
+- `fit_module09.py` — Mod 09 full MGE SLaM pipeline (SOURCE LP → SOURCE PIX × 2 → LIGHT LP → MASS TOTAL/PowerLaw)
+- `submit_cannon.slurm` — generic SBATCH, dispatches on `MODULE` env var (`sbatch --export=ALL,MODULE=05 ...`)
+- `export_results.py` — walks Nautilus output; writes `fit_subplot.pdf`, `corner.pdf`, `info.txt`, `summary.json`, `samples.csv` per search into `Modules/XX/results/`
+- `push_to_cannon.sh` / `pull_from_cannon.sh` — rsync wrappers, dry-run by default; push includes `autolens_workspace_latest/dataset/` for Mod 09
+
+All fit scripts:
+- Bump `n_live` over notebook defaults (75 → 100+) to avoid the `LinAlgError: Matrix is not positive definite` Nautilus crash we hit in Sol 04
+- Write `flush=True` on every print so Slurm stdout is live-tailable
+- Read `number_of_cores` from `$SLURM_CPUS_PER_TASK`
+- Nautilus `checkpoint.hdf5` auto-resumes → re-submitting after a timeout picks up where it left off
+
+### The "results viewer" pattern
+Raw Nautilus output is 100–500 MB per search — not git-trackable. But new users shouldn't need a cluster account to see finished results. `export_results.py` solves this: after every cluster run, it writes ~5 MB of PDFs/JSON per module into `Modules/XX/results/`. **These are committed to git.** Any module notebook can display them with a small loader cell that reads `results/<search>/{fit_subplot.pdf, corner.pdf, summary.json}` — no PyAutoFit machinery required.
+
+### Preserved local checkpoints (all pushed to Cannon via rsync for resume)
+
+| Path | Size | State at kill |
+|------|------|---------------|
+| `Modules/04_.../output/.../search_2_sie_nolenslight/checkpoint.hdf5` | 96 MB | 203 bounds, stuck |
+| `Modules/05_.../output/.../search2_pixelized_source/checkpoint.hdf5` | 1.9 MB | early |
+| `Modules/09_.../output/.../search1_mge_lens_sersic_source/checkpoint.hdf5` | 33 MB | ~30% |
+| `Solutions/output/.../search_1_sis_nolenslight/checkpoint.hdf5` | 58 MB | LinAlgError crash |
+| `Solutions/output/.../search1_mge_lens_sersic_source/checkpoint.hdf5` | 30 MB | ~30% |
+
+### Cluster submission plan
+```bash
+./Modules/10_Cluster_Computing/scripts/push_to_cannon.sh --go
+ssh cannon "cd learning_to_autolens && \
+    sbatch --export=ALL,MODULE=04 --job-name=mod04 \
+           Modules/10_Cluster_Computing/scripts/submit_cannon.slurm"
+# (and MODULE=05, MODULE=09 in parallel)
+./Modules/10_Cluster_Computing/scripts/pull_from_cannon.sh --go
+git add Modules/0{4,5,9}_*/results/
+```
+
+Expected wall times on `shared` partition / 16 cores / 32 GB:
+- Mod 04: ~5.5 h (resume benefit large — search_2 was 15 h stuck locally)
+- Mod 05: ~3 h
+- Mod 09: ~8–12 h (5 stages including PowerLaw MASS TOTAL)
+
+### Status after today
+- All prior modules committed and real-mode validated through Solutions 01–08 (Sol 04 placeholder still from test mode — will be replaced with cluster result).
+- Mod 09 / Sol 09 have test-mode placeholder outputs; cluster run will replace them.
+- Local repo is quiet. Laptop back to normal usage (66% idle, 13 GB RAM).

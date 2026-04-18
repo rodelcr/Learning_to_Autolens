@@ -1,36 +1,53 @@
 #!/bin/bash
-#SBATCH --job-name=autolens_mod04
+#SBATCH --job-name=autolens
 #SBATCH --partition=shared
 #SBATCH --time=24:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=16
 #SBATCH --mem=32G
-#SBATCH --output=logs/mod04_%j.out
-#SBATCH --error=logs/mod04_%j.err
+#SBATCH --output=logs/%x_%j.out
+#SBATCH --error=logs/%x_%j.err
 #SBATCH --mail-type=BEGIN,END,FAIL
 #SBATCH --mail-user=rodrigo.cordova_rosado@cfa.harvard.edu
 
 # =============================================================================
-# Cannon submission script for Module 04 (search chaining + SLaM).
+# Generic Cannon submit for any Learning_to_Autolens module.
 #
-# Nautilus checkpoints survive job requeues: if the previous job hit the time
-# limit, resubmitting this script picks up from the last `checkpoint.hdf5`
-# written by Nautilus. No special flag needed.
+# Pick the module to run via the MODULE env var at submit time:
 #
-# Edit the path variables below to match your Cannon layout.
+#   sbatch --export=ALL,MODULE=04 submit_cannon.slurm
+#   sbatch --export=ALL,MODULE=05 submit_cannon.slurm
+#   sbatch --export=ALL,MODULE=09 submit_cannon.slurm --mem=64G --time=48:00:00
+#
+# Nautilus checkpoints survive requeues — resubmitting the same command
+# automatically resumes from the last `checkpoint.hdf5`.
 # =============================================================================
 
 set -euo pipefail
 
-# ---- Paths (EDIT THESE) -----------------------------------------------------
-REPO_ROOT="${HOME}/learning_to_autolens"
-DATASET_ROOT="${REPO_ROOT}/autolens_workspace_original/dataset/imaging"
-OUTPUT_ROOT="${SCRATCH:-$HOME/scratch}/learning_to_autolens/output"
-CONDA_ENV="autolens"
+MODULE="${MODULE:-04}"
+
+# ---- Paths (EDIT for your Cannon account) -----------------------------------
+REPO_ROOT="${REPO_ROOT:-${HOME}/learning_to_autolens}"
+OUTPUT_ROOT="${OUTPUT_ROOT:-${SCRATCH:-$HOME/scratch}/learning_to_autolens/output}"
+CONDA_ENV="${CONDA_ENV:-autolens}"
+
+# Dataset root differs by module:
+#   04, 05 → autolens_workspace_original
+#   09     → autolens_workspace_latest
+case "${MODULE}" in
+    04|05) DATASET_ROOT="${REPO_ROOT}/autolens_workspace_original/dataset/imaging" ;;
+    09)    DATASET_ROOT="${REPO_ROOT}/autolens_workspace_latest/dataset/imaging"  ;;
+    *)     echo "unknown MODULE=${MODULE}"; exit 2 ;;
+esac
+
+FIT_SCRIPT="${REPO_ROOT}/Modules/10_Cluster_Computing/scripts/fit_module${MODULE}.py"
+if [[ ! -f "${FIT_SCRIPT}" ]]; then
+    echo "fit script not found: ${FIT_SCRIPT}"; exit 2
+fi
 
 # ---- Environment ------------------------------------------------------------
-# FASRC Cannon uses `module load`; Anaconda is available at /n/sw/helmod-rocky8/
 module purge
 module load python/3.11.8-fasrc01
 module load Anaconda3/2024.06-fasrc01 || module load python
@@ -39,26 +56,41 @@ source activate "${CONDA_ENV}"
 mkdir -p logs "${OUTPUT_ROOT}"
 
 # ---- Diagnostics ------------------------------------------------------------
+echo "====================================================================="
+echo "Module:        ${MODULE}"
 echo "Job ID:        ${SLURM_JOB_ID}"
+echo "Job name:      ${SLURM_JOB_NAME}"
 echo "Node:          $(hostname)"
 echo "Start time:    $(date -Is)"
 echo "CPUs per task: ${SLURM_CPUS_PER_TASK}"
+echo "Mem:           ${SLURM_MEM_PER_NODE:-?} MB"
 echo "Repo root:     ${REPO_ROOT}"
 echo "Dataset root:  ${DATASET_ROOT}"
 echo "Output root:   ${OUTPUT_ROOT}"
+echo "Fit script:    ${FIT_SCRIPT}"
 python -c "import autolens as al, autofit as af; \
            print('PyAutoLens', al.__version__, 'PyAutoFit', af.__version__)"
+echo "====================================================================="
 
 # ---- Run --------------------------------------------------------------------
 cd "${REPO_ROOT}"
 
-srun python "${REPO_ROOT}/Modules/10_Cluster_Computing/scripts/fit_module04.py" \
-    --part all \
+srun python "${FIT_SCRIPT}" \
     --repo-root    "${REPO_ROOT}" \
     --dataset-root "${DATASET_ROOT}" \
-    --output-root  "${OUTPUT_ROOT}" \
-    --n-live-s1    100 \
-    --n-live-s2    150 \
-    --slam-n-live  100
+    --output-root  "${OUTPUT_ROOT}"
 
 echo "End time: $(date -Is)"
+
+# ---- Post-process: export lightweight artifacts -----------------------------
+# Produces Modules/${MODULE}_.../results/<search>/{fit_subplot.pdf, corner.pdf,
+#   info.txt, summary.json, samples.csv}
+# These are small and git-trackable, so a user can view finished results
+# without needing the full Nautilus output tree.
+echo "Exporting lightweight result artifacts..."
+python "${REPO_ROOT}/Modules/10_Cluster_Computing/scripts/export_results.py" \
+    --output-root "${OUTPUT_ROOT}/module_${MODULE}" \
+    --module      "${MODULE}" \
+    --repo-root   "${REPO_ROOT}" || echo "(export_results.py failed — see above)"
+
+echo "All done: $(date -Is)"

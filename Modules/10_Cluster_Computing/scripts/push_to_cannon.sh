@@ -1,13 +1,14 @@
 #!/usr/bin/env bash
-# push_to_cannon.sh — sync the local repo (code + datasets + checkpoints) to
-# Cannon, skipping caches, editor cruft, and the huge vendored workspaces we
-# don't need on the cluster.
+# push_to_cannon.sh — sync the local repo (code + datasets + preserved
+# Nautilus checkpoints) to Cannon.
 #
 # Usage:
 #   ./push_to_cannon.sh                     # dry run
 #   ./push_to_cannon.sh --go                # actual transfer
 #
-# Edit CANNON_USER, CANNON_HOST, and CANNON_DEST for your account.
+# Override the Cannon target via env vars:
+#   CANNON_USER=rcordovarosado CANNON_HOST=login.rc.fas.harvard.edu \
+#     ./push_to_cannon.sh --go
 
 set -euo pipefail
 
@@ -22,18 +23,21 @@ if [[ "${1:-}" == "--go" ]]; then
     DRY_FLAG=""
 fi
 
-# Include everything that's in the repo tree, EXCEPT:
-#   - pycache/editor/os metadata
-#   - .git                               (keep cluster copy decoupled from local git)
-#   - .claude/                           (session artifacts)
-#   - autolens_workspace_latest/         (big vendored workspace; copy separately if needed)
-#   - .ipynb_checkpoints/
+# -----------------------------------------------------------------------------
+# Included on purpose:
+#   Modules/                                            all module code + notebooks
+#   Solutions/                                          (small; cheap to mirror)
+#   slam_v2026.py                                       Mod 04 imports this
+#   autolens_workspace_original/dataset/imaging/        Mods 04/05 datasets (few MB)
+#   autolens_workspace_latest/dataset/imaging/          Mod 09 dataset
+#   Modules/**/output/**/checkpoint.hdf5                lets Nautilus resume
 #
-# We INTENTIONALLY include:
-#   - autolens_workspace_original/dataset/  (small FITS; needed for fit)
-#   - slam_v2026.py                         (Module 04 imports this)
-#   - Modules/04_.../output/                (preserved checkpoint.hdf5 — enables resume)
-#   - Modules/10_Cluster_Computing/         (scripts themselves)
+# Excluded (saves bandwidth + keeps the cluster copy clean):
+#   .git/ .claude/ __pycache__/ *.pyc .DS_Store .ipynb_checkpoints/
+#   *.egg-info/ .venv/
+#   Output/                                             cluster writes to $SCRATCH instead
+#   autolens_workspace_latest/scripts, notebooks, config  (only need dataset/)
+# -----------------------------------------------------------------------------
 
 rsync -avh --progress ${DRY_FLAG} \
     --exclude='.git/' \
@@ -44,12 +48,20 @@ rsync -avh --progress ${DRY_FLAG} \
     --exclude='.ipynb_checkpoints/' \
     --exclude='*.egg-info/' \
     --exclude='.venv/' \
-    --exclude='autolens_workspace_latest/' \
     --exclude='Output/' \
+    --include='autolens_workspace_latest/' \
+    --include='autolens_workspace_latest/dataset/***' \
+    --exclude='autolens_workspace_latest/*' \
     "${LOCAL_ROOT}/" \
     "${CANNON_USER}@${CANNON_HOST}:~/${CANNON_DEST}/"
 
 if [[ -n "${DRY_FLAG}" ]]; then
     echo
     echo "This was a DRY RUN. Re-run with --go to actually transfer."
+else
+    echo
+    echo "Next: submit a job."
+    echo "  ssh ${CANNON_USER}@${CANNON_HOST}"
+    echo "  cd ${CANNON_DEST}"
+    echo "  sbatch --export=ALL,MODULE=04 --job-name=mod04 Modules/10_Cluster_Computing/scripts/submit_cannon.slurm"
 fi
