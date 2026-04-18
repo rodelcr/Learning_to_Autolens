@@ -35,7 +35,8 @@ Thumbs.db
 *~
 
 # --- Claude Code ---
-.claude/
+.claude/*
+!.claude/skills/
 .claude/settings.local.json
 
 # --- Sandboxed reference workspaces (large; pinned via pip install) ---
