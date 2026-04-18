@@ -132,3 +132,27 @@ Goal: rewrite the tutorial suite to run end-to-end against PyAutoLens **2026.2.2
 
 ### Repo hygiene
 - `.gitignore`: exclude `autolens_workspace_latest/` (300 MB pip-install reference copy), local `check_install.py`, and `Modules/**/*_debug.py` scratch scripts
+
+### Regression caught: test-mode outputs overwrote real fits
+- Commit `8fe3ddd` re-ran every notebook under `PYAUTOFIT_TEST_MODE=1` — this skips Nautilus sampling and returns a single prior draw, so the embedded figures in Solutions 03–09 (and the matching Modules) became nonsense: residuals at +25σ, sources outside the caustic, χ² ≈ 300
+- Also discovered that autofit writes a `.completed` cache marker in `output/output/.../` — subsequent real-mode runs short-circuit to the cached 1-sample result. **Fix: `rm -rf <module_output_dir>` before each real-mode rerun.**
+
+**Real-mode rerun progress (2026-04-17):**
+
+| Notebook | Status | Max LL | Notes |
+|---|---|---|---|
+| Modules/03 | committed `6b1c56a` | +6516 | θ_E=1.60", χ²_pp≈33 |
+| Solutions/03 | committed `6b1c56a` | +6516 | θ_E=1.60", source inside caustic |
+| Modules/06 | committed `6b1c56a` | +5978 | |
+| Solutions/06 | committed `6b1c56a` | +5949 | |
+| Modules/07 | committed `6b1c56a` | n/a | no heavy fits |
+| Solutions/07 | committed `6b1c56a` | n/a | no heavy fits |
+| Modules/04 | running (5-stage SLaM) | — | search 2/5 active, ~5 h CPU in |
+| Solutions/04 | running (5-stage SLaM) | — | search 1/5 active (n_live=75 heavier than Mod 04) |
+| Modules/05 | running (2-search) | — | launched 2026-04-17 23:05 |
+| Solutions/05 | running (2-search) | — | launched 2026-04-17 23:05 |
+| Modules/09 | running (MGE SLaM) | — | launched 2026-04-17 23:05 |
+| Solutions/09 | running (MGE SLaM) | — | launched 2026-04-17 23:05 |
+
+- **Machine-sleep gotcha**: laptop auto-sleep stalled all runs for ~2 h around 19:00–21:00. Fix: `caffeinate -dims -w <kernel_pid>` tied to each Python kernel PID — exits automatically when the kernel dies. All six current runs have caffeinate guards active.
+- 16-core / 48 GB machine, load avg ~5 with 6 nbconvert kernels; headroom OK.
