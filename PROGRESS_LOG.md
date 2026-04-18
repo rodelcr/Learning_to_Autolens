@@ -148,7 +148,7 @@ Goal: rewrite the tutorial suite to run end-to-end against PyAutoLens **2026.2.2
 | Modules/07 | committed `6b1c56a` | n/a | no heavy fits |
 | Solutions/07 | committed `6b1c56a` | n/a | no heavy fits |
 | Modules/04 | running (5-stage SLaM) | — | search 2/5 active, ~5 h CPU in |
-| Solutions/04 | running (5-stage SLaM) | — | search 1/5 active (n_live=75 heavier than Mod 04) |
+| Solutions/04 | **crashed** (LinAlgError) | — | `numpy.linalg.cholesky` failed on Nautilus neural-bound covariance after ~7 h on search_1 (n_live=75 → numerically singular). Notebook not overwritten; still holds test-mode placeholder outputs. TODO: bump n_live → 100 or add retry logic. |
 | Modules/05 | running (2-search) | — | launched 2026-04-17 23:05 |
 | Solutions/05 | running (2-search) | — | launched 2026-04-17 23:05 |
 | Modules/09 | running (MGE SLaM) | — | launched 2026-04-17 23:05 |
