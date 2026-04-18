@@ -29,14 +29,13 @@ set -euo pipefail
 
 MODULE="${MODULE:-04}"
 
-# ---- Paths (EDIT for your Cannon account) -----------------------------------
+# ---- Paths -----------------------------------------------------------------
 # On Cannon, $HOME = /n/home02/<user>/ (small quota — code only).
-# Compute is billed to --account=siag_lab (fast scheduling), but heavy output
-# is written to the Hernquist lab storage on holystore02. If the path below
-# doesn't exist on your first run, check `ls /n/holystore02/LABS/hernquist_lab/`
-# to confirm the exact layout and override OUTPUT_ROOT at submit time.
-REPO_ROOT="${REPO_ROOT:-${HOME}/learning_to_autolens}"
-OUTPUT_ROOT="${OUTPUT_ROOT:-/n/holystore02/LABS/hernquist_lab/Users/${USER}/learning_to_autolens/output}"
+# Compute is billed to --account=siag_lab (fast scheduling), but the repo lives
+# under Hernquist lab storage on holystore01, and output goes there too.
+# Directory layout confirmed: /n/holystore01/LABS/hernquist_lab/Lab/<user>/...
+REPO_ROOT="${REPO_ROOT:-/n/holystore01/LABS/hernquist_lab/Lab/${USER}/learning_to_autolens}"
+OUTPUT_ROOT="${OUTPUT_ROOT:-/n/holystore01/LABS/hernquist_lab/Lab/${USER}/learning_to_autolens/output}"
 CONDA_ENV="${CONDA_ENV:-autolens}"
 
 # Dataset root differs by module:
