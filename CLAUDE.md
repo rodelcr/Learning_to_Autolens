@@ -118,4 +118,4 @@ These tutorials draw from the following texts (referenced by abbreviation):
 - **Progress log:** Update `PROGRESS_LOG.md` after completing significant work.
 - **Self-contained:** Each module must be runnable independently — do not require the user to have completed prior modules (though they build conceptually).
 - **Theory first, code second:** Every code block should be preceded by a markdown cell explaining the physics.
-- **Reference the original:** The `autolens_workspace_original/` directory preserves the unmodified PyAutoLens workspace for reference. Our modules in `Modules/` are the educational layer built on top.
+- **Reference the original:** The `autolens_workspace_original/` directory preserves the PyAutoLens workspace for reference. Our modules in `Modules/` are the educational layer built on top. **Local compatibility patch (2026-04-18):** `autolens_workspace_original/slam/__init__.py` wraps `from . import subhalo` in `try/except AttributeError` because `subhalo/sensitivity_imaging_pix.py` references `al.AdaptImageMaker`, which was removed in autolens 2026.x. Revert this once upstream restores the class or the file stops referencing it.

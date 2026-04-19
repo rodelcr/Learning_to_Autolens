@@ -220,3 +220,75 @@ Expected wall times on `shared` partition / 16 cores / 32 GB:
 - All prior modules committed and real-mode validated through Solutions 01–08 (Sol 04 placeholder still from test mode — will be replaced with cluster result).
 - Mod 09 / Sol 09 have test-mode placeholder outputs; cluster run will replace them.
 - Local repo is quiet. Laptop back to normal usage (66% idle, 13 GB RAM).
+
+---
+
+## 2026-04-18 — Cannon: autolens upgrade + fictional-API cleanup
+
+### Context
+First Cannon-side session in this repo. Cloned to
+`/n/holystore01/LABS/hernquist_lab/Lab/rcordova/learning_to_autolens`.
+Initial Cannon submissions exposed that the cluster scripts and several
+module/Solutions notebooks referenced classes that **do not exist in any
+released PyAutoLens** (verified against installed 2026.2.26.4 and a GitHub
+code search): `al.mesh.RectangularAdaptDensity`, `al.mesh.RectangularAdaptImage`,
+`al.reg.Adapt`, `al.reg.AdaptSplit`, `al.AdaptImageMaker`. The local
+`slam_v2026.py` helper was built around these fictional names; its own
+header claimed `AdaptiveBrightnessSplit` had been "renamed in v2026" — it
+hadn't.
+
+### What changed (commits on `main`, all pushed)
+1. `autolens` + `autoarray`/`autofit`/`autogalaxy`/`autoconf` upgraded in-place
+   on Cannon from 2025.11.29.3 → 2026.2.26.4 (numpy pinned to 1.26.4 by
+   autolens's deps).
+2. `slam_v2026.py` → `slam_v2026.broken.py` (paper trail; nothing imports it).
+3. `fit_module04.py` now imports SLaM from `autolens_workspace_original/slam/`
+   (the canonical workspace implementation) instead of the fictional shim.
+4. `autolens_workspace_original/slam/__init__.py` — one defensive `try/except`
+   around `from . import subhalo`, since `subhalo/sensitivity_imaging_pix.py`
+   references the removed `al.AdaptImageMaker`. See CLAUDE.md note.
+5. `fit_module05.py` + `fit_module09.py` — swapped fictional classes for the
+   real 2026.x API:
+   - `RectangularAdaptDensity(shape=(N,N))` → `af.Model(al.Pixelization,
+     image_mesh=al.image_mesh.Overlay(shape=(N,N)), mesh=al.mesh.Delaunay(),
+     regularization=al.reg.AdaptiveBrightnessSplit)`
+   - `RectangularAdaptImage(shape=(N,N))` → same with `image_mesh.Hilbert(pixels=1000)`
+   - `al.reg.Adapt` → `al.reg.AdaptiveBrightnessSplit`
+6. Module 04/05/09/10 notebooks + Solutions 04/05/09 — same cleanup in source
+   cells. Stored cell outputs left as historical record; will regenerate on
+   rerun.
+7. Module 05 notebooks — direct `al.Pixelization(...)` calls (cells 7/10/12
+   plus equivalent Solutions cells) use `al.mesh.RectangularMagnification`,
+   because `al.Pixelization.__init__` only accepts `(mesh, regularization)`
+   — the `image_mesh` kwarg works only via `af.Model(al.Pixelization, ...)`.
+8. `.gitignore` now ignores `logs/`.
+
+### Current cluster state
+Three jobs queued (pushed commit `5597493`):
+
+| JobID | Module | Resources |
+|-------|--------|-----------|
+| 6546267 | 04 | 32 G / 24 h |
+| 6546268 | 05 | 32 G / 24 h |
+| 6546269 | 09 | 64 G / 48 h |
+
+### TODO once all three jobs finish
+1. **Audit the three runs.** For each:
+   - Check `logs/autolens_<jobid>.err` is empty (or warnings only).
+   - Confirm the pipeline reached its final stage (Module 04: `mass_total`
+     done; Module 05: `search2_pixelized_source` done; Module 09: `mass_total[1]`
+     done). `grep "done in" logs/autolens_<jobid>.out` gives stage timings.
+   - Sanity-check best-fit θ_E against the notebook's reported value. For
+     simple/simple__no_lens_light this should be ~1.6″.
+2. **Commit the results.** Pull output back via `scripts/pull_from_cannon.sh`
+   on the laptop, then `git add Modules/0{4,5,9}_*/results/` and commit.
+   Any `output/` dirs inside the module tree remain git-ignored (that's
+   intentional — only the curated `results/` artifacts are tracked).
+3. **If any stage still crashes:** very likely another fictional-API pocket
+   I missed. Grep the traceback's class name against GitHub code search
+   (`https://github.com/search?q=<ClassName>&type=code`) to confirm, then
+   patch to the real equivalent from `autolens_workspace_original/slam/`.
+4. **Optional cleanup once green:** delete `slam_v2026.broken.py` (the paper
+   trail has served its purpose in the commit history). Also clear stale
+   cell outputs in the notebooks via `jupyter nbconvert --clear-output`
+   once collaborators have seen them.
