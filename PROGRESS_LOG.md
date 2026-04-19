@@ -284,7 +284,7 @@ sbatch --mem=64G --time=48:00:00 --export=ALL,MODULE=09 Modules/10_Cluster_Compu
 | 6571566 | 09 | 2026-04-18 22:45 | 64 G / 48 h | Running |
 | 6572024 | 04 | 2026-04-18 23:14 | 32 G / 24 h | **FAILED** at 80 min — missing `positions_likelihood_list` in slam_v2026 |
 | 6584132 | 04 | 2026-04-19 00:37 | 32 G / 24 h | **COMPLETED** 01:26 (48 min wall) |
-| 6584987 | 09 | 2026-04-19 00:42 | 64 G / 48 h | Resumed from Stage 2 checkpoint; running |
+| 6584987 | 09 | 2026-04-19 00:42 | 64 G / 48 h | **COMPLETED** 01:53 (70 min wall) |
 
 Mod 09 (6571566) confirmed Stage 1 θ_E = 1.601″ before the Stage-3
 crash — matches the expected value. Stage 1 ran in 50.4 min, Stage 2
@@ -305,6 +305,21 @@ stages and resume at Stage 3 with the patched `fit_module09.py`.
 | **Total** | **0.80 h (48 min)** | mostly fresh runs from run_2 onward |
 
 stderr had only benign `autofit.SearchWarning`s.
+
+### Mod 09 stage timings (6584987, final run)
+
+| Stage | Wall time | Notes |
+|-------|-----------|-------|
+| Stage 1 SOURCE LP | 0.1 min | checkpointed, finalize only; θ_E = 1.601″ |
+| Stage 2 SOURCE PIX 1 | ~0 min | checkpointed, finalize only |
+| Stage 3 SOURCE PIX 2 | 8.4 min | fresh (this was the crash site) |
+| Stage 4 LIGHT LP | 17.4 min | fresh |
+| Stage 5 MASS TOTAL (PowerLaw) | 43.5 min | fresh; final power-law mass model |
+| **Total** | **1.16 h (70 min)** | from Stage 3 onward fresh |
+
+Combined with the prior 6571566 attempt (Stages 1+2, 89 min), total
+Mod 09 compute was ~2h39min across two jobs. stderr had only benign
+`autofit.SearchWarning`s.
 
 **Mod 04 second attempt (6572024) — what happened.** Cleared Search 1,
 Search 2, SLaM SOURCE LP, and SLaM SOURCE PIX run_1 successfully, then
