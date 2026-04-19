@@ -223,72 +223,77 @@ Expected wall times on `shared` partition / 16 cores / 32 GB:
 
 ---
 
-## 2026-04-18 — Cannon: autolens upgrade + fictional-API cleanup
+## 2026-04-18 — Cannon: env upgrade to autolens 2026.4 (Python 3.12)
 
 ### Context
 First Cannon-side session in this repo. Cloned to
 `/n/holystore01/LABS/hernquist_lab/Lab/rcordova/learning_to_autolens`.
-Initial Cannon submissions exposed that the cluster scripts and several
-module/Solutions notebooks referenced classes that **do not exist in any
-released PyAutoLens** (verified against installed 2026.2.26.4 and a GitHub
-code search): `al.mesh.RectangularAdaptDensity`, `al.mesh.RectangularAdaptImage`,
-`al.reg.Adapt`, `al.reg.AdaptSplit`, `al.AdaptImageMaker`. The local
-`slam_v2026.py` helper was built around these fictional names; its own
-header claimed `AdaptiveBrightnessSplit` had been "renamed in v2026" — it
-hadn't.
 
-### What changed (commits on `main`, all pushed)
-1. `autolens` + `autoarray`/`autofit`/`autogalaxy`/`autoconf` upgraded in-place
-   on Cannon from 2025.11.29.3 → 2026.2.26.4 (numpy pinned to 1.26.4 by
-   autolens's deps).
-2. `slam_v2026.py` → `slam_v2026.broken.py` (paper trail; nothing imports it).
-3. `fit_module04.py` now imports SLaM from `autolens_workspace_original/slam/`
-   (the canonical workspace implementation) instead of the fictional shim.
-4. `autolens_workspace_original/slam/__init__.py` — one defensive `try/except`
-   around `from . import subhalo`, since `subhalo/sensitivity_imaging_pix.py`
-   references the removed `al.AdaptImageMaker`. See CLAUDE.md note.
-5. `fit_module05.py` + `fit_module09.py` — swapped fictional classes for the
-   real 2026.x API:
-   - `RectangularAdaptDensity(shape=(N,N))` → `af.Model(al.Pixelization,
-     image_mesh=al.image_mesh.Overlay(shape=(N,N)), mesh=al.mesh.Delaunay(),
-     regularization=al.reg.AdaptiveBrightnessSplit)`
-   - `RectangularAdaptImage(shape=(N,N))` → same with `image_mesh.Hilbert(pixels=1000)`
-   - `al.reg.Adapt` → `al.reg.AdaptiveBrightnessSplit`
-6. Module 04/05/09/10 notebooks + Solutions 04/05/09 — same cleanup in source
-   cells. Stored cell outputs left as historical record; will regenerate on
-   rerun.
-7. Module 05 notebooks — direct `al.Pixelization(...)` calls (cells 7/10/12
-   plus equivalent Solutions cells) use `al.mesh.RectangularMagnification`,
-   because `al.Pixelization.__init__` only accepts `(mesh, regularization)`
-   — the `image_mesh` kwarg works only via `af.Model(al.Pixelization, ...)`.
-8. `.gitignore` now ignores `logs/`.
+Initial Cannon submissions failed with `AttributeError: module 'autolens' has
+no attribute 'RectangularAdaptDensity'` (and friends). I **mis-diagnosed**
+this as the scripts referencing fictional classes and spent ~10 commits
+substituting them for v2026.2 equivalents. **All of those were wrong** and
+have been reverted (see commits `4528c0e..9562693`).
 
-### Current cluster state
-Three jobs queued (pushed commit `5597493`):
+The actual root cause: the Cannon env had `autolens==2026.2.26.4`, but the
+scripts and `slam_v2026.py` helper were correctly written against
+`autolens==2026.4.13.6` (released April 2026, **requires Python ≥3.12**).
+The cluster env was Python 3.11, which capped pip at 2026.2.26.4 — one
+minor version too old to have the `RectangularAdapt*` / `reg.Adapt`
+classes.
 
-| JobID | Module | Resources |
-|-------|--------|-----------|
-| 6546267 | 04 | 32 G / 24 h |
-| 6546268 | 05 | 32 G / 24 h |
-| 6546269 | 09 | 64 G / 48 h |
+### What actually changed (kept on `main`)
+1. **New conda env `autolens312`** built on Cannon with Python 3.12 + the
+   latest autolens 2026.4.13.6. Build pattern:
+
+   ```bash
+   source /n/sw/Miniforge3-25.3.1-0/etc/profile.d/conda.sh
+   conda create -n autolens312 python=3.12 -y
+   conda activate autolens312
+   python -m pip install --upgrade pip          # IMPORTANT: `python -m pip`,
+   python -m pip install autolens jupyterlab \   # not bare `pip` — see below
+       astropy "matplotlib<3.9" corner numba
+   ```
+
+   **Tricky part:** `~/.local/bin/pip` (a stray Python 3.10 user-pip) shadows
+   the env's pip in PATH. Bare `pip install autolens` silently installs into
+   `~/.local/lib/python3.10/site-packages/` instead of the active conda env.
+   Always use `python -m pip` to bind to the active interpreter.
+
+2. **`submit_cannon.slurm` default env** flipped from `autolens` → `autolens312`.
+
+3. **`.gitignore`** now ignores `logs/` (slurm job stdout/stderr).
+
+### Cluster jobs to resubmit
+After this entry, resubmit Modules 04, 05, 09 against the new env. The
+existing checkpoint dirs (`Modules/0{4,5,9}_*/output/`) are already on
+Cannon and Nautilus will resume from them automatically.
+
+```bash
+sbatch --export=ALL,MODULE=04 Modules/10_Cluster_Computing/scripts/submit_cannon.slurm
+sbatch --export=ALL,MODULE=05 Modules/10_Cluster_Computing/scripts/submit_cannon.slurm
+sbatch --mem=64G --time=48:00:00 --export=ALL,MODULE=09 Modules/10_Cluster_Computing/scripts/submit_cannon.slurm
+```
 
 ### TODO once all three jobs finish
-1. **Audit the three runs.** For each:
-   - Check `logs/autolens_<jobid>.err` is empty (or warnings only).
-   - Confirm the pipeline reached its final stage (Module 04: `mass_total`
-     done; Module 05: `search2_pixelized_source` done; Module 09: `mass_total[1]`
-     done). `grep "done in" logs/autolens_<jobid>.out` gives stage timings.
-   - Sanity-check best-fit θ_E against the notebook's reported value. For
-     simple/simple__no_lens_light this should be ~1.6″.
-2. **Commit the results.** Pull output back via `scripts/pull_from_cannon.sh`
-   on the laptop, then `git add Modules/0{4,5,9}_*/results/` and commit.
-   Any `output/` dirs inside the module tree remain git-ignored (that's
-   intentional — only the curated `results/` artifacts are tracked).
-3. **If any stage still crashes:** very likely another fictional-API pocket
-   I missed. Grep the traceback's class name against GitHub code search
-   (`https://github.com/search?q=<ClassName>&type=code`) to confirm, then
-   patch to the real equivalent from `autolens_workspace_original/slam/`.
-4. **Optional cleanup once green:** delete `slam_v2026.broken.py` (the paper
-   trail has served its purpose in the commit history). Also clear stale
-   cell outputs in the notebooks via `jupyter nbconvert --clear-output`
-   once collaborators have seen them.
+1. **Audit each run.** Confirm `logs/autolens_<jobid>.err` is empty/warnings
+   only, and that the pipeline reached its final stage (`grep "done in"
+   logs/autolens_<jobid>.out`). Sanity-check best-fit θ_E ≈ 1.6″ for
+   simple/simple__no_lens_light.
+2. **Commit results.** Pull via `scripts/pull_from_cannon.sh` from the
+   laptop, then `git add Modules/0{4,5,9}_*/results/`. The `output/` dirs
+   stay git-ignored — only the curated `results/` artifacts are tracked.
+3. **If a stage still crashes:** check the traceback against the installed
+   2026.4.13.6 API. Avoid the previous mistake of assuming a class is
+   "fictional" before checking *which version* defines it (`pip index
+   versions <pkg>`) and *which Python* the env is on. The autolens release
+   cadence is monthly — keep an eye on which minor version the upstream
+   workspace and SLaM helpers target.
+4. **Lessons logged for future sessions** (CLAUDE.md note):
+   - When `AttributeError: module 'X' has no attribute 'Y'` appears in
+     PyAutoLens, **first check `pip index versions X` and the env's Python
+     version**, not GitHub code search. The class probably exists in a
+     newer release that requires a newer Python.
+   - On Cannon, **always `python -m pip`**, never bare `pip`, when working
+     in a conda env. The user-level `~/.local/bin/pip` will silently
+     hijack installs otherwise.

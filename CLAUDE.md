@@ -118,4 +118,11 @@ These tutorials draw from the following texts (referenced by abbreviation):
 - **Progress log:** Update `PROGRESS_LOG.md` after completing significant work.
 - **Self-contained:** Each module must be runnable independently — do not require the user to have completed prior modules (though they build conceptually).
 - **Theory first, code second:** Every code block should be preceded by a markdown cell explaining the physics.
-- **Reference the original:** The `autolens_workspace_original/` directory preserves the PyAutoLens workspace for reference. Our modules in `Modules/` are the educational layer built on top. **Local compatibility patch (2026-04-18):** `autolens_workspace_original/slam/__init__.py` wraps `from . import subhalo` in `try/except AttributeError` because `subhalo/sensitivity_imaging_pix.py` references `al.AdaptImageMaker`, which was removed in autolens 2026.x. Revert this once upstream restores the class or the file stops referencing it.
+- **Reference the original:** The `autolens_workspace_original/` directory preserves the unmodified PyAutoLens workspace for reference. Our modules in `Modules/` are the educational layer built on top.
+
+## Cannon environment (2026-04-18)
+
+- Production env on Cannon is **`autolens312`** (Python 3.12 + autolens 2026.4.13.6+). The slurm submit script defaults `CONDA_ENV=autolens312`.
+- The legacy `autolens` env (Python 3.11 + autolens 2026.2.26.4) is left in place but is one minor version too old to have the `RectangularAdaptDensity` / `RectangularAdaptImage` / `reg.Adapt` classes our scripts use. Do not target it.
+- **When installing into a Cannon conda env, always use `python -m pip`, not bare `pip`.** A stray `~/.local/bin/pip` (Python 3.10) shadows the env's pip in PATH and will silently install into `~/.local/lib/python3.10/site-packages/` instead.
+- **When you see `AttributeError: module 'autolens' has no attribute 'X'`,** check `pip index versions autolens` against the current Python before assuming the API was renamed. Autolens releases monthly and minor-version drift is the most common cause.

@@ -36,7 +36,7 @@ MODULE="${MODULE:-04}"
 # Directory layout confirmed: /n/holystore01/LABS/hernquist_lab/Lab/<user>/...
 REPO_ROOT="${REPO_ROOT:-/n/holystore01/LABS/hernquist_lab/Lab/${USER}/learning_to_autolens}"
 OUTPUT_ROOT="${OUTPUT_ROOT:-/n/holystore01/LABS/hernquist_lab/Lab/${USER}/learning_to_autolens/output}"
-CONDA_ENV="${CONDA_ENV:-autolens}"
+CONDA_ENV="${CONDA_ENV:-autolens312}"
 
 # Dataset root differs by module:
 #   04, 05 → autolens_workspace_original
