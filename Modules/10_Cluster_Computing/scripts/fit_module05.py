@@ -4,9 +4,8 @@ fit_module05.py — Standalone Python version of Module 05.
 Two-search pixelized-source pipeline on simple__no_lens_light.
 
     Search 1 (parametric):  SIE + shear + Sersic source   (n_live=100)
-    Search 2 (pixelized):   SIE + shear + Delaunay mesh with Overlay
-                            image_mesh (100x100) + Constant regularization
-                            (n_live=80)
+    Search 2 (pixelized):   SIE + shear + RectangularAdaptDensity(100x100)
+                            + Constant regularization       (n_live=80)
 
 Search 2 uses `SafeAnalysisImaging` (defined inline) to demote LinAlgErrors from
 ill-conditioned inversions to finite bad-likelihoods instead of crashes.
@@ -85,7 +84,7 @@ def build(dataset_root, output_root, dataset_name,
           flush=True)
 
     # ---- Search 2: Pixelized source -----------------------------------------
-    print("[MOD05] Search 2: pixelized source (Delaunay + Overlay 100x100)",
+    print("[MOD05] Search 2: pixelized source (RectangularAdaptDensity 100x100)",
           flush=True)
     model_2 = af.Collection(
         galaxies=af.Collection(
@@ -96,8 +95,7 @@ def build(dataset_root, output_root, dataset_name,
                 al.Galaxy, redshift=1.0,
                 pixelization=af.Model(
                     al.Pixelization,
-                    image_mesh=al.image_mesh.Overlay(shape=(100, 100)),
-                    mesh=al.mesh.Delaunay(),
+                    mesh=al.mesh.RectangularAdaptDensity(shape=(100, 100)),
                     regularization=al.reg.Constant,
                 ),
             ),
