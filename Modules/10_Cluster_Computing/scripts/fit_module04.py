@@ -11,7 +11,7 @@ Inputs (CLI):
     --part           {chain, slam, all}   which stage(s) to run (default: all)
     --output-root    path to write Nautilus outputs  (default: ./output)
     --dataset-root   path to autolens_workspace_original/dataset/imaging
-    --repo-root      path to Learning_to_Autolens (for slam_v2026 import)
+    --repo-root      path to Learning_to_Autolens (for workspace slam import)
     --n-live-s1      n_live for search_1 (default: 100; must be >= 100 to
                      avoid the LinAlgError seen on the local laptop run)
     --n-live-s2      n_live for search_2 (default: 150)
@@ -188,7 +188,7 @@ def main():
     p.add_argument("--dataset-root", type=Path, required=True,
                    help="Path containing simple/ and simple__no_lens_light/ subdirs")
     p.add_argument("--repo-root", type=Path, required=True,
-                   help="Path to Learning_to_Autolens (for slam_v2026 import)")
+                   help="Path to Learning_to_Autolens (for workspace slam import)")
     p.add_argument("--n-live-s1", type=int, default=100)
     p.add_argument("--n-live-s2", type=int, default=150)
     p.add_argument("--slam-n-live", type=int, default=100)
