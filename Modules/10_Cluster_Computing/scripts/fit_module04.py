@@ -92,7 +92,7 @@ def build_slam(dataset, dataset_name, output_root, slam_n_live):
     """Part 2: Full 5-stage SLaM pipeline on simple (with lens light)."""
     import autofit as af
     import autolens as al
-    from slam_v2026 import source_lp, source_pix, light_lp, mass_total
+    from slam import source_lp, source_pix, light_lp, mass_total
 
     settings_search = af.SettingsSearch(
         path_prefix=output_root / "module_04" / "slam",
@@ -195,6 +195,7 @@ def main():
     args = p.parse_args()
 
     sys.path.insert(0, str(args.repo_root.resolve()))
+    sys.path.insert(0, str((args.repo_root / "autolens_workspace_original").resolve()))
     args.output_root.mkdir(parents=True, exist_ok=True)
 
     import autolens as al
