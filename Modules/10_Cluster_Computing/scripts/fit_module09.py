@@ -138,7 +138,10 @@ def build(dataset_root, output_root, dataset_name, mask_radius, n_live, ncores):
     source_pix_result_2 = _nautilus("source_pix[2]", n_live["s3"]).fit(
         model=model_3,
         analysis=SafeAnalysisImaging(
-            dataset=dataset, adapt_images=adapt_images_2, use_jax=False))
+            dataset=dataset, adapt_images=adapt_images_2,
+            positions_likelihood_list=[source_pix_result_1.positions_likelihood_from(
+                factor=3.0, minimum_threshold=0.2)],
+            use_jax=False))
     print(f"[MOD09] Stage 3 done in {(time.time()-t0)/60:.1f} min", flush=True)
 
     # ---- Stage 4: LIGHT LP ---------------------------------------------------
@@ -164,7 +167,10 @@ def build(dataset_root, output_root, dataset_name, mask_radius, n_live, ncores):
     light_result = _nautilus("light[1]", n_live["s4"]).fit(
         model=model_4,
         analysis=al.AnalysisImaging(
-            dataset=dataset, adapt_images=adapt_images_4, use_jax=False))
+            dataset=dataset, adapt_images=adapt_images_4,
+            positions_likelihood_list=[source_pix_result_2.positions_likelihood_from(
+                factor=3.0, minimum_threshold=0.2)],
+            use_jax=False))
     print(f"[MOD09] Stage 4 done in {(time.time()-t0)/60:.1f} min", flush=True)
 
     # ---- Stage 5: MASS TOTAL -------------------------------------------------

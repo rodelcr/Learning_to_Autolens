@@ -181,6 +181,11 @@ def _source_pix_run_2(
     analysis = al.AnalysisImaging(
         dataset=dataset,
         adapt_images=adapt_images,
+        positions_likelihood_list=[
+            source_pix_result_1.positions_likelihood_from(
+                factor=3.0, minimum_threshold=0.2
+            )
+        ],
         use_jax=False,
     )
 
@@ -241,6 +246,11 @@ def _light_lp_run(
     analysis = al.AnalysisImaging(
         dataset=dataset,
         adapt_images=adapt_images,
+        positions_likelihood_list=[
+            source_result_for_source.positions_likelihood_from(
+                factor=3.0, minimum_threshold=0.2
+            )
+        ],
         use_jax=False,
     )
 
