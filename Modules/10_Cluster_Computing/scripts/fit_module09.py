@@ -5,8 +5,8 @@ Five-stage production SLaM pipeline using MGE light profiles on the v2026
 `simple` dataset:
 
     Stage 1 (SOURCE LP):   MGE lens (2x20) + MGE source (1x20) + Isothermal+shear
-    Stage 2 (SOURCE PIX 1): RectangularAdaptDensity(28,28) + reg.Adapt
-    Stage 3 (SOURCE PIX 2): RectangularAdaptImage(28,28)    + reg.Adapt
+    Stage 2 (SOURCE PIX 1): Delaunay + image_mesh.Overlay(28,28) + AdaptiveBrightnessSplit
+    Stage 3 (SOURCE PIX 2): Delaunay + image_mesh.Hilbert(1000)  + AdaptiveBrightnessSplit
     Stage 4 (LIGHT LP):     re-fit MGE lens light with mass/source fixed
     Stage 5 (MASS TOTAL):   PowerLaw mass + shear (source/light fixed)
 
@@ -104,8 +104,9 @@ def build(dataset_root, output_root, dataset_name, mask_radius, n_live, ncores):
                       shear=source_lp_result.model.galaxies.lens.shear),
         source=af.Model(al.Galaxy, redshift=1.0,
                         pixelization=af.Model(al.Pixelization,
-                            mesh=af.Model(al.mesh.RectangularAdaptDensity, shape=(28, 28)),
-                            regularization=al.reg.Adapt)),
+                            image_mesh=al.image_mesh.Overlay(shape=(28, 28)),
+                            mesh=al.mesh.Delaunay(),
+                            regularization=al.reg.AdaptiveBrightnessSplit)),
     ))
     t0 = time.time()
     source_pix_result_1 = _nautilus("source_pix[1]", n_live["s2"]).fit(
@@ -131,8 +132,9 @@ def build(dataset_root, output_root, dataset_name, mask_radius, n_live, ncores):
                       shear=source_pix_result_1.instance.galaxies.lens.shear),
         source=af.Model(al.Galaxy, redshift=1.0,
                         pixelization=af.Model(al.Pixelization,
-                            mesh=af.Model(al.mesh.RectangularAdaptImage, shape=(28, 28)),
-                            regularization=al.reg.Adapt)),
+                            image_mesh=al.image_mesh.Hilbert(pixels=1000),
+                            mesh=al.mesh.Delaunay(),
+                            regularization=al.reg.AdaptiveBrightnessSplit)),
     ))
     t0 = time.time()
     source_pix_result_2 = _nautilus("source_pix[2]", n_live["s3"]).fit(
