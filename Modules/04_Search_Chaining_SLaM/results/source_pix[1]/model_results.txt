@@ -1,0 +1,93 @@
+Bayesian Evidence                                                               4886.12883099
+Maximum Log Likelihood                                                          4937.72014392
+
+model                                                                           Collection (N=10)
+    galaxies                                                                    Collection (N=10)
+        lens                                                                    Galaxy (N=7)
+            bulge                                                               Sersic (N=0)
+            mass                                                                Isothermal (N=5)
+            shear                                                               ExternalShear (N=2)
+        source                                                                  Galaxy (N=3)
+            pixelization                                                        Pixelization (N=3)
+                mesh                                                            RectangularAdaptDensity (N=0)
+                regularization                                                  Adapt (N=3)
+
+Maximum Log Likelihood Model:
+
+galaxies
+    lens
+        mass
+            ell_comps
+                ell_comps_0                                                     -0.039
+                ell_comps_1                                                     -0.000
+            einstein_radius                                                     1.595
+            centre
+                centre_0                                                        0.006
+                centre_1                                                        0.008
+        shear
+            gamma_1                                                             0.050
+            gamma_2                                                             -0.042
+    source
+        pixelization
+            regularization
+                inner_coefficient                                               0.018
+                outer_coefficient                                               0.000
+                signal_scale                                                    0.229
+
+
+Summary (3.0 sigma limits):
+
+galaxies
+    lens
+        mass
+            ell_comps
+                ell_comps_0                                                     -0.0390 (-0.0428, -0.0360)
+                ell_comps_1                                                     -0.0000 (-0.0055, 0.0106)
+            einstein_radius                                                     1.5954 (1.5937, 1.5972)
+            centre
+                centre_0                                                        0.0066 (0.0052, 0.0081)
+                centre_1                                                        0.0077 (0.0062, 0.0093)
+        shear
+            gamma_1                                                             0.0500 (0.0475, 0.0547)
+            gamma_2                                                             -0.0414 (-0.0426, -0.0400)
+    source
+        pixelization
+            regularization
+                inner_coefficient                                               0.0001 (0.0000, 0.1064)
+                outer_coefficient                                               0.0001 (0.0000, 0.0136)
+                signal_scale                                                    0.5518 (0.0004, 0.9995)
+
+
+Summary (1.0 sigma limits):
+
+galaxies
+    lens
+        mass
+            ell_comps
+                ell_comps_0                                                     -0.0390 (-0.0402, -0.0381)
+                ell_comps_1                                                     -0.0000 (-0.0017, 0.0012)
+            einstein_radius                                                     1.5954 (1.5949, 1.5960)
+            centre
+                centre_0                                                        0.0066 (0.0062, 0.0071)
+                centre_1                                                        0.0077 (0.0072, 0.0082)
+        shear
+            gamma_1                                                             0.0500 (0.0492, 0.0507)
+            gamma_2                                                             -0.0414 (-0.0419, -0.0408)
+    source
+        pixelization
+            regularization
+                inner_coefficient                                               0.0001 (0.0000, 0.0037)
+                outer_coefficient                                               0.0001 (0.0000, 0.0012)
+                signal_scale                                                    0.5518 (0.1956, 0.8745)
+
+instances
+
+galaxies
+    lens
+        redshift                                                                0.5
+        bulge
+            intensity                                                           3.5446728840886714
+            effective_radius                                                    0.4533698463508872
+            sersic_index                                                        1.9227618029393834
+    source
+        redshift                                                                1.0

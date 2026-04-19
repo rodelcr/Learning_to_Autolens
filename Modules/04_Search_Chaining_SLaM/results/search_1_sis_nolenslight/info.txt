@@ -1,0 +1,32 @@
+Total Free Parameters = 7
+
+model                                                                           Collection (N=7)
+    galaxies                                                                    Collection (N=7)
+        lens                                                                    Galaxy (N=1)
+            mass                                                                IsothermalSph (N=1)
+        source                                                                  Galaxy (N=6)
+            bulge                                                               SersicCore (N=6)
+
+galaxies
+    lens
+        redshift                                                                0.5
+        mass
+            centre
+                centre_0                                                        0.0
+                centre_1                                                        0.0
+            einstein_radius                                                     UniformPrior [3], lower_limit = 0.5, upper_limit = 3.0
+    source
+        redshift                                                                1.0
+        bulge
+            centre
+                centre_0                                                        GaussianPrior [11], mean = 0.0, sigma = 0.3
+                centre_1                                                        GaussianPrior [12], mean = 0.0, sigma = 0.3
+            ell_comps
+                ell_comps_0                                                     TruncatedGaussianPrior [6], mean = 0.0, sigma = 0.3, lower_limit = -1.0, upper_limit = 1.0
+                ell_comps_1                                                     TruncatedGaussianPrior [7], mean = 0.0, sigma = 0.3, lower_limit = -1.0, upper_limit = 1.0
+            effective_radius                                                    UniformPrior [8], lower_limit = 0.0, upper_limit = 30.0
+            sersic_index                                                        1.0
+            radius_break                                                        0.025
+            intensity                                                           LogUniformPrior [10], lower_limit = 1e-05, upper_limit = 1000.0
+            gamma                                                               0.25
+            alpha                                                               3.0

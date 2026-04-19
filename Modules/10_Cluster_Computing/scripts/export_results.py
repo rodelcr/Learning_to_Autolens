@@ -12,34 +12,34 @@ Motivation:
 
 Artifacts written per search:
     results/<search_name>/
-        fit_subplot.pdf       (max-LL residual / normalized-residual subplot)
+        fit_subplot.png       (max-LL residual / normalized-residual subplot)
         corner.pdf            (posterior corner plot)
-        info.txt              (result.info — model summary, best-fit values)
-        summary.json          (max_log_likelihood, n_params, key scalar params)
+        info.txt              (model.info — human-readable model tree)
+        model_results.txt     (model.results — best-fit values + uncertainties)
         samples.csv           (copy of Nautilus samples.csv)
+        samples_summary.json  (copy of Nautilus samples_summary.json)
+        summary.json          (max_log_likelihood + log_evidence + source_dir)
 
 Usage:
-    # Export all searches under a given output root to Modules/XX/results/
     python export_results.py \\
-        --output-root $SCRATCH/learning_to_autolens/output \\
-        --repo-root /path/to/Learning_to_Autolens \\
-        --module 04
+        --output-root /path/to/output/module_04 \\
+        --repo-root   /path/to/Learning_to_Autolens \\
+        --module      04
 
-    # Or export a single search directory:
-    python export_results.py \\
-        --search-dir /path/to/search_1_sis_nolenslight/<hash> \\
-        --dest /path/to/Modules/04_.../results/search_1_sis_nolenslight
+The script is idempotent — re-running overwrites stale artifacts but skips
+corner-plot rendering if the PDF already exists (pass --force to rebuild).
 
-The script is idempotent — re-running it overwrites stale artifacts but
-skips the expensive plot rendering if the PDFs already exist and the search
-output is older (pass --force to always regenerate).
+Discovery:
+    A search is "completed" if its `files/samples_summary.json` exists. This
+    marker survives cleanup of Nautilus internal state (unlike `search_internal/`,
+    which the original version of this script relied on and which only exists
+    mid-run). The hash directory is `<samples_summary>.parent.parent`.
 """
 
 from __future__ import annotations
 
 import argparse
 import json
-import os
 import shutil
 import sys
 import traceback
@@ -47,106 +47,100 @@ from pathlib import Path
 
 
 def find_search_dirs(output_root: Path):
-    """Find every `files/search_internal/` under output_root. Each represents
-    one Nautilus search. Returns parents of those dirs (i.e. the hashed
-    <run_id> directories that hold `image/`, `files/`, etc.)."""
-    for p in output_root.rglob("files/search_internal"):
+    """Yield every completed-search hash directory under output_root.
+
+    A hash dir has `files/samples_summary.json` once Nautilus finishes and
+    the search is finalized. We skip directories where that file is missing
+    (partial / crashed runs) so the export doesn't emit empty summaries.
+    """
+    for p in output_root.rglob("files/samples_summary.json"):
         yield p.parent.parent
 
 
 def export_one(search_dir: Path, dest: Path, force: bool = False):
-    """Export artifacts for one search's output directory."""
+    """Export artifacts for one completed search."""
     import autofit as af
-    import autolens as al  # noqa: F401  (registers plot classes)
-    import autolens.plot as aplt
+    from autofit.plot import corner_cornerpy
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
 
     dest.mkdir(parents=True, exist_ok=True)
-    print(f"[export] {search_dir.parent.name} → {dest}", flush=True)
+    search_name = search_dir.parent.name
+    print(f"[export] {search_name} → {dest}", flush=True)
 
-    # 1. info.txt
-    info_src = search_dir / "files" / "model.info"
-    if not info_src.exists():
-        info_src = search_dir / "info"
-        if info_src.is_dir():
-            info_src = next(iter(info_src.glob("model.info")), None)
-    if info_src and info_src.exists():
-        shutil.copy2(info_src, dest / "info.txt")
+    # 1. Copy static text/data files that don't need autolens loaded
+    copies = [
+        (search_dir / "model.info",              dest / "info.txt"),
+        (search_dir / "model.results",           dest / "model_results.txt"),
+        (search_dir / "files" / "samples.csv",   dest / "samples.csv"),
+        (search_dir / "files" / "samples_summary.json",
+                                                 dest / "samples_summary.json"),
+    ]
+    for src, dst in copies:
+        if src.exists():
+            shutil.copy2(src, dst)
 
-    # 2. samples.csv
-    samples_src = search_dir / "files" / "samples.csv"
-    if samples_src.exists():
-        shutil.copy2(samples_src, dest / "samples.csv")
-
-    # 3. Load the search & result via the samples pickle (lightweight)
+    # 2. Load SearchOutput — gives us samples + max_log_likelihood cheaply
     try:
-        samples_pickle = search_dir / "files" / "samples.pickle"
-        # Newer autofit versions write samples_summary.json instead
-        summary_json = search_dir / "files" / "samples_summary.json"
-        summary = {}
-        if summary_json.exists():
-            with open(summary_json) as f:
-                summary = json.load(f)
+        so = af.SearchOutput(directory=search_dir)
     except Exception as e:
-        print(f"[export] could not parse summary: {e}", flush=True)
-        summary = {}
+        print(f"[export] SearchOutput load failed: {e}", flush=True)
+        traceback.print_exc()
+        so = None
 
-    # 4. summary.json — a tiny dict with max_log_likelihood + n_params
-    try:
-        with open(dest / "summary.json", "w") as f:
-            json.dump({
-                "search_name": search_dir.parent.name,
-                "max_log_likelihood": summary.get("max_log_likelihood"),
-                "log_evidence": summary.get("log_evidence"),
-                "n_live": summary.get("n_live"),
-                "n_samples": summary.get("total_samples") or summary.get("n_samples"),
-                "source_dir": str(search_dir),
-            }, f, indent=2)
-    except Exception as e:
-        print(f"[export] summary.json write failed: {e}", flush=True)
+    # 3. summary.json — small scalar dict for quick programmatic access
+    summary = {
+        "search_name": search_name,
+        "source_dir": str(search_dir),
+        "max_log_likelihood": None,
+        "log_evidence": None,
+    }
+    if so is not None:
+        try:
+            summary["max_log_likelihood"] = float(so.max_log_likelihood)
+        except Exception:
+            pass
+        try:
+            if so.samples_summary is not None:
+                le = getattr(so.samples_summary, "log_evidence", None)
+                summary["log_evidence"] = float(le) if le is not None else None
+        except Exception:
+            pass
+    with open(dest / "summary.json", "w") as f:
+        json.dump(summary, f, indent=2)
 
-    # 5. fit_subplot.pdf + corner.pdf (expensive — skip if already there)
-    fit_pdf = dest / "fit_subplot.pdf"
+    # 4. Fit subplot — autolens has already rendered image/fit.png for every
+    # search during the run, so we just copy it rather than rebuilding a Fit
+    # object (which would require the dataset + tracer reconstruction).
+    fit_png_src = search_dir / "image" / "fit.png"
+    fit_png_dst = dest / "fit_subplot.png"
+    if fit_png_src.exists():
+        shutil.copy2(fit_png_src, fit_png_dst)
+    else:
+        print(f"[export] no image/fit.png under {search_dir} — skipping fit subplot",
+              flush=True)
+
+    # 5. Corner plot — render to PDF unless already there
     corner_pdf = dest / "corner.pdf"
-    if (fit_pdf.exists() and corner_pdf.exists() and not force):
-        print("[export] plots already present, skipping (use --force to rebuild)",
+    if corner_pdf.exists() and not force:
+        print("[export] corner.pdf already present, skipping (use --force to rebuild)",
               flush=True)
         return
-
-    # Try to reconstruct the search result. Nautilus stores enough metadata in
-    # the search directory that af.DirectoryPaths can rebuild a SearchOutput.
-    try:
-        search_output = af.SearchOutput(directory=search_dir.parent)
-        result = search_output.result
-    except Exception as e:
-        print(f"[export] could not load result — skipping plots: {e}", flush=True)
-        traceback.print_exc()
+    if so is None or so.samples is None:
+        print("[export] no samples available — skipping corner plot", flush=True)
         return
-
-    # 5a. Fit subplot
     try:
-        fit = result.max_log_likelihood_fit
-        mat_plot = aplt.MatPlot2D(
-            output=aplt.Output(path=str(dest), filename="fit_subplot",
-                               format="pdf"))
-        fp = aplt.FitImagingPlotter(fit=fit, mat_plot_2d=mat_plot)
-        fp.subplot_fit()
-        plt.close("all")
-    except Exception as e:
-        print(f"[export] fit subplot failed: {e}", flush=True)
-
-    # 5b. Corner plot
-    try:
-        mat_plot = aplt.MatPlot1D(
-            output=aplt.Output(path=str(dest), filename="corner",
-                               format="pdf"))
-        sp = aplt.NestPlotter(samples=result.samples, mat_plot_1d=mat_plot)
-        sp.corner_cornerpy()
+        corner_cornerpy(
+            samples=so.samples,
+            path=str(dest),
+            filename="corner",
+            format="pdf",
+        )
         plt.close("all")
     except Exception as e:
         print(f"[export] corner plot failed: {e}", flush=True)
+        traceback.print_exc()
 
 
 def main():
@@ -177,7 +171,6 @@ def main():
     if not args.module or not args.repo_root:
         p.error("--module and --repo-root are required when using --output-root")
 
-    # Find the module's directory: Modules/<module>_*/
     candidates = list((args.repo_root / "Modules").glob(f"{args.module}_*"))
     if not candidates:
         sys.exit(f"No module dir matching {args.module}_* under Modules/")

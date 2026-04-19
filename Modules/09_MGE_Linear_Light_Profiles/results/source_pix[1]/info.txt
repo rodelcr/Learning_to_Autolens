@@ -1,0 +1,90 @@
+Total Free Parameters = 10
+
+model                                                                           Collection (N=10)
+    galaxies                                                                    Collection (N=10)
+        lens                                                                    Galaxy (N=7)
+            bulge                                                               Basis (N=0)
+                profile_list                                                    ModelInstance (N=0)
+                    0 - 39                                                      Gaussian (N=0)
+            mass                                                                Isothermal (N=5)
+            shear                                                               ExternalShear (N=2)
+        source                                                                  Galaxy (N=3)
+            pixelization                                                        Pixelization (N=3)
+                mesh                                                            RectangularAdaptDensity (N=0)
+                regularization                                                  Adapt (N=3)
+
+galaxies
+    lens
+        redshift                                                                0.5
+        bulge
+            centre                                                              (0.0005635654354997355, -0.0007715763670781695)
+            ell_comps                                                           (0.05002680786842937, -0.011389842218997649)
+            intensity                                                           0.1
+            profile_list
+                0 - 39
+                    centre                                                      (0.0005635654354997355, -0.0007715763670781695)
+                    intensity                                                   1.0
+                0 - 19
+                    ell_comps                                                   (0.05002680786842937, -0.011389842218997649)
+                0, 20
+                    sigma                                                       0.0001
+                1, 21
+                    sigma                                                       0.00017204337784861747
+                2, 22
+                    sigma                                                       0.0002959892386156216
+                3, 23
+                    sigma                                                       0.0005092298841827199
+                4, 24
+                    sigma                                                       0.0008760962937625548
+                5, 25
+                    sigma                                                       0.0015072656569956459
+                6, 26
+                    sigma                                                       0.0025931507494474657
+                7, 27
+                    sigma                                                       0.004461344142056164
+                8, 28
+                    sigma                                                       0.007675447159444847
+                9, 29
+                    sigma                                                       0.013205098558094675
+                10, 30
+                    sigma                                                       0.02271849760758516
+                11, 31
+                    sigma                                                       0.03908567068054686
+                12, 32
+                    sigma                                                       0.06724430809359952
+                13, 33
+                    sigma                                                       0.1156893790551599
+                14, 34
+                    sigma                                                       0.19903591553858827
+                15, 35
+                    sigma                                                       0.34242811222450853
+                16, 36
+                    sigma                                                       0.5891248909742991
+                17, 37
+                    sigma                                                       1.0135503621791702
+                18, 38
+                    sigma                                                       1.7437462792899407
+                19, 39
+                    sigma                                                       3.0
+                20 - 39
+                    ell_comps                                                   (-0.005727968047681962, 0.630743639157202)
+        mass
+            einstein_radius                                                     UniformPrior [314], lower_limit = 0.0, upper_limit = 8.0
+            centre
+                centre_0                                                        GaussianPrior [310], mean = 0.0, sigma = 0.1
+                centre_1                                                        GaussianPrior [311], mean = 0.0, sigma = 0.1
+            ell_comps
+                ell_comps_0                                                     TruncatedGaussianPrior [312], mean = 0.0, sigma = 0.3, lower_limit = -1.0, upper_limit = 1.0
+                ell_comps_1                                                     TruncatedGaussianPrior [313], mean = 0.0, sigma = 0.3, lower_limit = -1.0, upper_limit = 1.0
+        shear
+            gamma_1                                                             UniformPrior [315], lower_limit = -0.3, upper_limit = 0.3
+            gamma_2                                                             UniformPrior [316], lower_limit = -0.3, upper_limit = 0.3
+    source
+        redshift                                                                1.0
+        pixelization
+            mesh
+                shape                                                           (28, 28)
+            regularization
+                inner_coefficient                                               LogUniformPrior [317], lower_limit = 1e-06, upper_limit = 1000000.0
+                outer_coefficient                                               LogUniformPrior [318], lower_limit = 1e-06, upper_limit = 1000000.0
+                signal_scale                                                    UniformPrior [319], lower_limit = 0.0, upper_limit = 1.0

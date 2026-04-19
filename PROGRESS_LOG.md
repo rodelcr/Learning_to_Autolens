@@ -418,3 +418,37 @@ that led to building `autolens312`; leave them in the accounting trail.
    - On Cannon, **always `python -m pip`**, never bare `pip`, when working
      in a conda env. The user-level `~/.local/bin/pip` will silently
      hijack installs otherwise.
+
+---
+
+## 2026-04-19 — Post-downtime cleanup: `export_results.py` rewrite + Mod 04/09 artifacts committed
+
+Cannon came back up; job state on resume:
+- **6584132 (Mod 04):** COMPLETED 04-19 01:25 (49 min wall)
+- **6584987 (Mod 09):** COMPLETED 04-19 01:52 (71 min wall)
+- **6571565 (Mod 05):** REQUEUED, restarted 08:35, still running 2h15m in (fresh Nautilus — the downtime invalidated the prior checkpoint state)
+
+### `export_results.py` fix — discovery + v2026.4 API
+Both completed jobs ran `export_results.py` as their post-process step, but the original script was broken under autolens 2026.4.13.6:
+
+1. **Discovery broken.** `rglob("files/search_internal")` only matched *stale mid-run* directories (one partial search_pix[1] on Mod 09, zero on Mod 04). Nautilus cleans `search_internal/` on successful finalization, so completed searches were invisible. → Switched to `rglob("files/samples_summary.json")` which is the durable "completed" marker.
+2. **Corner-plot API gone.** `autolens.plot.MatPlot1D` / `NestPlotter` were removed in 2026.4 — `MatPlot1D in dir(aplt) == False`. → Switched to `autofit.plot.corner_cornerpy(samples, path, filename, format)` which is the canonical new API.
+3. **Fit-subplot rebuild unnecessary.** Original called `aplt.FitImagingPlotter(fit=result.max_log_likelihood_fit).subplot_fit()`, but `af.SearchOutput(...).result` returns `None` in 2026.4 (the result-pickle contract changed). → Copy the pre-rendered `<hash>/image/fit.png` that autolens writes during every search. Simpler and more faithful to what the fit actually looked like.
+4. **Info file location.** `model.info` lives at `<hash>/model.info`, not under `files/`. Also added `model.results` (best-fit table with 1σ/3σ uncertainties) to the export bundle.
+
+### Artifacts generated
+Cleared stale `Modules/09_.../results/source_pix[1]/` and re-ran export for both modules.
+
+| Module | Stages | Total size |
+|--------|--------|-----------|
+| 04 | search_1_sis, search_2_sie, source_lp, source_pix[1/2], mass_total | 23 MB |
+| 09 | source_lp, source_pix[1/2], light, mass_total | 30 MB |
+
+Each stage has `{fit_subplot.png, corner.pdf, info.txt, model_results.txt, samples.csv, samples_summary.json, summary.json}`.
+
+Sanity check on Mod 04 best-fit θ_E from `model_results.txt`: `einstein_radius = 1.5969 (1.5964, 1.5975)` at 1σ, matches expected 1.60″ for `simple__no_lens_light` dataset. Mod 09 `source_lp` Stage 1 θ_E = 1.601″ previously confirmed.
+
+### Status
+- Mod 04 + Mod 09 `results/` committed (this change).
+- Mod 05 (6571565) running; will re-run `export_results.py` on its output once `COMPLETED` and commit separately.
+- `output/` remains git-ignored — only curated `results/` tracked, per the "results viewer" pattern.

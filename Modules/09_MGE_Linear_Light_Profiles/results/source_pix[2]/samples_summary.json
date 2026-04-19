@@ -1,0 +1,206 @@
+{
+    "type": "instance",
+    "class_path": "autofit.non_linear.samples.summary.SamplesSummary",
+    "arguments": {
+        "values_at_sigma_1": {
+            "type": "dict",
+            "arguments": {
+                "galaxies.source.pixelization.mesh.weight_power": {
+                    "type": "tuple",
+                    "values": [
+                        0.36742294368057626,
+                        0.693735843492229
+                    ]
+                },
+                "galaxies.source.pixelization.mesh.weight_floor": {
+                    "type": "tuple",
+                    "values": [
+                        0.00012706685322209942,
+                        0.09307001046003026
+                    ]
+                },
+                "galaxies.source.pixelization.regularization.inner_coefficient": {
+                    "type": "tuple",
+                    "values": [
+                        7.090457926109375e-06,
+                        0.023602574147356857
+                    ]
+                },
+                "galaxies.source.pixelization.regularization.outer_coefficient": {
+                    "type": "tuple",
+                    "values": [
+                        1.056231246022395e-05,
+                        0.050375719680794455
+                    ]
+                },
+                "galaxies.source.pixelization.regularization.signal_scale": {
+                    "type": "tuple",
+                    "values": [
+                        0.14065291997120083,
+                        0.7975569525704107
+                    ]
+                }
+            }
+        },
+        "median_pdf_sample": {
+            "type": "instance",
+            "class_path": "autofit.non_linear.samples.sample.Sample",
+            "arguments": {
+                "log_likelihood": 5663.183105968411,
+                "log_prior": 58710.2032371176,
+                "weight": 0.00010089062210206767,
+                "kwargs": {
+                    "type": "dict",
+                    "arguments": {
+                        "galaxies.source.pixelization.mesh.weight_power": 0.6914391567845078,
+                        "galaxies.source.pixelization.mesh.weight_floor": 0.002735652420887228,
+                        "galaxies.source.pixelization.regularization.inner_coefficient": 0.0003576754348164873,
+                        "galaxies.source.pixelization.regularization.outer_coefficient": 0.0007046237380614975,
+                        "galaxies.source.pixelization.regularization.signal_scale": 0.4809976405712942
+                    }
+                }
+            }
+        },
+        "log_evidence": 5653.565514858878,
+        "values_at_sigma_3": {
+            "type": "dict",
+            "arguments": {
+                "galaxies.source.pixelization.mesh.weight_power": {
+                    "type": "tuple",
+                    "values": [
+                        0.18301535460934273,
+                        0.7454148435133537
+                    ]
+                },
+                "galaxies.source.pixelization.mesh.weight_floor": {
+                    "type": "tuple",
+                    "values": [
+                        1.058952534285994e-05,
+                        0.9394272870956804
+                    ]
+                },
+                "galaxies.source.pixelization.regularization.inner_coefficient": {
+                    "type": "tuple",
+                    "values": [
+                        1.0411118654802874e-06,
+                        0.2831564994524918
+                    ]
+                },
+                "galaxies.source.pixelization.regularization.outer_coefficient": {
+                    "type": "tuple",
+                    "values": [
+                        1.0362898096126976e-06,
+                        1.6634838332306079
+                    ]
+                },
+                "galaxies.source.pixelization.regularization.signal_scale": {
+                    "type": "tuple",
+                    "values": [
+                        0.0008963276704436608,
+                        0.9966240949753666
+                    ]
+                }
+            }
+        },
+        "max_log_likelihood_sample": {
+            "type": "instance",
+            "class_path": "autofit.non_linear.samples.sample.Sample",
+            "arguments": {
+                "log_likelihood": 5663.183105968411,
+                "log_prior": 58710.2032371176,
+                "weight": 0.00010089062210206767,
+                "kwargs": {
+                    "type": "dict",
+                    "arguments": {
+                        "galaxies.source.pixelization.mesh.weight_power": 0.693683525433529,
+                        "galaxies.source.pixelization.mesh.weight_floor": 1.9744076885011913e-05,
+                        "galaxies.source.pixelization.regularization.inner_coefficient": 0.00012452409751185578,
+                        "galaxies.source.pixelization.regularization.outer_coefficient": 0.03171775093411109,
+                        "galaxies.source.pixelization.regularization.signal_scale": 0.19052557634126654
+                    }
+                }
+            }
+        },
+        "model": null,
+        "errors_at_sigma_3": {
+            "type": "dict",
+            "arguments": {
+                "galaxies.source.pixelization.mesh.weight_power": {
+                    "type": "tuple",
+                    "values": [
+                        0.5084238021751651,
+                        0.053975686728845895
+                    ]
+                },
+                "galaxies.source.pixelization.mesh.weight_floor": {
+                    "type": "tuple",
+                    "values": [
+                        0.002725062895544368,
+                        0.9366916346747931
+                    ]
+                },
+                "galaxies.source.pixelization.regularization.inner_coefficient": {
+                    "type": "tuple",
+                    "values": [
+                        0.000356634322951007,
+                        0.28279882401767537
+                    ]
+                },
+                "galaxies.source.pixelization.regularization.outer_coefficient": {
+                    "type": "tuple",
+                    "values": [
+                        0.0007035874482518848,
+                        1.6627792094925464
+                    ]
+                },
+                "galaxies.source.pixelization.regularization.signal_scale": {
+                    "type": "tuple",
+                    "values": [
+                        0.4801013129008505,
+                        0.5156264544040725
+                    ]
+                }
+            }
+        },
+        "errors_at_sigma_1": {
+            "type": "dict",
+            "arguments": {
+                "galaxies.source.pixelization.mesh.weight_power": {
+                    "type": "tuple",
+                    "values": [
+                        0.3240162131039316,
+                        0.002296686707721207
+                    ]
+                },
+                "galaxies.source.pixelization.mesh.weight_floor": {
+                    "type": "tuple",
+                    "values": [
+                        0.0026085855676651285,
+                        0.09033435803914303
+                    ]
+                },
+                "galaxies.source.pixelization.regularization.inner_coefficient": {
+                    "type": "tuple",
+                    "values": [
+                        0.0003505849768903779,
+                        0.02324489871254037
+                    ]
+                },
+                "galaxies.source.pixelization.regularization.outer_coefficient": {
+                    "type": "tuple",
+                    "values": [
+                        0.0006940614256012736,
+                        0.04967109594273296
+                    ]
+                },
+                "galaxies.source.pixelization.regularization.signal_scale": {
+                    "type": "tuple",
+                    "values": [
+                        0.34034472060009335,
+                        0.3165593119991165
+                    ]
+                }
+            }
+        }
+    }
+}
