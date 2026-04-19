@@ -282,7 +282,33 @@ sbatch --mem=64G --time=48:00:00 --export=ALL,MODULE=09 Modules/10_Cluster_Compu
 | 6571564 | 04 | 2026-04-18 22:45 | 32 G / 24 h | **FAILED** at ~1 min — stale checkpoint (see below) |
 | 6571565 | 05 | 2026-04-18 22:45 | 32 G / 24 h | Running |
 | 6571566 | 09 | 2026-04-18 22:45 | 64 G / 48 h | Running |
-| 6572024 | 04 | 2026-04-18 23:14 | 32 G / 24 h | Queued after clean-checkpoint restart |
+| 6572024 | 04 | 2026-04-18 23:14 | 32 G / 24 h | **FAILED** at 80 min — missing `positions_likelihood_list` in slam_v2026 |
+| 6584132 | 04 | 2026-04-19 00:37 | 32 G / 24 h | Resubmitted with patched slam_v2026.py |
+
+**Mod 04 second attempt (6572024) — what happened.** Cleared Search 1,
+Search 2, SLaM SOURCE LP, and SLaM SOURCE PIX run_1 successfully, then
+crashed entering SLaM SOURCE PIX run_2 with:
+
+```
+autogalaxy.exc.AnalysisException:
+    You have begun a model-fit which reconstructs the source using a
+    pixelization. However, you have not input a `positions_likelihood_list`
+    object. It is likely your model-fit will infer an inaccurate solution.
+```
+
+In autolens 2026.4.13.6, pixelized fits now **raise** this exception
+instead of just warning (as they did in 2026.2.x). The `slam_v2026.py`
+helper only passed `positions_likelihood_list` to `_source_pix_run_1`,
+not `_source_pix_run_2` or `_light_lp_run`. `fit_module09.py` was also
+missing it at Stage 3 and Stage 4.
+
+**Fix (commit `869a91d`).** Added
+`<prev_pix_result>.positions_likelihood_from(factor=3.0, minimum_threshold=0.2)`
+to all four pixelized analyses. Resubmitted Mod 04 as 6584132 — will
+resume from the source_pix[1] checkpoint and pick up at run_2.
+Mod 09 (6571566, still running Stage 1) will hit the same exception
+when it reaches Stage 3; when it does, resubmit against the patched
+`fit_module09.py` and Nautilus auto-resumes from the Stage 2 checkpoint.
 
 **Mod 04 first attempt (6571564) — what happened.** Search 1 resumed from
 `output/.../search_1_sis_nolenslight/.../checkpoint.hdf5` (53 MB, saved by
