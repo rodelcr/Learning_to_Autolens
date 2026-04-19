@@ -277,11 +277,33 @@ sbatch --mem=64G --time=48:00:00 --export=ALL,MODULE=09 Modules/10_Cluster_Compu
 
 ### Resubmission log (autolens312 env)
 
-| JobID | Module | Submitted | Resources | State at submit |
-|-------|--------|-----------|-----------|-----------------|
-| 6571564 | 04 | 2026-04-18 ~22:45 | 32 G / 24 h | PD (Priority) |
-| 6571565 | 05 | 2026-04-18 ~22:45 | 32 G / 24 h | PD (Priority) |
-| 6571566 | 09 | 2026-04-18 ~22:45 | 64 G / 48 h | PD (Priority) |
+| JobID | Module | Submitted | Resources | Outcome |
+|-------|--------|-----------|-----------|---------|
+| 6571564 | 04 | 2026-04-18 22:45 | 32 G / 24 h | **FAILED** at ~1 min — stale checkpoint (see below) |
+| 6571565 | 05 | 2026-04-18 22:45 | 32 G / 24 h | Running |
+| 6571566 | 09 | 2026-04-18 22:45 | 64 G / 48 h | Running |
+| 6572024 | 04 | 2026-04-18 23:14 | 32 G / 24 h | Queued after clean-checkpoint restart |
+
+**Mod 04 first attempt (6571564) — what happened.** Search 1 resumed from
+`output/.../search_1_sis_nolenslight/.../checkpoint.hdf5` (53 MB, saved by
+the prior old-env run at 22:18). With 263 k existing likelihood calls
+already in the state, Nautilus entered bound-construction mode and
+hit `LinAlgError: Matrix is not positive definite` in
+`np.linalg.cholesky` inside `nautilus/bounds/basic.py:308`. The
+checkpoint was saved under autolens 2026.2.26.4 / nautilus-sampler at
+that version; autolens 2026.4.13.6 pulls in a newer nautilus whose
+internal state layout is incompatible — when it thawed the old live
+points into the new bound logic, the resulting covariance was singular.
+
+**Fix.** Archived the stuck file as `checkpoint.hdf5.old-env-bak`
+(not deleted — recoverable) and resubmitted as 6572024. Fresh bound
+construction from scratch should converge normally.
+
+**Generalization.** When upgrading autolens across a minor version with
+existing Nautilus checkpoints on disk, **assume checkpoints are not
+portable**. Sweep `Modules/*/output/**/checkpoint.hdf5` and move them
+aside before the first job under the new env. Otherwise LinAlgError or
+silent numerical corruption are the most likely failure modes.
 
 Prior failed attempts on the old `autolens` env (all cancelled/failed,
 jobs 6466300/6466689/6466690 and 6546267/6546268/6546269) are visible
