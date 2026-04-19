@@ -275,6 +275,43 @@ sbatch --export=ALL,MODULE=05 Modules/10_Cluster_Computing/scripts/submit_cannon
 sbatch --mem=64G --time=48:00:00 --export=ALL,MODULE=09 Modules/10_Cluster_Computing/scripts/submit_cannon.slurm
 ```
 
+### Resubmission log (autolens312 env)
+
+| JobID | Module | Submitted | Resources | State at submit |
+|-------|--------|-----------|-----------|-----------------|
+| 6571564 | 04 | 2026-04-18 ~22:45 | 32 G / 24 h | PD (Priority) |
+| 6571565 | 05 | 2026-04-18 ~22:45 | 32 G / 24 h | PD (Priority) |
+| 6571566 | 09 | 2026-04-18 ~22:45 | 64 G / 48 h | PD (Priority) |
+
+Prior failed attempts on the old `autolens` env (all cancelled/failed,
+jobs 6466300/6466689/6466690 and 6546267/6546268/6546269) are visible
+via `sacct -u rcordova --starttime=2026-04-18`. Those are the signal
+that led to building `autolens312`; leave them in the accounting trail.
+
+### Lessons learned (for future sessions)
+
+- **Diagnose env first, code second.** A missing class is far more often a
+  version/interpreter mismatch than a genuine API fiction. Before touching
+  scripts, check:
+  - `pip index versions autolens` against the env's Python version
+  - the class's existence in the upstream repo at the exact installed
+    version tag
+  - whether an `salloc` test-node reproduces the import failure
+- **`python -m pip`, always.** On Cannon, `~/.local/bin/pip` points at an
+  old user Python and hijacks `pip install` inside conda envs without any
+  warning. The symptom is "pip install succeeds, import fails" — exactly
+  what happened the first time I tried to install into `autolens312`.
+- **Paper trail for reverts.** 8-commit `git revert` chains are
+  acceptable when the reverted work was wrong and the intermediate code
+  was pushed; one unified "undo" commit would lose the diff detail that
+  explains *why* each substitution was wrong. All reverts this session
+  are `4528c0e..9562693` on `main`.
+- **PAT hygiene.** This session pushed ~10 times with a PAT embedded in
+  a `GIT_ASKPASS` temp script containing the token in plaintext. The
+  token now lives in this transcript and the command-history of each
+  invocation. Rotate at a convenient moment and move to either an SSH
+  deploy key or `git credential-store` with mode-600 credentials.
+
 ### TODO once all three jobs finish
 1. **Audit each run.** Confirm `logs/autolens_<jobid>.err` is empty/warnings
    only, and that the pipeline reached its final stage (`grep "done in"
