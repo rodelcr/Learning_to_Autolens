@@ -1,0 +1,10 @@
+{
+  "search_name": "search1_parametric_source",
+  "source_dir": "/n/holystore01/LABS/hernquist_lab/Lab/rcordova/learning_to_autolens/output/module_05/search1_parametric_source/bb15da599f1cf5219d0dcea15a56053b",
+  "max_log_likelihood": 6515.604010095009,
+  "log_evidence": 6430.897991055114,
+  "chi_squared_total": null,
+  "chi_squared_per_pixel": null,
+  "n_unmasked_pixels": null,
+  "max_abs_normalized_residual": null
+}

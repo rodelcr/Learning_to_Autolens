@@ -1,0 +1,10 @@
+{
+  "search_name": "search2_pixelized_source",
+  "source_dir": "/n/holystore01/LABS/hernquist_lab/Lab/rcordova/learning_to_autolens/output/module_05/search2_pixelized_source/5e479baa49b24a23799feedf4ed5b2d8",
+  "max_log_likelihood": 6625.32600732719,
+  "log_evidence": 6584.820330770474,
+  "chi_squared_total": 2883.0540141613556,
+  "chi_squared_per_pixel": 1.0194674731829405,
+  "n_unmasked_pixels": 2828,
+  "max_abs_normalized_residual": 5.728754781633391
+}
