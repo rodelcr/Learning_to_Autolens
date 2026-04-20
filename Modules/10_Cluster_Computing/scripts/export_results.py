@@ -47,14 +47,44 @@ from pathlib import Path
 
 
 def find_search_dirs(output_root: Path):
-    """Yield every completed-search hash directory under output_root.
+    """Yield the NEWEST completed-search hash directory per search name.
 
     A hash dir has `files/samples_summary.json` once Nautilus finishes and
     the search is finalized. We skip directories where that file is missing
     (partial / crashed runs) so the export doesn't emit empty summaries.
+
+    When multiple hashes exist for the same search name (e.g. a prior run
+    with stale priors + a fresh run with the corrected priors both
+    finished), we keep only the newest. Otherwise both get exported to
+    the same `Modules/XX/results/<search_name>/` destination and iteration
+    order determines which one wins — which is exactly how the 2026-04-20
+    Mod 04 re-run silently exported the stale numbers over the fresh ones.
     """
+    # Map search_name → (newest_mtime, hash_dir)
+    newest: dict[str, tuple[float, Path]] = {}
+    stale: list[Path] = []
     for p in output_root.rglob("files/samples_summary.json"):
-        yield p.parent.parent
+        hash_dir = p.parent.parent
+        search_name = hash_dir.parent.name
+        mtime = p.stat().st_mtime
+        if search_name not in newest or mtime > newest[search_name][0]:
+            if search_name in newest:
+                stale.append(newest[search_name][1])
+            newest[search_name] = (mtime, hash_dir)
+        else:
+            stale.append(hash_dir)
+
+    if stale:
+        print(f"[export] WARNING: ignored {len(stale)} stale hash dir(s) "
+              "(older siblings of a newer run for the same search):",
+              flush=True)
+        for s in stale:
+            print(f"  {s}", flush=True)
+        print("[export] Delete them on the cluster once you've confirmed "
+              "the newer run is correct.", flush=True)
+
+    for _mtime, hash_dir in newest.values():
+        yield hash_dir
 
 
 def export_one(search_dir: Path, dest: Path, force: bool = False):
