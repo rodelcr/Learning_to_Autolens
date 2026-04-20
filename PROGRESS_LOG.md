@@ -714,3 +714,166 @@ Override at submit time if you have a second env:
   `$HOME/.conda/envs/autolens/`. It's safe to `conda env remove -n autolens`
   once no one is targeting it — the slurm script's default switched away
   from it in commit `bed4f8b`.
+
+---
+
+## 2026-04-20 — Session: fit diagnostics, cluster round-trip tooling, ship prep
+
+### What was wrong
+
+A review of `Modules/{04,05,08,09}/results/` revealed that an earlier
+audit (by an unguarded general-purpose agent) had pronounced every
+cluster artifact "good" after reading only `summary.json`. Visual
+inspection of `fit_subplot.png` showed three separate failure modes
+hiding behind acceptable-looking scalar metrics:
+
+1. **Mod 08** was presenting `chi²_red = 44.8`, `θ_E` off by 15%,
+   `log_evidence = −54970` — derived from a 100-sample / 1.9-second
+   "fit". Root cause: `PYAUTOFIT_TEST_MODE=1` (a documented
+   integration-testing flag in `autolens_workspace_latest/CLAUDE.md`)
+   had leaked from a shell into the Jupyter session that generated the
+   cached result. PyAutoFit silently returned a random prior draw.
+2. **Mod 04 `source_lp[1]`, `source_pix[1]`, `source_pix[2]`** had
+   coherent Einstein-ring residuals despite `chi²/pix ≈ 1.4`. The
+   intermediate SLaM stages were being presented as "good cluster
+   results" via `show_result()` cells.
+3. **Mod 05 `search1_parametric_source/summary.json`** had null
+   `chi_squared_per_pixel` / `max_abs_normalized_residual` / `n_unmasked_pixels`.
+   `export_results.py` couldn't find `image/fit.fits` (absent on
+   resumed searches by default).
+
+### What got built
+
+**`autolens-fit-diagnostics` skill** — `~/.claude/skills/autolens-fit-diagnostics/`
+(auto-triggers on any `results/` path). SKILL.md plus 5 references:
+calibrated PASS / SUSPECT / FAIL thresholds, 8-pattern residual
+catalog (ring, quadrupole, mesh collapse, etc.), artifact-reading
+recipes, SLaM-stage monotonicity checks, fix playbook, cluster-migration
+protocol. Core rule: *open `fit_subplot.png` before declaring any fit
+acceptable; scalar metrics can mask coherent residual structure.*
+
+**5-layer `PYAUTOFIT_TEST_MODE` guard** — `check_install.py` (FAIL on
+run), `submit_cannon.slurm` (refuse to submit), `slam_v2026.py`
+(raise at import), every Modules/ and Solutions/ notebook's imports
+cell (raise on kernel load). A future env-var leak can't corrupt a
+cache silently.
+
+**Mod 08 rewrite** — deleted the test-mode-generated toy cache at
+`Modules/08/output/`, rewrote the notebook (11 code cells + 7
+markdown) to load Mod 04's converged `mass_total[1]` artifacts and
+drive every diagnostic from them. Added a guard at the top of the
+notebook that raises `RuntimeError` if the loaded artifact fails the
+skill's PASS bar (chi²/pix ≤ 1.3 and max|res| ≤ 5σ).
+
+**Mod 04 re-run tooling** — `fit_module04.py` updated with
+tighter source Sersic priors (R_e ≤ 1", n ∈ [0.5, 4]), free mass
+centre (GaussianPrior instead of frozen at (0,0)), and a post-SOURCE-LP
+quality gate that raises if the MAP theta_E lands on a prior rail or
+the source effective radius exceeds 0.9". A Cannon re-run confirmed
+the new SOURCE LP converges correctly (θ_E = 1.6015 ± 0.003 vs. 1.550
+wrong value previously; source R_e = 0.826" within the new cap). BUT
+the downstream MASS TOTAL degraded from the prior committed run
+(chi²/pix 0.91 → 2.06, max|res| 3.86 → 6.33σ) — an interaction with
+the 21-parameter model that needs further investigation. For shipping,
+Mod 04's `results/` are reverted to the pre-today HEAD state (pass-
+quality final fits); the priors improvements remain in `fit_module04.py`
+for a future re-run attempt.
+
+**Mod 05 re-export** — my updated `export_results.py` (which now picks
+the newest hash dir per search name, not all siblings) correctly
+resolved `search1_parametric_source` to `chi²/pix = 1.10`,
+`max|res| = 5.73σ` — real metrics instead of null. The older hash dir
+(without `image/fit.fits`) is now explicitly logged as a stale sibling
+and ignored.
+
+**Cluster round-trip upgrades**:
+- `scripts/submit_to_cannon.sh` — one-command wrapper that pushes,
+  verifies SHA256 of `fit_module${MODULE}.py` on both sides, then
+  sbatches. Catches stale-rsync bugs before burning cluster hours.
+- `submit_cannon.slurm` — echoes `fit_module.py` SHA256, git HEAD,
+  git branch, and `git status` at job start. Any future "why did this
+  produce the wrong numbers?" debug is answered by the log alone.
+- `push_to_cannon.sh` — retargeted from `$HOME/learning_to_autolens`
+  (wrong filesystem) to the lab-storage path used by the slurm job.
+- `pull_from_cannon.sh` — two-step pull: artifacts by default, optional
+  raw Nautilus output with `--include-raw`.
+- `export_results.py` — picks the newest hash dir per search name;
+  emits a `chi_squared_status` field when `image/fit.fits` is missing,
+  explaining the fix.
+- `fit_template.py` — generic skeleton for students converting their
+  own notebook to a cluster job. Comes with `_force_visualize()`
+  helper that guarantees `image/fit.fits` on resumed searches.
+- All three rsync/ssh scripts now use a `cannon` ssh alias (+
+  ControlMaster) by default, reducing Duo 2FA from three prompts per
+  submit to one.
+
+**New-user onboarding infrastructure**:
+- `Modules/10_Cluster_Computing/cannon.env.example` (tracked) +
+  `cannon.env` (gitignored) for user-specific settings. All cluster
+  scripts auto-source it. User-specific defaults (username, lab
+  storage path, slurm account, conda env) no longer hardcoded.
+- `submit_cannon.slurm` removed hardcoded `--account=siag_lab` and
+  `--mail-user=...`. `submit_to_cannon.sh` forwards cannon.env's
+  `SLURM_{ACCOUNT,PARTITION,MEM,TIME,CPUS_PER_TASK,MAIL_{USER,TYPE}}`
+  as sbatch CLI overrides.
+- `Modules/10_Cluster_Computing/SETUP_NEW_USER.md` — 10-step
+  onboarding guide covering Cannon account request, SSH config with
+  ControlMaster, Miniforge bootstrap, autolens312 env, repo clone,
+  cannon.env editing, first push/submit/pull, quality check, and
+  troubleshooting the four common first-time failures.
+- `Modules/10_Cluster_Computing/CANNON_HANDOFF.md` — self-contained
+  reference for a Claude Code session running *on* Cannon (no access
+  to the user's laptop `~/.claude/skills/`). Includes the exact
+  stale-hash diagnostic protocol we used today.
+- `Modules/10_Cluster_Computing/CLUSTER_WORKFLOW_NOTES.md` —
+  retrospective of today's 10 pain points + prioritized improvement
+  roadmap (git-backed sync, results-diff tool, auto-triggered
+  post-pull diagnostic as top three).
+- Mod 10 notebook: new **Section 8 "Converting Your Own Notebook"**
+  + renumbered subsequent sections (9 Results Viewer, 10 Monitoring,
+  11 FASRC, 12 Exercises) with matching anchors + ASCII flow diagram
+  of the round-trip.
+
+**Versioning reconciliation** — `check_install.py` now requires
+`autolens >= 2026.4.13` (was 2026.2.26); `CLAUDE.md` Key Dependencies
++ Common Commands rewritten against `requirements.txt`; Mod 10 notebook
+cells 5 and 9 updated from Python 3.11 / autolens 2026.2.26.4 to
+Miniforge-bootstrapped Python 3.12 / autolens ≥ 2026.4.13 / `autolens312`.
+
+**Cross-references** — Mods 04/05/09 notebooks now point readers at
+`fit_module*.py` + the push/submit/pull commands from their
+cluster-results-viewer sections.
+
+### Ship-readiness verdict (final)
+
+| Module | Stage | chi²/pix | max\|res\| | Verdict |
+|---|---|---:|---:|---|
+| 04 | `light[1]` | 0.918 | 3.86σ | **PASS** |
+| 04 | `mass_total[1]` | 0.913 | 3.86σ | **PASS** |
+| 04 | `search_1_sis_nolenslight` | 15.45 | 19.50σ | PEDAGOGICAL-FAIL (by design) |
+| 04 | `search_2_sie_nolenslight` | 1.099 | 5.73σ | SUSPECT (pedagogical chain demo) |
+| 04 | `source_lp[1]` | 17.31 | 20.78σ | PEDAGOGICAL-FAIL (parametric source stage) |
+| 04 | `source_pix[1]/[2]` | 1.38 | 7.46σ | SUSPECT (ring residual; MASS TOTAL resolves) |
+| 05 | `search1_parametric_source` | 1.097 | 5.73σ | SUSPECT (parametric source tutorial) |
+| 05 | `search2_pixelized_source` | 1.019 | 5.73σ | SUSPECT (pixelized tutorial) |
+| 09 | all 5 SLaM stages | 0.86–1.02 | 3.59–4.20σ | **PASS / SUSPECT (exemplary)** |
+
+Mod 09 remains the reference for what a clean production pipeline looks
+like; Mod 04's `mass_total[1]` is also PASS quality and is what Mod 08
+loads as its demo.
+
+### Known issues remaining (for later)
+
+- Mod 04 re-run with new priors produced a WORSE MASS TOTAL than the
+  frozen-centre version. Need to investigate why free mass centre
+  destabilizes the 21-param fit. The `fit_module04.py` priors are
+  kept in place; the committed `results/` are the earlier good-output
+  hash.
+- Old stale hash dirs remain under `output/module_04/slam/.../` on
+  Cannon. Safe to delete manually once the user has committed to a
+  single result version.
+- `.git/` excluded from rsync means the slurm provenance echo reports
+  a stale `git HEAD` on Cannon. Fix: remove the `.git/` exclusion
+  from `push_to_cannon.sh`. Small rsync overhead, big provenance win.
+- The `autolens` env (Python 3.11) is still on Cannon; safe to
+  `conda env remove` once confirmed no one depends on it.

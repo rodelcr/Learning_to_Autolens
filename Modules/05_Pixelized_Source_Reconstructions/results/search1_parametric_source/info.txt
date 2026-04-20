@@ -21,8 +21,8 @@ galaxies
                 ell_comps_1                                                     TruncatedGaussianPrior [3], mean = 0.0, sigma = 0.3, lower_limit = -1.0, upper_limit = 1.0
             einstein_radius                                                     UniformPrior [14], lower_limit = 0.5, upper_limit = 3.0
         shear
-            gamma_1                                                             UniformPrior [5], lower_limit = -0.2, upper_limit = 0.2
-            gamma_2                                                             UniformPrior [6], lower_limit = -0.2, upper_limit = 0.2
+            gamma_1                                                             UniformPrior [5], lower_limit = -0.3, upper_limit = 0.3
+            gamma_2                                                             UniformPrior [6], lower_limit = -0.3, upper_limit = 0.3
     source
         redshift                                                                1.0
         bulge

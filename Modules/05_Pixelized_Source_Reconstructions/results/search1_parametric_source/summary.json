@@ -1,10 +1,10 @@
 {
   "search_name": "search1_parametric_source",
-  "source_dir": "/n/holystore01/LABS/hernquist_lab/Lab/rcordova/learning_to_autolens/output/module_05/search1_parametric_source/bb15da599f1cf5219d0dcea15a56053b",
-  "max_log_likelihood": 6515.604010095009,
-  "log_evidence": 6430.897991055114,
-  "chi_squared_total": null,
-  "chi_squared_per_pixel": null,
-  "n_unmasked_pixels": null,
-  "max_abs_normalized_residual": null
+  "source_dir": "/n/holystore01/LABS/hernquist_lab/Lab/rcordova/learning_to_autolens/output/module_05/search1_parametric_source/6a7f62d6a7a919a1a79b6b23eea66923",
+  "max_log_likelihood": 6515.629769670044,
+  "log_evidence": 6429.990146148317,
+  "chi_squared_total": 3102.4464894756493,
+  "chi_squared_per_pixel": 1.0970461419645152,
+  "n_unmasked_pixels": 2828,
+  "max_abs_normalized_residual": 5.728189116148532
 }
