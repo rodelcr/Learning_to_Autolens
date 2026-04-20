@@ -29,6 +29,14 @@
 
 set -euo pipefail
 
+# Source user-specific overrides if a cannon.env exists alongside this
+# script (see ../cannon.env.example).
+_CANNON_ENV="$(cd "$(dirname "$0")" && pwd)/../cannon.env"
+if [[ -f "${_CANNON_ENV}" ]]; then
+    # shellcheck source=/dev/null
+    source "${_CANNON_ENV}"
+fi
+
 if [[ $# -lt 1 ]]; then
     echo "usage: $0 <MODULE> [extra sbatch args]"
     echo "       e.g.  $0 04"
@@ -104,8 +112,22 @@ fi
 echo "[submit] Hashes match → fit script is in sync."
 
 # --- 4. sbatch --------------------------------------------------------------
+# Build an sbatch CLI override list from cannon.env settings. These become
+# `--account X --partition Y --mem Z ...` flags, which take precedence over
+# the #SBATCH defaults baked into submit_cannon.slurm. Empty values are
+# skipped.
+SBATCH_OVERRIDES=()
+[[ -n "${SLURM_ACCOUNT:-}" ]]       && SBATCH_OVERRIDES+=("--account=${SLURM_ACCOUNT}")
+[[ -n "${SLURM_PARTITION:-}" ]]     && SBATCH_OVERRIDES+=("--partition=${SLURM_PARTITION}")
+[[ -n "${SLURM_MEM:-}" ]]           && SBATCH_OVERRIDES+=("--mem=${SLURM_MEM}")
+[[ -n "${SLURM_TIME:-}" ]]          && SBATCH_OVERRIDES+=("--time=${SLURM_TIME}")
+[[ -n "${SLURM_CPUS_PER_TASK:-}" ]] && SBATCH_OVERRIDES+=("--cpus-per-task=${SLURM_CPUS_PER_TASK}")
+[[ -n "${SLURM_MAIL_USER:-}" ]]     && SBATCH_OVERRIDES+=("--mail-user=${SLURM_MAIL_USER}")
+[[ -n "${SLURM_MAIL_TYPE:-}" ]]     && SBATCH_OVERRIDES+=("--mail-type=${SLURM_MAIL_TYPE}")
+
 SBATCH_CMD="cd ${REMOTE_REPO} && \
     sbatch --export=ALL,MODULE=${MODULE} --job-name=mod${MODULE} \
+           ${SBATCH_OVERRIDES[*]:-} \
            ${EXTRA_SBATCH[@]:-} \
            Modules/10_Cluster_Computing/scripts/submit_cannon.slurm"
 echo "[submit] Remote command: ${SBATCH_CMD}"

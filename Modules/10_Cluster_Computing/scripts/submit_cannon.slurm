@@ -1,7 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=autolens
 #SBATCH --partition=shared
-#SBATCH --account=siag_lab
 #SBATCH --time=24:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
@@ -10,10 +9,20 @@
 #SBATCH --output=logs/%x_%j.out
 #SBATCH --error=logs/%x_%j.err
 #SBATCH --mail-type=BEGIN,END,FAIL
-#SBATCH --mail-user=rodrigo.cordova_rosado@cfa.harvard.edu
 
 # =============================================================================
 # Generic Cannon submit for any Learning_to_Autolens module.
+#
+# User-specific settings (account, mail-user, partition overrides, conda env
+# name, lab-storage path) come from Modules/10_Cluster_Computing/cannon.env,
+# which the submit_to_cannon.sh wrapper forwards as sbatch CLI overrides and
+# as environment variables.
+#
+# Direct invocation (without the wrapper) still works but will miss the
+# per-user overrides — set SBATCH_ACCOUNT / SBATCH_MAIL_USER yourself or
+# pass --account / --mail-user on the sbatch command line:
+#
+#   SBATCH_ACCOUNT=mylab_lab sbatch --export=ALL,MODULE=04 submit_cannon.slurm
 #
 # Pick the module to run via the MODULE env var at submit time:
 #
@@ -45,12 +54,16 @@ fi
 
 # ---- Paths -----------------------------------------------------------------
 # On Cannon, $HOME = /n/home02/<user>/ (small quota — code only).
-# Compute is billed to --account=siag_lab (fast scheduling), but the repo lives
-# under Hernquist lab storage on holystore01, and output goes there too.
-# Directory layout confirmed: /n/holystore01/LABS/hernquist_lab/Lab/<user>/...
+# The repo lives under lab storage on holystore01, and output goes there
+# too. The canonical path depends on which lab the user belongs to; set
+# REPO_ROOT in cannon.env or via the submit_to_cannon.sh wrapper.
+# Example: /n/holystore01/LABS/<your_lab>_lab/Lab/<user>/learning_to_autolens
 REPO_ROOT="${REPO_ROOT:-/n/holystore01/LABS/hernquist_lab/Lab/${USER}/learning_to_autolens}"
-OUTPUT_ROOT="${OUTPUT_ROOT:-/n/holystore01/LABS/hernquist_lab/Lab/${USER}/learning_to_autolens/output}"
+OUTPUT_ROOT="${OUTPUT_ROOT:-${REPO_ROOT}/output}"
 CONDA_ENV="${CONDA_ENV:-autolens312}"
+# Miniforge installer path. FASRC-provided Miniforge lives here as of
+# 2026-04; override via cannon.env if you bootstrap your own copy.
+CONDA_ACTIVATE_SCRIPT="${CONDA_ACTIVATE_SCRIPT:-/n/sw/Miniforge3-25.3.1-0/etc/profile.d/conda.sh}"
 
 # Dataset root differs by module:
 #   04, 05 → autolens_workspace_original
@@ -69,7 +82,7 @@ fi
 # ---- Environment ------------------------------------------------------------
 # FASRC conda lives under Miniforge, not a module. Source the activate script
 # rather than `module load Anaconda3` (which is out of date / gone on Cannon 2.0).
-source /n/sw/Miniforge3-25.3.1-0/etc/profile.d/conda.sh
+source "${CONDA_ACTIVATE_SCRIPT}"
 conda activate "${CONDA_ENV}"
 
 # Unbuffered Python output so logs appear live instead of in bursts when the

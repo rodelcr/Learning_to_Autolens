@@ -45,6 +45,9 @@ Thumbs.db
 # --- Sandboxed reference workspaces (large; pinned via pip install) ---
 autolens_workspace_latest/
 
+# --- Cannon user-specific config (see cannon.env.example) -------------------
+Modules/10_Cluster_Computing/cannon.env
+
 # --- Local debug / scratch scripts ---
 check_install.py
 Modules/**/*_debug.py

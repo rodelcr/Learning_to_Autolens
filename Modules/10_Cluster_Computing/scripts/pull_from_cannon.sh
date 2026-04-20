@@ -28,6 +28,14 @@
 
 set -euo pipefail
 
+# Source user-specific overrides if a cannon.env exists alongside this
+# script (see ../cannon.env.example).
+_CANNON_ENV="$(cd "$(dirname "$0")" && pwd)/../cannon.env"
+if [[ -f "${_CANNON_ENV}" ]]; then
+    # shellcheck source=/dev/null
+    source "${_CANNON_ENV}"
+fi
+
 CANNON_SSH="${CANNON_SSH:-cannon}"       # SSH alias (see ~/.ssh/config)
 CANNON_USER="${CANNON_USER:-rcordova}"   # only for building the remote path
 # Default matches submit_cannon.slurm's REPO_ROOT / OUTPUT_ROOT defaults.
