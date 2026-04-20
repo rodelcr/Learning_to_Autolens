@@ -62,6 +62,18 @@ conda activate "${CONDA_ENV}"
 # job ends — essential for monitoring multi-hour Nautilus runs via `tail -f`.
 export PYTHONUNBUFFERED=1
 
+# Pin BLAS libraries to a single thread each. Nautilus parallelizes the
+# likelihood evaluation via multiprocessing (number_of_cores=16); if OpenBLAS
+# or MKL also try to parallelize, the two layers contend and the workers
+# deadlock on a shared fork-lock. Symptom: all workers go to `S` state with
+# 0% CPU and zero log progress for hours. Mod 05 (search2_pixelized_source)
+# hit this in job 6571565 — 11 h of wall clock, zero samples written.
+export OPENBLAS_NUM_THREADS=1
+export MKL_NUM_THREADS=1
+export OMP_NUM_THREADS=1
+export VECLIB_MAXIMUM_THREADS=1
+export NUMEXPR_NUM_THREADS=1
+
 mkdir -p logs "${OUTPUT_ROOT}"
 
 # ---- Diagnostics ------------------------------------------------------------

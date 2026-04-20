@@ -452,3 +452,57 @@ Sanity check on Mod 04 best-fit θ_E from `model_results.txt`: `einstein_radius 
 - Mod 04 + Mod 09 `results/` committed (this change).
 - Mod 05 (6571565) running; will re-run `export_results.py` on its output once `COMPLETED` and commit separately.
 - `output/` remains git-ignored — only curated `results/` tracked, per the "results viewer" pattern.
+
+### Mod 05 (6571565) — deadlocked, cancelled + resubmitted (6697218)
+
+While exporting Mod 04/09 I spot-checked 6571565 and found it catastrophically stalled:
+
+- **Wall clock:** 11 h 20 min since 08:35 this morning
+- **Nautilus stdout:** Only the "Starting new Nautilus non-linear search (no previous samples found)" line + the column header for the status table. **Zero iteration rows in 11 hours.**
+- **Log file mtime:** 08:37 — hasn't been written to since startup
+- **Output tree:** `search2_pixelized_source/<hash>/files/search_internal/` exists but no `checkpoint.hdf5`, no `samples.csv`. Search1 (parametric) had already completed cleanly.
+- **`sstat` AveCPU = 16:26** over 680 min wall = **2.4% CPU utilization** across the 16-core allocation
+- **Process inspection via `srun --jobid=6571565 --overlap ps -u rcordova`:** all 16+ python workers in `S` (sleeping) state at 0% CPU
+
+**Root cause: OpenBLAS × multiprocessing fork-lock deadlock.** The Nautilus log at startup had already printed its canonical warning:
+
+```
+OPENBLAS_NUM_THREADS
+MKL_NUM_THREADS
+OMP_NUM_THREADS
+VECLIB_MAXIMUM_THREADS
+NUMEXPR_NUM_THREADS
+(not set to 1)
+
+This can lead to performance issues, because both the non-linear search and
+libraries that may be used in your `log_likelihood_function` evaluation may
+attempt to parallelize over all cores available.
+```
+
+The old `submit_cannon.slurm` ignored that warning. For Mod 04 and Mod 09 it didn't bite (their pixelized searches are shorter; the deadlock is probabilistic per bound-construction and scales with likelihood call count). For Mod 05's `search2_pixelized_source` it locked up on the very first bound construction and never recovered.
+
+### Fix (commit this change)
+`submit_cannon.slurm` now exports the five BLAS/threading env vars before `srun`:
+
+```bash
+export OPENBLAS_NUM_THREADS=1
+export MKL_NUM_THREADS=1
+export OMP_NUM_THREADS=1
+export VECLIB_MAXIMUM_THREADS=1
+export NUMEXPR_NUM_THREADS=1
+```
+
+### Resubmission
+- `scancel 6571565` (final `TIME=11:21:48`, state `CG`)
+- `rm -rf output/module_05/search2_pixelized_source/` — no salvageable state (no checkpoint)
+- Kept `output/module_05/search1_parametric_source/<good_hash>/` since search1 had completed samples
+- `sbatch --export=ALL,MODULE=05 Modules/10_Cluster_Computing/scripts/submit_cannon.slurm` → **6697218** (running on holy7c04101 as of 19:58)
+
+### Generalization
+Hot-running Nautilus jobs without `*_NUM_THREADS=1` are a time bomb. The 04-18 Cannon migration checklist should include a one-liner check:
+
+```bash
+grep -q "OPENBLAS_NUM_THREADS=1" Modules/10_Cluster_Computing/scripts/submit_cannon.slurm
+```
+
+Added as a memory entry for future sessions (`feedback_blas_threading.md`).
