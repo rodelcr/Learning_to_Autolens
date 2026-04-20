@@ -6,11 +6,11 @@ A 10-module tutorial series teaching computational strong lens modeling from fir
 
 This project is a companion to [Learning to Lens](https://github.com/rodelcr/Learning_to_Lens) (GR & lensing theory in Mathematica), but is fully self-contained — all necessary theory is developed inline with references to the primary literature.
 
-> **Alpha build (v0.92)** — April 2026. Modules 01–10 complete; cluster runs for Mods 04/05/09 pending. Run `python check_install.py` before starting. Feedback welcome at rodrigo.cordova_rosado@cfa.harvard.edu.
+> **Alpha build (v0.92)** — April 2026. Modules 01–10 complete; Cannon cluster results for Mods 04, 05, and 09 are included under each module's `results/` directory. Feedback welcome at rodrigo.cordova_rosado@cfa.harvard.edu.
 
 ---
 
-## Quick Start
+## Local Install
 
 ### 1. Create a conda environment
 
@@ -32,26 +32,68 @@ python -m pip install -r requirements.txt
 
 > **Use `python -m pip`, not bare `pip`.** A stray user-level `pip` on `$PATH` can shadow the env's pip and silently install into the wrong interpreter — this happens on HPC accounts and occasionally on laptops with multiple Python installs. The symptom is "`pip install` succeeds, `import autolens` fails." See `PROGRESS_LOG.md` for the Cannon-specific runbook if installing on Harvard FASRC.
 
-### 3. Verify the install
+### 3. Register the env as a Jupyter kernel
 
 ```bash
-cd Learning_to_Autolens_alpha_v0.91
-python check_install.py
+python -m ipykernel install --user --name=autolens --display-name="Python (autolens)"
 ```
 
-This checks all package versions, runs API smoke tests, and confirms the datasets are in place. **Fix any FAIL items before proceeding.**
+Without this step, a `jupyter lab` session launched from a different env (e.g. `base`) will not list the `autolens` kernel and you'll end up running notebooks under the wrong interpreter.
 
-### 4. Launch Jupyter
+### 4. Verify the install
+
+```bash
+python -c "import autolens as al, autofit as af; print('autolens', al.__version__, '| autofit', af.__version__)"
+```
+
+Expect `autolens 2026.4.13.x` (or later in the 2026.4 line) on both packages.
+
+### 5. Launch Jupyter
 
 ```bash
 jupyter lab
 ```
 
-Then open any notebook from `Modules/` — start with **Module 01** if you're new, or **Module 09** if you want the production MGE/SLaM workflow.
+Open any notebook from `Modules/`, then **Kernel → Change Kernel → Python (autolens)**. Start with **Module 01** if you're new, or **Module 09** if you want the production MGE/SLaM workflow.
 
-### 4. (Optional) Wolfram Mathematica
+### 6. (Optional) Wolfram Mathematica
 
 Symbolic derivation scripts in `Mathematica/` require Mathematica 13.0+ or Wolfram Engine. These are supplementary — all key results are derived in the notebooks and LaTeX notes.
+
+---
+
+## Viewing pre-computed Cannon results (no fitting required)
+
+Modules 04, 05, and 09 each publish their finished Cannon fits under `Modules/XX_*/results/` as small, git-tracked artifacts (fit subplot PNG, corner PDF, `samples.csv`, `summary.json`, `info.txt`, `model_results.txt`). You can inspect them end-to-end without a cluster account or a multi-hour local run.
+
+In Jupyter Lab (with the `Python (autolens)` kernel selected):
+
+1. Open the module notebook — e.g. `Modules/09_MGE_Linear_Light_Profiles/09_mge_linear_light_profiles.ipynb`.
+2. Scroll to the section titled **"Viewing pre-computed results from the Cannon cluster"**.
+3. Run that cell plus the `show_result(...)` cells underneath. They read the committed artifacts directly and render the fit subplot + corner plot inline.
+
+The same viewer cells live in each `Solutions/XX_*_SOLVED.ipynb`, pointing at the shared `Modules/XX_*/results/` tree.
+
+---
+
+## Running fits yourself on Harvard FASRC Cannon
+
+If you want to *reproduce* or *extend* the fits (rather than view the bundled results), Module 10 is the end-to-end runbook. The short version:
+
+```bash
+# on your laptop, from the repo root, after activating the autolens env
+bash Modules/10_Cluster_Computing/scripts/push_to_cannon.sh --go         # mirror repo to Cannon
+bash Modules/10_Cluster_Computing/scripts/seed_cannon_data.sh --go       # copy datasets + checkpoint.hdf5
+
+# on Cannon
+cd /n/holystore01/LABS/hernquist_lab/Lab/$USER/learning_to_autolens
+sbatch --export=ALL,MODULE=04 Modules/10_Cluster_Computing/scripts/submit_cannon.slurm
+
+# back on your laptop, after the job finishes
+bash Modules/10_Cluster_Computing/scripts/pull_from_cannon.sh --go       # pull lightweight artifacts
+```
+
+The submit script bills compute to `--account=siag_lab` (fast scheduling) and writes output to Hernquist lab storage. Nautilus checkpoints in `checkpoint.hdf5` auto-resume on re-submit, so a requeued job picks up where it left off. See **Module 10** for the full layout, failure modes, and `export_results.py` artifact pattern.
 
 ---
 
@@ -112,9 +154,7 @@ Symbolic derivation scripts in `Mathematica/` require Mathematica 13.0+ or Wolfr
 
 > **Runtimes** are approximate for a laptop with 8+ cores. Modules with non-linear searches (03–06, 09) take longer on first run; results are cached for subsequent runs. **Modules 04, 05, 09** have ready-made cluster drop-ins (`Modules/10_Cluster_Computing/scripts/fit_module{04,05,09}.py`) if your laptop can't keep up.
 
-### Viewing pre-computed results without running anything
-
-Every module that requires a non-trivial fit publishes its finished results under `Modules/XX_*/results/` as small PDFs and JSON files (fit subplot, corner plot, `info.txt`, `summary.json`). These are committed to the repo and can be viewed directly — no cluster account, no multi-hour wait. See Module 10 §8 (Results Viewer) for the pattern and loader snippet.
+See the **"Viewing pre-computed Cannon results"** section above for how to inspect finished fits without running anything.
 
 ---
 
