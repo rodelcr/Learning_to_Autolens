@@ -1,0 +1,83 @@
+Bayesian Evidence                                                               5554.45660416
+Maximum Log Likelihood                                                          5596.35230322
+
+model                                                                           Collection (N=7)
+    galaxies                                                                    Collection (N=7)
+        lens                                                                    Galaxy (N=7)
+            bulge                                                               Sersic (N=7)
+            mass                                                                Isothermal (N=0)
+            shear                                                               ExternalShear (N=0)
+        source                                                                  Galaxy (N=0)
+            pixelization                                                        Pixelization (N=0)
+                mesh                                                            RectangularAdaptImage (N=0)
+                regularization                                                  Adapt (N=0)
+
+Maximum Log Likelihood Model:
+
+galaxies
+    lens
+        bulge
+            centre
+                centre_0                                                        0.001
+                centre_1                                                        0.000
+            ell_comps
+                ell_comps_0                                                     -0.051
+                ell_comps_1                                                     -0.001
+            intensity                                                           2.567
+            effective_radius                                                    0.527
+            sersic_index                                                        2.314
+
+
+Summary (3.0 sigma limits):
+
+galaxies
+    lens
+        bulge
+            centre
+                centre_0                                                        0.0013 (-0.0009, 0.0037)
+                centre_1                                                        0.0001 (-0.0022, 0.0024)
+            ell_comps
+                ell_comps_0                                                     -0.0503 (-0.0559, -0.0443)
+                ell_comps_1                                                     -0.0007 (-0.0070, 0.0056)
+            intensity                                                           2.5618 (2.4240, 2.6973)
+            effective_radius                                                    0.5272 (0.5137, 0.5420)
+            sersic_index                                                        2.3129 (2.1588, 2.4605)
+
+
+Summary (1.0 sigma limits):
+
+galaxies
+    lens
+        bulge
+            centre
+                centre_0                                                        0.0013 (0.0006, 0.0021)
+                centre_1                                                        0.0001 (-0.0007, 0.0010)
+            ell_comps
+                ell_comps_0                                                     -0.0503 (-0.0524, -0.0482)
+                ell_comps_1                                                     -0.0007 (-0.0027, 0.0012)
+            intensity                                                           2.5618 (2.5110, 2.6073)
+            effective_radius                                                    0.5272 (0.5226, 0.5324)
+            sersic_index                                                        2.3129 (2.2590, 2.3666)
+
+instances
+
+galaxies
+    lens
+        redshift                                                                0.5
+        mass
+            einstein_radius                                                     1.5953735644655418
+            slope                                                               2.0
+            core_radius                                                         0.0
+        shear
+            gamma_1                                                             0.05023447473979337
+            gamma_2                                                             -0.041824078875639825
+    source
+        redshift                                                                1.0
+        pixelization
+            mesh
+                weight_power                                                    0.0007582022129228663
+                weight_floor                                                    0.059190501109320545
+            regularization
+                inner_coefficient                                               0.008631434841617986
+                outer_coefficient                                               0.001715148499955409
+                signal_scale                                                    0.700875277856976

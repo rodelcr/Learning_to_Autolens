@@ -2,5 +2,9 @@
   "search_name": "light[1]",
   "source_dir": "output/module_09/slam/light[1]/bcef44eaeefe501e2f6d9f0fe9771583",
   "max_log_likelihood": 5671.580385082219,
-  "log_evidence": 5650.977738872204
+  "log_evidence": 5650.977738872204,
+  "chi_squared_total": 2453.358741032726,
+  "chi_squared_per_pixel": 0.8675243072958719,
+  "n_unmasked_pixels": 2828,
+  "max_abs_normalized_residual": 3.725973686866274
 }

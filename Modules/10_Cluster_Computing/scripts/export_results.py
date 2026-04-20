@@ -95,6 +95,10 @@ def export_one(search_dir: Path, dest: Path, force: bool = False):
         "source_dir": str(search_dir),
         "max_log_likelihood": None,
         "log_evidence": None,
+        "chi_squared_total": None,
+        "chi_squared_per_pixel": None,
+        "n_unmasked_pixels": None,
+        "max_abs_normalized_residual": None,
     }
     if so is not None:
         try:
@@ -107,6 +111,33 @@ def export_one(search_dir: Path, dest: Path, force: bool = False):
                 summary["log_evidence"] = float(le) if le is not None else None
         except Exception:
             pass
+
+    # Chi-squared diagnostics. PyAutoLens already wrote the best-fit
+    # residual/chi-squared maps to <search>/image/fit.fits during the run —
+    # we just read them to avoid having to reconstruct the fit object.
+    # Pixels outside the mask have chi_squared = 0 exactly, so counting
+    # non-zero cells gives N_unmasked without needing to interpret the
+    # MASK HDU's boolean convention.
+    fit_fits = search_dir / "image" / "fit.fits"
+    if fit_fits.exists():
+        try:
+            from astropy.io import fits as _fits
+            import numpy as _np
+            with _fits.open(fit_fits) as hdul:
+                chi2_map = hdul["CHI_SQUARED_MAP"].data
+                normres_map = hdul["NORMALIZED_RESIDUAL_MAP"].data
+            n_unmasked = int((chi2_map != 0).sum())
+            if n_unmasked > 0:
+                chi2_total = float(chi2_map.sum())
+                summary["chi_squared_total"] = chi2_total
+                summary["chi_squared_per_pixel"] = chi2_total / n_unmasked
+                summary["n_unmasked_pixels"] = n_unmasked
+                summary["max_abs_normalized_residual"] = float(
+                    _np.nanmax(_np.abs(normres_map))
+                )
+        except Exception as e:
+            print(f"[export] chi2 diagnostics failed: {e}", flush=True)
+
     with open(dest / "summary.json", "w") as f:
         json.dump(summary, f, indent=2)
 

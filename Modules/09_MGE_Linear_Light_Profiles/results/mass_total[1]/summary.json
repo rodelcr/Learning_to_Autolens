@@ -2,5 +2,9 @@
   "search_name": "mass_total[1]",
   "source_dir": "output/module_09/slam/mass_total[1]/88aaa00e5625a14f5f1e1bb9450ca467",
   "max_log_likelihood": 5676.026757988723,
-  "log_evidence": 5637.122274287662
+  "log_evidence": 5637.122274287662,
+  "chi_squared_total": 2444.465995219718,
+  "chi_squared_per_pixel": 0.8643797720013148,
+  "n_unmasked_pixels": 2828,
+  "max_abs_normalized_residual": 3.6852494916117013
 }

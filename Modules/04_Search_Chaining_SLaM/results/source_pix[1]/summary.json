@@ -2,5 +2,9 @@
   "search_name": "source_pix[1]",
   "source_dir": "output/module_04/slam/simple/source_pix[1]/eea93ae688915627787b460c8a291273",
   "max_log_likelihood": 4937.720143916102,
-  "log_evidence": 4886.128830991839
+  "log_evidence": 4886.128830991839,
+  "chi_squared_total": 3914.3178752040467,
+  "chi_squared_per_pixel": 1.3841293759561693,
+  "n_unmasked_pixels": 2828,
+  "max_abs_normalized_residual": 7.454200311445139
 }
