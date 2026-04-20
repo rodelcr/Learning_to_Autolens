@@ -506,3 +506,54 @@ grep -q "OPENBLAS_NUM_THREADS=1" Modules/10_Cluster_Computing/scripts/submit_can
 ```
 
 Added as a memory entry for future sessions (`feedback_blas_threading.md`).
+
+### Mod 05 (6697218) — second stall: 100×100 pixelized mesh over-resolves for Nautilus
+
+The BLAS fix on its own wasn't enough. Resubmission 6697218 ran cleanly for
+the first few minutes of search2 (workers at 1–1.2% CPU, not deadlocked like
+the first run), then plateaued: 2 h wall, zero files written after the
+initial pre-fit emission, MaxRSS pinned at 30 GB / 32 GB request. AveCPU
+flatlined at 13:33 between the 1 h and 2 h snapshots.
+
+The culprit was in `fit_module05.py`, not the environment. The script used
+`al.mesh.RectangularAdaptDensity(shape=(100, 100))` — **10 000 source pixels**.
+The pixelized inversion cost scales as O(N_pix³) for the Cholesky factorization
+on F^T F, and O(N_pix²) in memory for the matrix itself (≈800 MB per worker at
+100×100 × 8 bytes). Nautilus calls the likelihood thousands of times; at
+~10-30 s per eval on 10 000 pixels, the cluster fit would take days.
+
+Mod 09's SLaM source_pix stages (which completed in 8 min each) use
+`RectangularAdaptImage(28, 28)` = 784 pixels, i.e. **13× fewer pixels**
+and (28/100)³ ≈ **0.02× the compute per eval**. The Mod 05 notebook had
+been deliberately using a high-res mesh for pedagogical effect (shows the
+"high-resolution adaptive" idea), but that choice doesn't survive porting
+to a multi-hour Nautilus search.
+
+### Fix (commit this change)
+`fit_module05.py` now uses:
+
+```python
+al.mesh.RectangularAdaptDensity(shape=(40, 40))   # 1600 pixels
+settings=al.Settings(
+    use_border_relocator=True,
+    use_positive_only_solver=True,   # was False — NNLS is faster + physical
+)
+```
+
+40×40 is intermediate between Mod 09's 28×28 and the original 100×100 —
+still demonstrates the adaptive-density scaling, still meaningfully higher
+resolution than the default, but ~250× cheaper per eval. Also flipped
+`use_positive_only_solver` to True (NNLS): source flux is non-negative by
+physics, and scikit-learn's NNLS beats the signed solver both for speed
+and numerical conditioning.
+
+### Resubmission
+- `scancel 6697218` (final `TIME=2:04:44`, state CG)
+- `rm -rf output/module_05/search2_pixelized_source/` — stale, no checkpoint
+- Kept `output/module_05/search1_parametric_source/` (completed samples from earlier)
+- Resubmitted as **6713224** with the new mesh + solver config.
+
+If 6713224 still wedges, the next level of debugging is to drop `n_live`
+(80 → 50) and/or reduce `ncores` (16 → 8 or 4) — fewer workers mean less
+memory pressure and less multiprocessing synchronization overhead. The
+notebook itself can still showcase 100×100 as a single-shot inversion.

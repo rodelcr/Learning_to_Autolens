@@ -4,8 +4,17 @@ fit_module05.py — Standalone Python version of Module 05.
 Two-search pixelized-source pipeline on simple__no_lens_light.
 
     Search 1 (parametric):  SIE + shear + Sersic source   (n_live=100)
-    Search 2 (pixelized):   SIE + shear + RectangularAdaptDensity(100x100)
+    Search 2 (pixelized):   SIE + shear + RectangularAdaptDensity(40x40)
                             + Constant regularization       (n_live=80)
+
+Note: the Mod 05 notebook uses mesh=(100,100) for pedagogical impact, but a
+Nautilus search re-evaluates the pixelized inversion thousands of times and
+the cost is O(N_pix^3) per eval. 100x100 = 10 000 pixels is tractable for a
+single forward pass in the notebook but makes the cluster fit run for >2 h
+with no progress (memory-bound thrashing on a 32 GB node). 40x40 = 1600
+pixels is ~240x cheaper per eval, still demonstrates the "high-res adaptive"
+idea from the tutorial, and matches the order of magnitude that Mod 09's
+MGE SLaM uses (28x28 in slam_v2026). Original config preserved in git log.
 
 Search 2 uses `SafeAnalysisImaging` (defined inline) to demote LinAlgErrors from
 ill-conditioned inversions to finite bad-likelihoods instead of crashes.
@@ -95,7 +104,7 @@ def build(dataset_root, output_root, dataset_name,
                 al.Galaxy, redshift=1.0,
                 pixelization=af.Model(
                     al.Pixelization,
-                    mesh=al.mesh.RectangularAdaptDensity(shape=(100, 100)),
+                    mesh=al.mesh.RectangularAdaptDensity(shape=(40, 40)),
                     regularization=al.reg.Constant,
                 ),
             ),
@@ -118,7 +127,11 @@ def build(dataset_root, output_root, dataset_name,
         positions_likelihood_list=[positions_lh],
         settings=al.Settings(
             use_border_relocator=True,
-            use_positive_only_solver=False,
+            # NNLS (positive-only) is both faster than the signed solve and
+            # physically correct (source flux is non-negative). Mod 09 uses
+            # True by default via slam_v2026; the original False here was a
+            # holdover from an earlier notebook draft.
+            use_positive_only_solver=True,
         ),
         use_jax=False,
     )
