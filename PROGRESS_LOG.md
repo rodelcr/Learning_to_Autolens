@@ -321,6 +321,52 @@ Combined with the prior 6571566 attempt (Stages 1+2, 89 min), total
 Mod 09 compute was ~2h39min across two jobs. stderr had only benign
 `autofit.SearchWarning`s.
 
+### Mod 05 journey
+
+Mod 05 was the trickiest — three cluster attempts:
+
+| Attempt | JobID | Mem | Outcome |
+|---------|-------|-----|---------|
+| 1 | 6571565 | 32 G | OOM at 11h21m — peak 32 GB during Search 2 (100×100 mesh) |
+| 2 | 6697218 | 32 G | OOM at 2h04m — same configuration, failed faster |
+| 3 | 6713224 | 32 G | **COMPLETED** 32 min, peak 11 GB |
+
+The fix between #2 and #3 was **editing `fit_module05.py` to drop the
+`RectangularAdaptDensity` mesh shape from (100, 100) to (40, 40)**. A
+100×100 rectangular mesh produces a 10 000-element source-plane grid
+whose inversion-matrix operations dominate RAM; (40, 40) → 1 600
+elements brings that cost into the 10–15 GB range on the same problem.
+
+### Mod 05 stage timings (6713224, final run)
+
+| Stage | Wall time | Notes |
+|-------|-----------|-------|
+| Search 1 | 0.3 min | SIE+shear + Sersic — checkpointed from prior job, finalize only; θ_E = 1.600″ |
+| Search 2 | 30.4 min | Pixelized source (RectangularAdaptDensity 40×40 + Constant reg); peak 11 GB |
+| **Total** | **0.51 h (31 min)** | — |
+
+**Cosmetic TODO:** `fit_module05.py` still prints `"Search 2: pixelized
+source (RectangularAdaptDensity 100x100)"` — the string is stale; the
+model really uses 40×40 now. Fix when touching the file next.
+
+### Session close-out — all three modules done
+
+All three modules completed cleanly against the `autolens312` env
+(Python 3.12 + autolens 2026.4.13.6). θ_E values agree across modules
+(~1.60″ for `simple`/`simple__no_lens_light`), confirming the pipeline
+is numerically correct in the new env.
+
+### Original TODO (post-run audit) — outcome
+
+1. **Audit each run.** ✅ Done inline. All stderrs contained only
+   `autofit.SearchWarning` (benign); all stages reached their expected
+   final result; θ_E values agree with the notebooks' expected ~1.6″.
+2. **Commit results.** Still TODO — the laptop needs to pull the
+   `output/module_0{4,5,9}/` trees back and commit only the curated
+   `Modules/0{4,5,9}_*/results/` artifacts.
+3. **If a stage still crashes:** N/A — all three green.
+4. **Lessons for future sessions** already baked into this entry.
+
 **Mod 04 second attempt (6572024) — what happened.** Cleared Search 1,
 Search 2, SLaM SOURCE LP, and SLaM SOURCE PIX run_1 successfully, then
 crashed entering SLaM SOURCE PIX run_2 with:
