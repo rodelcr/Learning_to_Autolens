@@ -16,11 +16,16 @@
 #   ./submit_to_cannon.sh 04 --mem 64G --time 48:00:00     # extra sbatch args
 #   SKIP_PUSH=1 ./submit_to_cannon.sh 04                    # already pushed
 #
-# Env overrides (same defaults as push_to_cannon.sh):
-#   CANNON_USER      (default: rcordova)
-#   CANNON_HOST      (default: login.rc.fas.harvard.edu)
-#   CANNON_DEST      (default: learning_to_autolens — repo dir on Cannon,
-#                     under the SUBMIT_ROOT you're rsyncing to)
+# Uses the SSH alias `cannon` by default (expected in ~/.ssh/config with
+# ControlMaster auto + ControlPath for one-time Duo auth per session).
+# Without that alias, every ssh call below would prompt for Duo — here
+# there are three (push, SHA256 verify, sbatch), so one-time auth is a
+# meaningful ergonomic difference.
+#
+# Env overrides:
+#   CANNON_SSH       (default: cannon — the ssh-config alias)
+#   CANNON_USER      (default: rcordova — only used for path construction)
+#   CANNON_REPO_ROOT (default: /n/holystore01/LABS/hernquist_lab/Lab/$USER/learning_to_autolens)
 
 set -euo pipefail
 
@@ -34,14 +39,13 @@ fi
 MODULE="$1"; shift
 EXTRA_SBATCH=("$@")
 
-CANNON_USER="${CANNON_USER:-rcordova}"
-CANNON_HOST="${CANNON_HOST:-login.rc.fas.harvard.edu}"
-CANNON_DEST="${CANNON_DEST:-learning_to_autolens}"
+CANNON_SSH="${CANNON_SSH:-cannon}"       # SSH alias (see ~/.ssh/config)
+CANNON_USER="${CANNON_USER:-rcordova}"   # only for building the remote path
 
 LOCAL_ROOT="$(cd "$(dirname "$0")/../../.." && pwd)"
 LOCAL_FIT="${LOCAL_ROOT}/Modules/10_Cluster_Computing/scripts/fit_module${MODULE}.py"
 LOCAL_SLURM="${LOCAL_ROOT}/Modules/10_Cluster_Computing/scripts/submit_cannon.slurm"
-REMOTE_REPO="/n/holystore01/LABS/hernquist_lab/Lab/${CANNON_USER}/learning_to_autolens"
+REMOTE_REPO="${CANNON_REPO_ROOT:-/n/holystore01/LABS/hernquist_lab/Lab/${CANNON_USER}/learning_to_autolens}"
 REMOTE_FIT="${REMOTE_REPO}/Modules/10_Cluster_Computing/scripts/fit_module${MODULE}.py"
 
 # --- 0. Sanity --------------------------------------------------------------
@@ -86,9 +90,9 @@ fi
 # --- 3. Verify fit_module script hashes match -------------------------------
 LOCAL_HASH=$(shasum -a 256 "${LOCAL_FIT}" | awk '{print $1}')
 echo "[submit] Local  fit_module${MODULE}.py SHA256: ${LOCAL_HASH}"
-REMOTE_HASH=$(ssh -o BatchMode=no "${CANNON_USER}@${CANNON_HOST}" \
+REMOTE_HASH=$(ssh "${CANNON_SSH}" \
     "sha256sum ${REMOTE_FIT} 2>/dev/null | awk '{print \$1}'" \
-    || { echo "error: could not ssh to ${CANNON_HOST}"; exit 1; })
+    || { echo "error: could not ssh to ${CANNON_SSH}"; exit 1; })
 echo "[submit] Remote fit_module${MODULE}.py SHA256: ${REMOTE_HASH}"
 
 if [[ "${LOCAL_HASH}" != "${REMOTE_HASH}" ]]; then
@@ -100,12 +104,12 @@ fi
 echo "[submit] Hashes match → fit script is in sync."
 
 # --- 4. sbatch --------------------------------------------------------------
-SBATCH_CMD="cd ${CANNON_DEST:-learning_to_autolens} && \
+SBATCH_CMD="cd ${REMOTE_REPO} && \
     sbatch --export=ALL,MODULE=${MODULE} --job-name=mod${MODULE} \
            ${EXTRA_SBATCH[@]:-} \
            Modules/10_Cluster_Computing/scripts/submit_cannon.slurm"
 echo "[submit] Remote command: ${SBATCH_CMD}"
-SBATCH_OUT=$(ssh -o BatchMode=no "${CANNON_USER}@${CANNON_HOST}" "${SBATCH_CMD}")
+SBATCH_OUT=$(ssh "${CANNON_SSH}" "${SBATCH_CMD}")
 echo "[submit] ${SBATCH_OUT}"
 JOB_ID=$(echo "${SBATCH_OUT}" | grep -oE '[0-9]+' | head -1)
 
@@ -120,9 +124,9 @@ cat <<EOF
 ============================================================
 
 Next:
-  Monitor:    ssh ${CANNON_USER}@${CANNON_HOST} "squeue -j ${JOB_ID}"
-  Tail log:   ssh ${CANNON_USER}@${CANNON_HOST} "tail -f ${REMOTE_REPO}/logs/mod${MODULE}_${JOB_ID}.out"
-  Cancel:     ssh ${CANNON_USER}@${CANNON_HOST} "scancel ${JOB_ID}"
+  Monitor:    ssh ${CANNON_SSH} "squeue -j ${JOB_ID}"
+  Tail log:   ssh ${CANNON_SSH} "tail -f ${REMOTE_REPO}/logs/mod${MODULE}_${JOB_ID}.out"
+  Cancel:     ssh ${CANNON_SSH} "scancel ${JOB_ID}"
   Pull back:  bash Modules/10_Cluster_Computing/scripts/pull_from_cannon.sh --go
 
 EOF

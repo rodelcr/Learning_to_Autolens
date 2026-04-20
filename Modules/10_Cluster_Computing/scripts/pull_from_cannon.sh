@@ -17,17 +17,19 @@
 #   ./pull_from_cannon.sh --go              # pull artifacts
 #   ./pull_from_cannon.sh --go --include-raw  # artifacts + raw output
 #
-# Override Cannon paths via env vars (defaults match submit_cannon.slurm):
-#   CANNON_USER=rcordova \
-#   CANNON_HOST=login.rc.fas.harvard.edu \
-#   CANNON_REPO_ROOT=/n/holystore01/LABS/hernquist_lab/Lab/$USER/learning_to_autolens \
-#   CANNON_SCRATCH=<same>/output \
+# Uses the SSH alias `cannon` by default (expected in ~/.ssh/config with
+# ControlMaster auto + ControlPath for one-time Duo auth per session).
+# Override via env vars:
+#   CANNON_SSH=cannon                        # ssh alias (default)
+#   CANNON_USER=rcordova                     # only for path construction
+#   CANNON_REPO_ROOT=/n/.../learning_to_autolens
+#   CANNON_SCRATCH=<same>/output
 #     ./pull_from_cannon.sh --go
 
 set -euo pipefail
 
-CANNON_USER="${CANNON_USER:-rcordova}"
-CANNON_HOST="${CANNON_HOST:-login.rc.fas.harvard.edu}"
+CANNON_SSH="${CANNON_SSH:-cannon}"       # SSH alias (see ~/.ssh/config)
+CANNON_USER="${CANNON_USER:-rcordova}"   # only for building the remote path
 # Default matches submit_cannon.slurm's REPO_ROOT / OUTPUT_ROOT defaults.
 # The results/ artifacts live under the repo; raw Nautilus output lives
 # alongside under output/ (both on holystore, not holyscratch).
@@ -60,7 +62,7 @@ rsync -avh --progress ${DRY_FLAG} \
     --include='Modules/*/results/' \
     --include='Modules/*/results/***' \
     --exclude='*' \
-    "${CANNON_USER}@${CANNON_HOST}:${CANNON_REPO_ROOT}/" \
+    "${CANNON_SSH}:${CANNON_REPO_ROOT}/" \
     "${LOCAL_ROOT}/"
 
 # ---- Step 2: Raw Nautilus output (optional) --------------------------------
@@ -71,7 +73,7 @@ if [[ "${INCLUDE_RAW}" == "1" ]]; then
     echo "===================================================================="
     mkdir -p "${LOCAL_RAW_DEST}"
     rsync -avh --progress ${DRY_FLAG} \
-        "${CANNON_USER}@${CANNON_HOST}:${CANNON_SCRATCH}/" \
+        "${CANNON_SSH}:${CANNON_SCRATCH}/" \
         "${LOCAL_RAW_DEST}/"
 fi
 
