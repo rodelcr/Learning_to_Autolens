@@ -603,3 +603,114 @@ If 6713224 still wedges, the next level of debugging is to drop `n_live`
 (80 → 50) and/or reduce `ncores` (16 → 8 or 4) — fewer workers mean less
 memory pressure and less multiprocessing synchronization overhead. The
 notebook itself can still showcase 100×100 as a single-shot inversion.
+
+---
+
+## 2026-04-19 — Post-run audit + result viewers in notebooks
+
+### What was checked (after 04/05/09 all green)
+
+**Convergence and input recovery** (truth: `einstein_radius = 1.6″` in
+`autolens_workspace_original/dataset/imaging/simple{,__no_lens_light}/tracer.json`):
+
+| Module | Final stage | Recovered θ_E | χ²/N | Max \|norm residual\| |
+|--------|-------------|---------------|------|------------------------|
+| 04 | `mass_total[1]` | 1.550″ (SOURCE LP fix) | 0.913 | 3.86 σ |
+| 05 | `search2_pixelized_source` | 1.600″ | 1.019 | 5.73 σ |
+| 09 | `mass_total[1]` | 1.601″ (PowerLaw) | 0.864 | 3.69 σ |
+
+All three reduced χ² are well within the (0.86, 1.02) band — models
+match the data to within noise. Max-residual peaks of 3–6σ are
+typical for sharp arc edges / PSF cores. Mod 04's 3% low θ_E is the
+Isothermal/PowerLaw degeneracy; Mod 09's PowerLaw fit pulled back to
+1.601″.
+
+### Result-viewer cells propagated to the missing notebooks
+
+Commit `f3ad7a7` (James's earlier commit) added self-contained
+"view Cannon results" loader cells only to the Module 04 and Module 09
+main notebooks. This session propagated the same pattern to:
+
+- `Modules/05_Pixelized_Source_Reconstructions/05_pixelized_sources.ipynb`
+  (RESULTS_ROOT = `results`, default stage = `search2_pixelized_source`)
+- `Solutions/04_search_chaining_slam_SOLVED.ipynb`
+  (RESULTS_ROOT = `../Modules/04_Search_Chaining_SLaM/results`, default stage = `mass_total[1]`)
+- `Solutions/05_pixelized_sources_SOLVED.ipynb`
+  (RESULTS_ROOT = `../Modules/05_Pixelized_Source_Reconstructions/results`, default stage = `search2_pixelized_source`)
+- `Solutions/09_mge_linear_light_profiles_SOLVED.ipynb`
+  (RESULTS_ROOT = `../Modules/09_MGE_Linear_Light_Profiles/results`, default stage = `mass_total[1]`)
+
+Each cell is pure stdlib + `IPython.display` (no helper module). Solutions
+notebooks point at the Modules results (one directory up, same tree) so
+the artifacts aren't duplicated. Smoke-tested path resolution from the
+`Solutions/` cwd.
+
+### Careful env-build runbook (autolens312 on Cannon)
+
+For future upgrades. Do everything from a compute node, not a login node.
+
+```bash
+# 1. Grab a small interactive allocation (login nodes cap CPU/memory).
+salloc --partition=test --time=1:00:00 --cpus-per-task=4 --mem=8G
+
+# 2. Activate conda. Use the Miniforge3 at /n/sw, not `module load Anaconda3`
+#    — the Miniforge conda is what the slurm script also sources.
+source /n/sw/Miniforge3-25.3.1-0/etc/profile.d/conda.sh
+
+# 3. Create a Python 3.12 env. autolens 2026.4.x REQUIRES Python ≥ 3.12;
+#    Python 3.11 caps you at autolens 2026.2.26.4, which lacks
+#    RectangularAdaptDensity / RectangularAdaptImage / reg.Adapt.
+conda create -n autolens312 python=3.12 -y
+conda activate autolens312
+
+# 4. CRITICAL: use `python -m pip`, not bare `pip`. A stray
+#    ~/.local/bin/pip (owned by an old user Python 3.10) shadows the env's
+#    pip in PATH and silently installs into ~/.local/lib/python3.10/site-packages/.
+#    The symptom is "pip install succeeds, import fails inside the env."
+python -m pip install --upgrade pip
+python -m pip install autolens jupyterlab astropy "matplotlib<3.9" corner numba
+
+# 5. Verify the env picked up the expected version AND that the classes
+#    the scripts need really exist. This catches the Python-version gap
+#    before a cluster submission does.
+python -c "
+import autolens as al
+print('autolens =', al.__version__)        # expect 2026.4.x
+assert hasattr(al.mesh, 'RectangularAdaptDensity'), 'mesh.RectangularAdaptDensity missing'
+assert hasattr(al.mesh, 'RectangularAdaptImage'),   'mesh.RectangularAdaptImage missing'
+assert hasattr(al.reg,  'Adapt'),                    'reg.Adapt missing'
+assert hasattr(al,      'AdaptImages'),              'AdaptImages missing'
+assert hasattr(al,      'Settings'),                 'Settings missing'
+print('API sanity checks passed.')
+"
+
+# 6. Verify slam_v2026 imports cleanly from the repo root. It wraps the
+#    canonical SLaM stages (source_lp, source_pix, light_lp, mass_total)
+#    for autolens 2026.4 and is what fit_module04 imports.
+cd /n/holystore01/LABS/hernquist_lab/Lab/${USER}/learning_to_autolens
+python -c "
+from slam_v2026 import source_lp, source_pix, light_lp, mass_total
+print('slam_v2026 imports OK')
+"
+
+# 7. Leave the allocation — don't run fits on the interactive node.
+exit
+```
+
+Once the env is built, `Modules/10_Cluster_Computing/scripts/submit_cannon.slurm`
+defaults `CONDA_ENV=autolens312` and will `conda activate` it for every job.
+Override at submit time if you have a second env:
+`sbatch --export=ALL,MODULE=04,CONDA_ENV=alt_env submit_cannon.slurm`.
+
+### Things NOT covered by this runbook (future improvements)
+
+- A `requirements.txt` or `environment.yml` would pin versions so the env
+  is reproducible. autolens pulls a long dependency tree (nautilus-sampler,
+  jax, numba, etc.) and minor-version drift in those transitive deps could
+  silently change fit behavior. Low priority — the autolens metapackage
+  version is what matters most.
+- The old `autolens` env (Python 3.11 / autolens 2026.2.26.4) is left in
+  place on Cannon and will likely keep accumulating stale checkpoints in
+  `$HOME/.conda/envs/autolens/`. It's safe to `conda env remove -n autolens`
+  once no one is targeting it — the slurm script's default switched away
+  from it in commit `bed4f8b`.
