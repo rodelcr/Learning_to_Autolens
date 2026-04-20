@@ -16,8 +16,25 @@ Calling conventions match v2026 slam_start_here.py:
 - `mesh_init`/`regularization_init` are passed as `af.Model` or classes
 """
 
+import os
 import types
 from pathlib import Path
+
+# Fail loudly at import time if PYAUTOFIT_TEST_MODE is set. With this flag
+# enabled, every PyAutoFit search returns a random prior draw instead of
+# sampling — every SLaM stage in this file would produce meaningless output.
+# Mod 08's cached results_summary.json (chi²_red = 44.8, theta_E off by 15%)
+# was a direct casualty of this leaking from autolens_workspace_latest's
+# integration-testing shell into a production Jupyter session.
+if os.environ.get("PYAUTOFIT_TEST_MODE"):
+    raise RuntimeError(
+        f"PYAUTOFIT_TEST_MODE={os.environ['PYAUTOFIT_TEST_MODE']!r} is set. "
+        "PyAutoFit would skip sampling and return a random prior draw — "
+        "every SLaM stage below would be meaningless. "
+        "Unset it and restart the kernel:\n"
+        "    unset PYAUTOFIT_TEST_MODE\n"
+        "    (for notebooks: restart the kernel after unsetting)"
+    )
 
 import autofit as af
 import autolens as al

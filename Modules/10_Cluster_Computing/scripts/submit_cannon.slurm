@@ -29,6 +29,20 @@ set -euo pipefail
 
 MODULE="${MODULE:-04}"
 
+# ---- Safety: refuse to submit a test-mode run ------------------------------
+# PYAUTOFIT_TEST_MODE=1 (documented in autolens_workspace_latest/CLAUDE.md as
+# an integration-testing flag) makes every PyAutoFit search skip sampling and
+# return a random prior draw. If it leaks into the submit environment, we'd
+# silently burn cluster hours on a fit that writes junk artifacts.
+if [[ -n "${PYAUTOFIT_TEST_MODE:-}" ]]; then
+    echo "ERROR: PYAUTOFIT_TEST_MODE=${PYAUTOFIT_TEST_MODE} is set."
+    echo "       PyAutoFit would skip sampling — every fit would be a random"
+    echo "       prior draw. Refusing to submit. Unset it and resubmit:"
+    echo "           unset PYAUTOFIT_TEST_MODE"
+    echo "           sbatch --export=ALL,MODULE=${MODULE} submit_cannon.slurm"
+    exit 1
+fi
+
 # ---- Paths -----------------------------------------------------------------
 # On Cannon, $HOME = /n/home02/<user>/ (small quota — code only).
 # Compute is billed to --account=siag_lab (fast scheduling), but the repo lives
@@ -77,6 +91,11 @@ export NUMEXPR_NUM_THREADS=1
 mkdir -p logs "${OUTPUT_ROOT}"
 
 # ---- Diagnostics ------------------------------------------------------------
+# Print enough provenance that a future debug of "why did my run produce
+# the wrong numbers?" can be answered by reading this log alone. Specifically:
+#   - SHA256 of the fit script actually executed (catches stale-rsync bugs)
+#   - Git commit of the repo on Cannon (catches branch / unpushed drift)
+#   - autolens / autofit versions (catches env drift)
 echo "====================================================================="
 echo "Module:        ${MODULE}"
 echo "Job ID:        ${SLURM_JOB_ID}"
@@ -89,6 +108,25 @@ echo "Repo root:     ${REPO_ROOT}"
 echo "Dataset root:  ${DATASET_ROOT}"
 echo "Output root:   ${OUTPUT_ROOT}"
 echo "Fit script:    ${FIT_SCRIPT}"
+echo "--- provenance -------------------------------------------------------"
+FIT_SHA=$(sha256sum "${FIT_SCRIPT}" 2>/dev/null | awk '{print $1}')
+echo "fit_module${MODULE}.py SHA256: ${FIT_SHA}"
+echo "fit_module${MODULE}.py mtime:  $(stat -c '%y' "${FIT_SCRIPT}" 2>/dev/null || stat -f '%Sm' "${FIT_SCRIPT}")"
+if (cd "${REPO_ROOT}" && git rev-parse --git-dir > /dev/null 2>&1); then
+    echo "git HEAD:     $(cd "${REPO_ROOT}" && git rev-parse HEAD 2>/dev/null)"
+    echo "git branch:   $(cd "${REPO_ROOT}" && git rev-parse --abbrev-ref HEAD 2>/dev/null)"
+    # Any local edits after the last commit? This is the smoking gun for
+    # "the laptop pushed uncommitted changes and the log can't reproduce".
+    if ! (cd "${REPO_ROOT}" && git diff-index --quiet HEAD -- 2>/dev/null); then
+        echo "git state:    DIRTY (uncommitted changes on Cannon — not reproducible from HEAD)"
+        (cd "${REPO_ROOT}" && git status --short 2>/dev/null | head -20 | sed 's/^/              /')
+    else
+        echo "git state:    clean"
+    fi
+else
+    echo "git:          (not a git repo)"
+fi
+echo "---"
 python -c "import autolens as al, autofit as af; \
            print('PyAutoLens', al.__version__, 'PyAutoFit', af.__version__)"
 echo "====================================================================="

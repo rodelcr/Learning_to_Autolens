@@ -36,6 +36,26 @@ import time
 from pathlib import Path
 
 
+def _force_visualize(analysis, result, tag: str = ""):
+    """Force autolens to regenerate image/fit.fits for a finished search.
+
+    On a resumed search (.completed already present), autolens skips
+    visualization regeneration, leaving image/fit.fits missing. That
+    file is what export_results.py reads for chi_squared_per_pixel and
+    max_abs_normalized_residual, so a missing fit.fits → null residual
+    fields in summary.json. Force the re-render here.
+    """
+    try:
+        analysis.visualize(
+            paths=result.paths,
+            instance=result.max_log_likelihood_instance,
+            during_analysis=False,
+        )
+    except Exception as e:
+        print(f"[MOD04]   warning: post-fit visualize {tag} failed: {e}",
+              flush=True)
+
+
 def build_chain(dataset, dataset_name, output_root, n_live_s1, n_live_s2):
     """Part 1: Two-search SIS → SIE chain on simple__no_lens_light."""
     import autofit as af
@@ -66,6 +86,7 @@ def build_chain(dataset, dataset_name, output_root, n_live_s1, n_live_s2):
     print(f"[CHAIN] Search 1 done in {(time.time()-t0)/60:.1f} min; "
           f"best θ_E = {result_1.max_log_likelihood_instance.galaxies.lens.mass.einstein_radius:.3f}\"",
           flush=True)
+    _force_visualize(analysis, result_1, tag="CHAIN Search 1")
 
     lens_2 = af.Model(al.Galaxy, redshift=0.5,
                       mass=al.mp.Isothermal, shear=al.mp.ExternalShear)
@@ -84,12 +105,28 @@ def build_chain(dataset, dataset_name, output_root, n_live_s1, n_live_s2):
     t0 = time.time()
     result_2 = search_2.fit(model=model_2, analysis=analysis)
     print(f"[CHAIN] Search 2 done in {(time.time()-t0)/60:.1f} min", flush=True)
+    _force_visualize(analysis, result_2, tag="CHAIN Search 2")
     print(result_2.info, flush=True)
     return result_1, result_2
 
 
 def build_slam(dataset, dataset_name, output_root, slam_n_live):
-    """Part 2: Full 5-stage SLaM pipeline on simple (with lens light)."""
+    """Part 2: Full 5-stage SLaM pipeline on simple (with lens light).
+
+    History: an earlier version of this function froze the mass centre to
+    (0, 0) and used default wide priors on the source Sersic. That produced
+    a catastrophic SOURCE LP failure in the committed cluster artifacts
+    (chi²/pix = 17.3, max|res| = 20.8σ, source collapsed to R_e = 5.4",
+    n = 3.85). The MASS TOTAL stage eventually recovered, but the SLaM
+    pipeline's `results/source_lp[1]/` directory was being presented as a
+    good cluster result when in fact the first stage had diverged.
+
+    The priors below fix both failure modes:
+      - Mass centre is FREE but with a tight GaussianPrior around the
+        image centre (the true centre in this dataset is ~(0.007, 0.008)").
+      - Source Sersic is CAPPED: effective_radius ≤ 1" and sersic_index
+        ∈ [0.5, 4.0], preventing the "huge diffuse blob" local minimum.
+    """
     import autofit as af
     import autolens as al
     from slam_v2026 import source_lp, source_pix, light_lp, mass_total
@@ -100,6 +137,19 @@ def build_slam(dataset, dataset_name, output_root, slam_n_live):
         number_of_cores=int(os.environ.get("SLURM_CPUS_PER_TASK", "1")),
     )
 
+    # ---- Mass: Isothermal with tight but free centre ------------------------
+    mass_lp = af.Model(al.mp.Isothermal)
+    mass_lp.centre.centre_0 = af.GaussianPrior(mean=0.0, sigma=0.1)
+    mass_lp.centre.centre_1 = af.GaussianPrior(mean=0.0, sigma=0.1)
+    mass_lp.einstein_radius = af.UniformPrior(lower_limit=0.5, upper_limit=3.0)
+
+    # ---- Source Sersic with compact/physical priors -------------------------
+    source_bulge = af.Model(al.lp.Sersic)
+    source_bulge.effective_radius = af.UniformPrior(lower_limit=0.01, upper_limit=1.0)
+    source_bulge.sersic_index = af.UniformPrior(lower_limit=0.5, upper_limit=4.0)
+    source_bulge.centre.centre_0 = af.GaussianPrior(mean=0.0, sigma=0.3)
+    source_bulge.centre.centre_1 = af.GaussianPrior(mean=0.0, sigma=0.3)
+
     print("[SLaM] SOURCE LP...", flush=True)
     t0 = time.time()
     source_lp_result = source_lp.run(
@@ -107,16 +157,36 @@ def build_slam(dataset, dataset_name, output_root, slam_n_live):
         dataset=dataset,
         lens_bulge=af.Model(al.lp.Sersic),
         lens_disk=None,
-        mass=af.Model(al.mp.Isothermal),
+        mass=mass_lp,
         shear=af.Model(al.mp.ExternalShear),
-        source_bulge=af.Model(al.lp.Sersic),
+        source_bulge=source_bulge,
         redshift_lens=0.5,
         redshift_source=1.0,
-        mass_centre=(0.0, 0.0),
+        # NOTE: no mass_centre= kwarg — centre floats with the GaussianPrior
+        # configured on mass_lp above. Freezing to (0, 0) previously caused
+        # the arc to be missed entirely.
     )
     print(f"[SLaM] SOURCE LP done in {(time.time()-t0)/60:.1f} min; "
           f"θ_E = {source_lp_result.instance.galaxies.lens.mass.einstein_radius:.3f}\"",
           flush=True)
+
+    # Quality-gate: if SOURCE LP came out with theta_E near the prior rail
+    # or a nonsensical source, the rest of the pipeline is garbage. Bail
+    # loudly rather than silently spending more cluster hours.
+    _map_theta_E = source_lp_result.instance.galaxies.lens.mass.einstein_radius
+    _map_source_Re = source_lp_result.instance.galaxies.source.bulge.effective_radius
+    _map_source_n = source_lp_result.instance.galaxies.source.bulge.sersic_index
+    if not (0.6 < _map_theta_E < 2.8):
+        raise RuntimeError(
+            f"SOURCE LP converged to theta_E = {_map_theta_E:.3f} — "
+            "likely stuck at a prior rail. Widen prior or recenter."
+        )
+    if _map_source_Re > 0.9:
+        raise RuntimeError(
+            f"SOURCE LP source effective_radius = {_map_source_Re:.2f}\" "
+            "(> 0.9\"); source has collapsed to a diffuse blob — check the "
+            "source bulge prior."
+        )
 
     print("[SLaM] SOURCE PIX run_1...", flush=True)
     t0 = time.time()

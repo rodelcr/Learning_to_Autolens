@@ -77,30 +77,47 @@ Learning_to_Autolens/
 
 ## Key Dependencies
 
+The authoritative pins live in `requirements.txt`. Summary:
+
 ```
-autolens >= 2024.1
-autofit
-dynesty
-numpy
-matplotlib
-astropy
-scipy
+python           3.12            # autolens 2026.4+ requires ≥ 3.12
+autolens         >= 2026.4.13    # pulls in autoarray/autoconf/autofit/autogalaxy transitively
+nautilus-sampler (transitive)    # default sampler — replaces dynesty in modern autolens
+matplotlib       >= 3.7, < 3.9   # PyAutoLens has a plotting incompat with 3.9+
+jupyterlab       >= 4.5
+astropy          >= 7.0
+corner           >= 2.2
+numba            >= 0.65
 ```
+
+Install with `python -m pip install -r requirements.txt` (never bare `pip`, to
+avoid a PATH-shadowed user-level pip installing into the wrong interpreter).
+Verify with `python check_install.py`.
 
 ## Common Commands
 
 ```bash
-# Install PyAutoLens
-pip install autolens
+# --- Install (one-time) ---------------------------------------------------
+conda create -n autolens python=3.12 -y
+conda activate autolens
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+python -m ipykernel install --user --name=autolens --display-name="Python (autolens)"
+python check_install.py
 
-# Run a tutorial notebook
+# --- Launch / run --------------------------------------------------------
+jupyter lab                                # then Kernel → Python (autolens)
 jupyter lab Modules/01_Basics_Grids_Galaxies_RayTracing/01_grids_galaxies_raytracing.ipynb
 
-# Run a Mathematica script
-wolframscript -file Mathematica/lens_equation_symbolic.wl
+# --- Cannon round-trip (Modules 04/05/09) --------------------------------
+bash Modules/10_Cluster_Computing/scripts/push_to_cannon.sh --go
+bash Modules/10_Cluster_Computing/scripts/seed_cannon_data.sh --go   # first push only
+# On Cannon:
+#   sbatch --export=ALL,MODULE=04 Modules/10_Cluster_Computing/scripts/submit_cannon.slurm
+bash Modules/10_Cluster_Computing/scripts/pull_from_cannon.sh --go
 
-# Run Jupyter Lab
-jupyter lab
+# --- Mathematica (optional) ----------------------------------------------
+wolframscript -file Mathematica/lens_equation_symbolic.wl
 ```
 
 ## Reference Texts

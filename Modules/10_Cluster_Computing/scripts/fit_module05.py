@@ -91,6 +91,13 @@ def build(dataset_root, output_root, dataset_name,
     print(f"[MOD05] Search 1 done in {(time.time()-t0)/60:.1f} min; "
           f"θ_E = {result_1.instance.galaxies.lens.mass.einstein_radius:.3f}\"",
           flush=True)
+    # Defensive: force-regenerate image/fit.fits so export_results.py can
+    # compute chi²_per_pixel and max|residual| from it. On a resumed
+    # search, autolens sometimes skips visualization and the FITS cube is
+    # absent, leaving the exported summary.json with null residual fields
+    # — which is exactly how the committed search1_parametric_source/
+    # summary.json ended up with nulls despite a valid fit.
+    _force_visualize(analysis_1, result_1, tag="Search 1")
 
     # ---- Search 2: Pixelized source -----------------------------------------
     print("[MOD05] Search 2: pixelized source (RectangularAdaptDensity 100x100)",
@@ -138,8 +145,33 @@ def build(dataset_root, output_root, dataset_name,
     t0 = time.time()
     result_2 = search_2.fit(model=model_2, analysis=analysis_2)
     print(f"[MOD05] Search 2 done in {(time.time()-t0)/60:.1f} min", flush=True)
+    _force_visualize(analysis_2, result_2, tag="Search 2")
     print(result_2.info, flush=True)
     return result_1, result_2
+
+
+def _force_visualize(analysis, result, tag: str = ""):
+    """Force autolens to regenerate image/fit.fits for a finished search.
+
+    PyAutoFit's default behavior is to skip visualization when a search is
+    resumed (the `.completed` marker is already present), which leaves
+    image/fit.fits missing. export_results.py reads chi_squared_per_pixel
+    and max_abs_normalized_residual out of that FITS cube, so a missing
+    file turns the exported summary's residual fields into `null`. Calling
+    analysis.visualize(...) explicitly here re-renders the file.
+
+    Best-effort: any exception is logged but not raised — we'd rather
+    finish the search chain than abort on a visualization slip.
+    """
+    try:
+        analysis.visualize(
+            paths=result.paths,
+            instance=result.max_log_likelihood_instance,
+            during_analysis=False,
+        )
+    except Exception as e:
+        print(f"[MOD05]   warning: post-fit visualize {tag} failed: {e}",
+              flush=True)
 
 
 def main():

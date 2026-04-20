@@ -137,6 +137,22 @@ def export_one(search_dir: Path, dest: Path, force: bool = False):
                 )
         except Exception as e:
             print(f"[export] chi2 diagnostics failed: {e}", flush=True)
+            summary["chi_squared_status"] = f"read error: {e}"
+    else:
+        # Missing fit.fits typically means the search was resumed from a
+        # checkpoint and autolens skipped the visualization regeneration
+        # step (`force_visualize_overwrite: false` in general.yaml). The
+        # quality metrics can't be recovered from the lightweight files
+        # alone. Flag explicitly in the summary so the consumer knows
+        # *why* the fields are null rather than assuming the fit failed.
+        summary["chi_squared_status"] = (
+            "image/fit.fits not found — likely a resumed search skipped "
+            "visualization. Fix: re-run with force_visualize_overwrite=True "
+            "in the config, or call analysis.visualize(paths, instance, "
+            "during_analysis=False) post-fit in the fit script."
+        )
+        print(f"[export]   WARNING: {fit_fits} missing → residual metrics null",
+              flush=True)
 
     with open(dest / "summary.json", "w") as f:
         json.dump(summary, f, indent=2)
