@@ -1,0 +1,31 @@
+# Learning to Autolens — pip requirements
+#
+# Tested environment: Python 3.12.13 + autolens 2026.4.13.6 on Harvard
+# FASRC Cannon (see PROGRESS_LOG.md "Careful env-build runbook").
+#
+# Install:
+#   conda create -n autolens312 python=3.12 -y
+#   conda activate autolens312
+#   python -m pip install --upgrade pip
+#   python -m pip install -r requirements.txt
+#
+# IMPORTANT: use `python -m pip`, not bare `pip`, to avoid a PATH-shadowed
+# user-level pip installing into the wrong interpreter.
+
+# --- Core modeling stack ---------------------------------------------------
+# autolens pulls in autoarray/autoconf/autofit/autogalaxy at matching
+# versions, plus nautilus-sampler, jax, jaxlib, scipy, scikit-learn, etc.
+# Pinning only the user-visible top-level packages keeps this file readable
+# while letting the auto* transitive pins come from autolens itself.
+autolens>=2026.4.13,<2027
+
+# --- Notebooks + plotting --------------------------------------------------
+jupyterlab>=4.5
+matplotlib>=3.7,<3.9   # PyAutoLens plotting has a known issue with 3.9+
+corner>=2.2            # posterior corner plots
+astropy>=7.0           # FITS I/O, cosmology
+
+# --- JAX-accelerated likelihoods ------------------------------------------
+# numba is used by a few of autolens's inner loops; installing it explicitly
+# gives clearer errors than the autolens metapackage's lazy import.
+numba>=0.65

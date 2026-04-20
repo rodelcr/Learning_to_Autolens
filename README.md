@@ -15,17 +15,22 @@ This project is a companion to [Learning to Lens](https://github.com/rodelcr/Lea
 ### 1. Create a conda environment
 
 ```bash
-conda create -n autolens python=3.11
+conda create -n autolens python=3.12 -y
 conda activate autolens
 ```
+
+Python **3.12 is required** — autolens 2026.4+ (which Modules 04/05/09 depend on for `RectangularAdaptDensity`, `RectangularAdaptImage`, `reg.Adapt`, and `AdaptImageMaker`) is not released for Python 3.11 or earlier.
 
 ### 2. Install dependencies
 
 ```bash
-pip install autolens jupyterlab astropy "matplotlib<3.9" corner
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
 ```
 
-This installs PyAutoLens (>= 2026.2) and all dependencies. We pin `matplotlib<3.9` to avoid a known plotting compatibility issue with PyAutoLens.
+`requirements.txt` pins the top-level packages (autolens ≥ 2026.4.13, jupyterlab, matplotlib < 3.9, corner, astropy, numba). We cap `matplotlib < 3.9` because PyAutoLens has a known plotting incompatibility with 3.9+.
+
+> **Use `python -m pip`, not bare `pip`.** A stray user-level `pip` on `$PATH` can shadow the env's pip and silently install into the wrong interpreter — this happens on HPC accounts and occasionally on laptops with multiple Python installs. The symptom is "`pip install` succeeds, `import autolens` fails." See `PROGRESS_LOG.md` for the Cannon-specific runbook if installing on Harvard FASRC.
 
 ### 3. Verify the install
 
@@ -61,8 +66,8 @@ Symbolic derivation scripts in `Mathematica/` require Mathematica 13.0+ or Wolfr
 
 | Software | Version | Purpose | Required? |
 |----------|---------|---------|-----------|
-| Python | 3.10–3.12 | Runtime | **Yes** |
-| PyAutoLens | >= 2026.2 | Lens modeling | **Yes** |
+| Python | 3.12 | Runtime (autolens 2026.4+ requires ≥ 3.12) | **Yes** |
+| PyAutoLens | >= 2026.4.13 | Lens modeling | **Yes** |
 | Jupyter Lab | any | Notebook environment | **Yes** |
 | Wolfram Mathematica | 13.0+ | Symbolic derivations | Optional |
 
