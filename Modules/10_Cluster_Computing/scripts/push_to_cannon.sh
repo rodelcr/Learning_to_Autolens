@@ -2,19 +2,32 @@
 # push_to_cannon.sh — sync the local repo (code + datasets + preserved
 # Nautilus checkpoints) to Cannon.
 #
+# Default destination is the lab-storage path used by submit_cannon.slurm
+# and pull_from_cannon.sh, so push / submit / pull all operate on the
+# same tree. Prior versions pushed to $HOME/learning_to_autolens which
+# is a DIFFERENT filesystem from the one the slurm job reads — caused
+# the 2026-04-20 stale-hash incident.
+#
 # Usage:
 #   ./push_to_cannon.sh                     # dry run
 #   ./push_to_cannon.sh --go                # actual transfer
 #
 # Override the Cannon target via env vars:
-#   CANNON_USER=rcordovarosado CANNON_HOST=login.rc.fas.harvard.edu \
+#   CANNON_USER=rcordova CANNON_HOST=login.rc.fas.harvard.edu \
+#   CANNON_REPO_ROOT=/n/home02/rcordova/learning_to_autolens \
 #     ./push_to_cannon.sh --go
 
 set -euo pipefail
 
 CANNON_USER="${CANNON_USER:-rcordova}"
 CANNON_HOST="${CANNON_HOST:-login.rc.fas.harvard.edu}"
-CANNON_DEST="${CANNON_DEST:-learning_to_autolens}"
+# Absolute path on Cannon — matches submit_cannon.slurm's REPO_ROOT default.
+# Using an absolute path (not ~/...) avoids ambiguity between home and lab
+# storage, which live on different filesystems on Cannon.
+CANNON_REPO_ROOT="${CANNON_REPO_ROOT:-/n/holystore01/LABS/hernquist_lab/Lab/${CANNON_USER}/learning_to_autolens}"
+# Back-compat: CANNON_DEST still works if someone sets it, but we now
+# resolve the destination from CANNON_REPO_ROOT.
+CANNON_DEST="${CANNON_DEST:-${CANNON_REPO_ROOT}}"
 
 LOCAL_ROOT="$(cd "$(dirname "$0")/../../.." && pwd)"
 
@@ -53,12 +66,14 @@ rsync -avh --progress ${DRY_FLAG} \
     --include='autolens_workspace_latest/dataset/***' \
     --exclude='autolens_workspace_latest/*' \
     "${LOCAL_ROOT}/" \
-    "${CANNON_USER}@${CANNON_HOST}:~/${CANNON_DEST}/"
+    "${CANNON_USER}@${CANNON_HOST}:${CANNON_DEST}/"
 
 if [[ -n "${DRY_FLAG}" ]]; then
     echo
     echo "This was a DRY RUN. Re-run with --go to actually transfer."
 else
+    echo
+    echo "Pushed to: ${CANNON_USER}@${CANNON_HOST}:${CANNON_DEST}"
     echo
     echo "Next: submit a job."
     echo "  ssh ${CANNON_USER}@${CANNON_HOST}"
