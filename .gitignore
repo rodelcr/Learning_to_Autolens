@@ -23,6 +23,9 @@ env/
 output/
 output*/
 
+# --- Published figures produced by Mod 08 notebook execution (regenerate on run) ---
+Modules/08_Results_Diagnostics_Figures/figures/
+
 # --- Slurm logs ---
 logs/
 
