@@ -28,6 +28,7 @@
 #
 #   sbatch --export=ALL,MODULE=04 submit_cannon.slurm
 #   sbatch --export=ALL,MODULE=05 submit_cannon.slurm
+#   sbatch --export=ALL,MODULE=06 submit_cannon.slurm
 #   sbatch --export=ALL,MODULE=09 submit_cannon.slurm --mem=64G --time=48:00:00
 #
 # Nautilus checkpoints survive requeues — resubmitting the same command
@@ -66,12 +67,12 @@ CONDA_ENV="${CONDA_ENV:-autolens312}"
 CONDA_ACTIVATE_SCRIPT="${CONDA_ACTIVATE_SCRIPT:-/n/sw/Miniforge3-25.3.1-0/etc/profile.d/conda.sh}"
 
 # Dataset root differs by module:
-#   04, 05 → autolens_workspace_original
-#   09     → autolens_workspace_latest
+#   04, 05, 06 → autolens_workspace_original
+#   09         → autolens_workspace_latest
 case "${MODULE}" in
-    04|05) DATASET_ROOT="${REPO_ROOT}/autolens_workspace_original/dataset/imaging" ;;
-    09)    DATASET_ROOT="${REPO_ROOT}/autolens_workspace_latest/dataset/imaging"  ;;
-    *)     echo "unknown MODULE=${MODULE}"; exit 2 ;;
+    04|05|06) DATASET_ROOT="${REPO_ROOT}/autolens_workspace_original/dataset/imaging" ;;
+    09)       DATASET_ROOT="${REPO_ROOT}/autolens_workspace_latest/dataset/imaging"  ;;
+    *)        echo "unknown MODULE=${MODULE}"; exit 2 ;;
 esac
 
 FIT_SCRIPT="${REPO_ROOT}/Modules/10_Cluster_Computing/scripts/fit_module${MODULE}.py"
