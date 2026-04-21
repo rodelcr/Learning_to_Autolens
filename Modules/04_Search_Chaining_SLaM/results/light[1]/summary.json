@@ -1,6 +1,6 @@
 {
   "search_name": "light[1]",
-  "source_dir": "/n/holystore01/LABS/hernquist_lab/Lab/rcordova/learning_to_autolens/output/module_04/slam/simple/light[1]/a557ace2672a6fa0d34e03204948a00d",
+  "source_dir": "output/module_04/slam/simple/light[1]/a557ace2672a6fa0d34e03204948a00d",
   "max_log_likelihood": 5596.352303215202,
   "log_evidence": 5554.456604156113,
   "chi_squared_total": 2597.053556605847,

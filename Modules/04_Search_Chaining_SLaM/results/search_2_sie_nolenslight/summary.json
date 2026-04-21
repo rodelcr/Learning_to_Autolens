@@ -1,6 +1,6 @@
 {
   "search_name": "search_2_sie_nolenslight",
-  "source_dir": "/n/holystore01/LABS/hernquist_lab/Lab/rcordova/learning_to_autolens/output/module_04/chaining/simple__no_lens_light/search_2_sie_nolenslight/c63891d44e44d961ce31eeccc5bc5ee6",
+  "source_dir": "output/module_04/chaining/simple__no_lens_light/search_2_sie_nolenslight/c63891d44e44d961ce31eeccc5bc5ee6",
   "max_log_likelihood": 6513.376240491119,
   "log_evidence": 6441.948903942653,
   "chi_squared_total": 3106.9535478334965,

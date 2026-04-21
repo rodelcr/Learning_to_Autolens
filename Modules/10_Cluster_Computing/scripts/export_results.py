@@ -87,8 +87,15 @@ def find_search_dirs(output_root: Path):
         yield hash_dir
 
 
-def export_one(search_dir: Path, dest: Path, force: bool = False):
-    """Export artifacts for one completed search."""
+def export_one(search_dir: Path, dest: Path, repo_root: Path | None = None, force: bool = False):
+    """Export artifacts for one completed search.
+
+    If `repo_root` is given, `summary.json`'s `source_dir` is written as a
+    path relative to repo_root so the committed artifact is portable across
+    users (otherwise Cannon's `/n/holystore01/LABS/<lab>/Lab/<user>/...`
+    leaks into git). Falls back to the absolute string when the search dir
+    isn't under repo_root.
+    """
     import autofit as af
     from autofit.plot import corner_cornerpy
     import matplotlib
@@ -120,9 +127,16 @@ def export_one(search_dir: Path, dest: Path, force: bool = False):
         so = None
 
     # 3. summary.json — small scalar dict for quick programmatic access
+    if repo_root is not None:
+        try:
+            source_dir_str = str(search_dir.resolve().relative_to(repo_root.resolve()))
+        except ValueError:
+            source_dir_str = str(search_dir)
+    else:
+        source_dir_str = str(search_dir)
     summary = {
         "search_name": search_name,
-        "source_dir": str(search_dir),
+        "source_dir": source_dir_str,
         "max_log_likelihood": None,
         "log_evidence": None,
         "chi_squared_total": None,
@@ -240,7 +254,7 @@ def main():
     if args.search_dir:
         if not args.dest:
             p.error("--dest is required with --search-dir")
-        export_one(args.search_dir, args.dest, force=args.force)
+        export_one(args.search_dir, args.dest, repo_root=args.repo_root, force=args.force)
         return
 
     if not args.output_root:
@@ -258,7 +272,7 @@ def main():
     n = 0
     for search_dir in find_search_dirs(args.output_root):
         dest = results_root / search_dir.parent.name
-        export_one(search_dir, dest, force=args.force)
+        export_one(search_dir, dest, repo_root=args.repo_root, force=args.force)
         n += 1
     print(f"[export] exported {n} search(es) → {results_root}", flush=True)
 

@@ -1,6 +1,6 @@
 {
   "search_name": "mass_total[1]",
-  "source_dir": "/n/holystore01/LABS/hernquist_lab/Lab/rcordova/learning_to_autolens/output/module_04/slam/simple/mass_total[1]/3acb06f24b030776077661d26bc10ae6",
+  "source_dir": "output/module_04/slam/simple/mass_total[1]/3acb06f24b030776077661d26bc10ae6",
   "max_log_likelihood": 5603.6653131140565,
   "log_evidence": 5555.878815560874,
   "chi_squared_total": 2582.427536808138,
