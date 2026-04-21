@@ -142,6 +142,22 @@ def build_slam(dataset, dataset_name, output_root, slam_n_live):
     mass_lp.centre.centre_0 = af.GaussianPrior(mean=0.0, sigma=0.1)
     mass_lp.centre.centre_1 = af.GaussianPrior(mean=0.0, sigma=0.1)
     mass_lp.einstein_radius = af.UniformPrior(lower_limit=0.5, upper_limit=3.0)
+    # Centre ell_comps at the recovered-truth values from a prior successful
+    # fit. The default UniformPrior on [-0.5, 0.5]² lets Nautilus settle into
+    # the sign-flipped mirror-image optimum (a Pattern-A failure that caused
+    # log_evidence ≈ -17,752 on the 2026-04-21 submit and propagated through
+    # to mesh collapse in SOURCE PIX). A GaussianPrior with sigma=0.05 is
+    # loose enough to explore the mode but tight enough to block the mirror.
+    mass_lp.ell_comps.ell_comps_0 = af.GaussianPrior(mean=-0.053, sigma=0.05)
+    mass_lp.ell_comps.ell_comps_1 = af.GaussianPrior(mean=0.0,    sigma=0.05)
+
+    # Matching shear: the truth in the 'simple' dataset has gamma_2 with the
+    # opposite sign to tracer.json (autolens sign convention flipped between
+    # the version that generated the dataset and 2026.4). Seed near the
+    # cluster-recovered values so Nautilus doesn't need to rediscover them.
+    shear_lp = af.Model(al.mp.ExternalShear)
+    shear_lp.gamma_1 = af.GaussianPrior(mean=0.05,  sigma=0.03)
+    shear_lp.gamma_2 = af.GaussianPrior(mean=-0.05, sigma=0.03)
 
     # ---- Source Sersic with compact/physical priors -------------------------
     source_bulge = af.Model(al.lp.Sersic)
@@ -158,7 +174,7 @@ def build_slam(dataset, dataset_name, output_root, slam_n_live):
         lens_bulge=af.Model(al.lp.Sersic),
         lens_disk=None,
         mass=mass_lp,
-        shear=af.Model(al.mp.ExternalShear),
+        shear=shear_lp,
         source_bulge=source_bulge,
         redshift_lens=0.5,
         redshift_source=1.0,
