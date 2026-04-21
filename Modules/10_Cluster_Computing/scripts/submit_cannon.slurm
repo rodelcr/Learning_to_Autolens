@@ -4,8 +4,8 @@
 #SBATCH --time=24:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=16
-#SBATCH --mem=32G
+#SBATCH --cpus-per-task=32
+#SBATCH --mem=64G
 #SBATCH --output=logs/%x_%j.out
 #SBATCH --error=logs/%x_%j.err
 #SBATCH --mail-type=BEGIN,END,FAIL
@@ -132,7 +132,14 @@ if (cd "${REPO_ROOT}" && git rev-parse --git-dir > /dev/null 2>&1); then
     # "the laptop pushed uncommitted changes and the log can't reproduce".
     if ! (cd "${REPO_ROOT}" && git diff-index --quiet HEAD -- 2>/dev/null); then
         echo "git state:    DIRTY (uncommitted changes on Cannon — not reproducible from HEAD)"
-        (cd "${REPO_ROOT}" && git status --short 2>/dev/null | head -20 | sed 's/^/              /')
+        # `git status --short | head -20 | sed ...` used to live here but,
+        # with `set -o pipefail` on, the SIGPIPE head sends to git once it
+        # has its 20 lines bubbled up as exit 141 and killed the whole job
+        # before the fit started (mod09_7020232). Capture the full output
+        # in a variable and slice in pure bash — no pipes, no surprises.
+        _dirty="$(cd "${REPO_ROOT}" && git status --short 2>/dev/null || true)"
+        echo "${_dirty}" | awk 'NR<=20 {print "              "$0} END {if (NR>20) print "              ... (" NR-20 " more)"}'
+        unset _dirty
     else
         echo "git state:    clean"
     fi
