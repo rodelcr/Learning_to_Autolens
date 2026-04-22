@@ -79,8 +79,15 @@ def build_chain(dataset, dataset_name, output_root, n_live_s1, n_live_s2):
         name="search_1_sis_nolenslight",
         unique_tag=dataset_name,
         n_live=n_live_s1,
+        number_of_cores=int(os.environ.get("SLURM_CPUS_PER_TASK", "1")),
     )
-    analysis = al.AnalysisImaging(dataset=dataset)
+    # use_jax=False is critical on CPU nodes: default JAX backend is single-
+    # threaded on CPU (no CUDA on these nodes), and its "parallelization
+    # handled by JAX" routing stops Nautilus's multiprocessing from ever
+    # spawning workers — 1 CPU active / 31 idle, 16+ h wall clock for a
+    # 2-hour fit. SLaM's shim already passes use_jax=False; pass it here
+    # too so the chain section isn't silently single-core.
+    analysis = al.AnalysisImaging(dataset=dataset, use_jax=False)
     t0 = time.time()
     result_1 = search_1.fit(model=model_1, analysis=analysis)
     print(f"[CHAIN] Search 1 done in {(time.time()-t0)/60:.1f} min; "
@@ -101,6 +108,7 @@ def build_chain(dataset, dataset_name, output_root, n_live_s1, n_live_s2):
         name="search_2_sie_nolenslight",
         unique_tag=dataset_name,
         n_live=n_live_s2,
+        number_of_cores=int(os.environ.get("SLURM_CPUS_PER_TASK", "1")),
     )
     t0 = time.time()
     result_2 = search_2.fit(model=model_2, analysis=analysis)
