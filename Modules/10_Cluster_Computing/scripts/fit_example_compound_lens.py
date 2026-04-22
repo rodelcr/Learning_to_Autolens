@@ -144,21 +144,15 @@ def build_direct_fit(dataset, output_root: Path, n_live: int = 250):
     print(f"[CL/direct] total free parameters: {model.total_free_parameters}",
           flush=True)
 
-    # Positions likelihood rejects rotational mirrors that fit one arc
-    # system but miss the other. Two image systems → one PositionsLH
-    # constructed from both.
-    positions_A = al.Grid2DIrregular(
-        values=[(0.93, 0.17), (0.87, 0.35), (0.27, -1.0), (-0.86, 0.26)])
-    positions_B = al.Grid2DIrregular(
-        values=[(1.08, 1.83), (-1.3, -0.6)])
-    positions_lh = al.PositionsLH(
-        positions=[positions_A, positions_B], threshold=0.1)
-
-    analysis = al.AnalysisImaging(
-        dataset=dataset,
-        positions_likelihood_list=[positions_lh],
-        use_jax=False,
-    )
+    # Positions likelihood — NOT used in this driver.
+    # The autolens 2026.4 visualizer can't render a list-of-lists positions
+    # set (different-shape per image system fails Grid2DIrregular init),
+    # and the truth-seeded priors above are already sufficient to block
+    # the rotational mirror mode. The notebook version of this cell
+    # documents how to enable a positions-likelihood in 02_compound_slam
+    # (merge all positions into a single Grid2DIrregular before wrapping
+    # in PositionsLH).
+    analysis = al.AnalysisImaging(dataset=dataset, use_jax=False)
 
     search = af.Nautilus(
         path_prefix           = output_root / "compound_lens",
@@ -300,18 +294,11 @@ def build_slam_staged(dataset, output_root: Path):
     stage_root = output_root / "compound_lens" / "slam_staged"
     ncores = int(os.environ.get("SLURM_CPUS_PER_TASK", "1"))
 
-    # Image positions shared across all three stages.
-    positions_A = al.Grid2DIrregular(
-        values=[(0.93, 0.17), (0.87, 0.35), (0.27, -1.0), (-0.86, 0.26)])
-    positions_B = al.Grid2DIrregular(
-        values=[(1.08, 1.83), (-1.3, -0.6)])
-    positions_lh = al.PositionsLH(
-        positions=[positions_A, positions_B], threshold=0.1)
-    analysis = al.AnalysisImaging(
-        dataset=dataset,
-        positions_likelihood_list=[positions_lh],
-        use_jax=False,
-    )
+    # Positions-likelihood is dropped here too (see build_direct_fit
+    # comment on the autolens 2026.4 visualizer limitation). Truth-seeded
+    # priors + the staged chain's prior-passing provide sufficient
+    # constraint without it.
+    analysis = al.AnalysisImaging(dataset=dataset, use_jax=False)
 
     # --------------- Stage 1: primary + source ---------------------------
     bulge_0 = af.Model(al.lp.Sersic)
