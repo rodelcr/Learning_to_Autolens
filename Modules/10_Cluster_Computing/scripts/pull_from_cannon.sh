@@ -62,13 +62,17 @@ done
 # nothing else under Modules/. The trailing '***' matches everything
 # under results/ recursively. The final '*' exclude drops unmatched paths.
 echo "===================================================================="
-echo "  Step 1: pulling Modules/*/results/ artifacts (git-trackable)"
+echo "  Step 1: pulling Modules/*/results/ + Examples/*/results/ (git-trackable)"
 echo "===================================================================="
 rsync -avh --progress ${DRY_FLAG} \
     --include='Modules/' \
     --include='Modules/*/' \
     --include='Modules/*/results/' \
     --include='Modules/*/results/***' \
+    --include='Examples/' \
+    --include='Examples/*/' \
+    --include='Examples/*/results/' \
+    --include='Examples/*/results/***' \
     --exclude='*' \
     "${CANNON_SSH}:${CANNON_REPO_ROOT}/" \
     "${LOCAL_ROOT}/"

@@ -241,6 +241,10 @@ def main():
     p.add_argument("--module", type=str,
                    help="Module number (04, 05, 09) to export into "
                         "Modules/<module>_.../results/. Requires --repo-root.")
+    p.add_argument("--example", type=str,
+                   help="Example name (e.g. compound_lens) to export into "
+                        "Examples/<name>/results/. Alternative to --module; "
+                        "requires --repo-root.")
     p.add_argument("--repo-root", type=Path,
                    help="Learning_to_Autolens repo root (for destination path)")
     p.add_argument("--search-dir", type=Path,
@@ -259,14 +263,23 @@ def main():
 
     if not args.output_root:
         p.error("need either --output-root or --search-dir")
-    if not args.module or not args.repo_root:
-        p.error("--module and --repo-root are required when using --output-root")
+    if not (args.module or args.example) or not args.repo_root:
+        p.error("--module or --example, plus --repo-root, required when using "
+                "--output-root")
+    if args.module and args.example:
+        p.error("--module and --example are mutually exclusive")
 
-    candidates = list((args.repo_root / "Modules").glob(f"{args.module}_*"))
-    if not candidates:
-        sys.exit(f"No module dir matching {args.module}_* under Modules/")
-    module_dir = candidates[0]
-    results_root = module_dir / "results"
+    if args.example:
+        example_dir = args.repo_root / "Examples" / args.example
+        if not example_dir.is_dir():
+            sys.exit(f"Examples/{args.example}/ does not exist")
+        results_root = example_dir / "results"
+    else:
+        candidates = list((args.repo_root / "Modules").glob(f"{args.module}_*"))
+        if not candidates:
+            sys.exit(f"No module dir matching {args.module}_* under Modules/")
+        module_dir = candidates[0]
+        results_root = module_dir / "results"
     results_root.mkdir(exist_ok=True)
 
     n = 0

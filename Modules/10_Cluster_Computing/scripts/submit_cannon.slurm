@@ -66,16 +66,28 @@ CONDA_ENV="${CONDA_ENV:-autolens312}"
 # 2026-04; override via cannon.env if you bootstrap your own copy.
 CONDA_ACTIVATE_SCRIPT="${CONDA_ACTIVATE_SCRIPT:-/n/sw/Miniforge3-25.3.1-0/etc/profile.d/conda.sh}"
 
-# Dataset root differs by module:
-#   04, 05, 06 → autolens_workspace_original
-#   09         → autolens_workspace_latest
-case "${MODULE}" in
-    04|05|06) DATASET_ROOT="${REPO_ROOT}/autolens_workspace_original/dataset/imaging" ;;
-    09)       DATASET_ROOT="${REPO_ROOT}/autolens_workspace_latest/dataset/imaging"  ;;
-    *)        echo "unknown MODULE=${MODULE}"; exit 2 ;;
-esac
+# Dataset root + fit script differ by MODULE (curriculum) or EXAMPLE
+# (practice-example collection under Examples/). EXAMPLE wins if set.
+#   MODULE=04, 05, 06 → autolens_workspace_original/dataset/imaging
+#   MODULE=09         → autolens_workspace_latest/dataset/imaging
+#   EXAMPLE=compound_lens → Examples/compound_lens/mocks
+if [[ -n "${EXAMPLE:-}" ]]; then
+    case "${EXAMPLE}" in
+        compound_lens)
+            DATASET_ROOT="${REPO_ROOT}/Examples/compound_lens/mocks"
+            FIT_SCRIPT="${REPO_ROOT}/Modules/10_Cluster_Computing/scripts/fit_example_compound_lens.py"
+            ;;
+        *) echo "unknown EXAMPLE=${EXAMPLE}"; exit 2 ;;
+    esac
+else
+    case "${MODULE}" in
+        04|05|06) DATASET_ROOT="${REPO_ROOT}/autolens_workspace_original/dataset/imaging" ;;
+        09)       DATASET_ROOT="${REPO_ROOT}/autolens_workspace_latest/dataset/imaging"  ;;
+        *)        echo "unknown MODULE=${MODULE}"; exit 2 ;;
+    esac
+    FIT_SCRIPT="${REPO_ROOT}/Modules/10_Cluster_Computing/scripts/fit_module${MODULE}.py"
+fi
 
-FIT_SCRIPT="${REPO_ROOT}/Modules/10_Cluster_Computing/scripts/fit_module${MODULE}.py"
 if [[ ! -f "${FIT_SCRIPT}" ]]; then
     echo "fit script not found: ${FIT_SCRIPT}"; exit 2
 fi
@@ -174,9 +186,19 @@ echo "End time: $(date -Is)"
 # These are small and git-trackable, so a user can view finished results
 # without needing the full Nautilus output tree.
 echo "Exporting lightweight result artifacts..."
-python "${REPO_ROOT}/Modules/10_Cluster_Computing/scripts/export_results.py" \
-    --output-root "${OUTPUT_ROOT}/module_${MODULE}" \
-    --module      "${MODULE}" \
-    --repo-root   "${REPO_ROOT}" || echo "(export_results.py failed — see above)"
+if [[ -n "${EXAMPLE:-}" ]]; then
+    # Example-mode: Nautilus wrote into ${OUTPUT_ROOT}/<example>/... (the fit
+    # driver sets path_prefix=output_root/<example>/...). Point export at
+    # that subtree and target Examples/<example>/results/.
+    python "${REPO_ROOT}/Modules/10_Cluster_Computing/scripts/export_results.py" \
+        --output-root "${OUTPUT_ROOT}/${EXAMPLE}" \
+        --example     "${EXAMPLE}" \
+        --repo-root   "${REPO_ROOT}" || echo "(export_results.py failed — see above)"
+else
+    python "${REPO_ROOT}/Modules/10_Cluster_Computing/scripts/export_results.py" \
+        --output-root "${OUTPUT_ROOT}/module_${MODULE}" \
+        --module      "${MODULE}" \
+        --repo-root   "${REPO_ROOT}" || echo "(export_results.py failed — see above)"
+fi
 
 echo "All done: $(date -Is)"
