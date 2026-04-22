@@ -152,7 +152,13 @@ The submit script bills compute to `--account=siag_lab` (fast scheduling) and wr
 |---|--------|-------------------|---------|
 | 10 | [Cluster Computing on Cannon](Modules/10_Cluster_Computing/) | Converting notebooks to Slurm jobs, Nautilus checkpoint resume, rsync patterns, `export_results.py` for git-trackable artifacts, FASRC-specific filesystem and partition guidance | reading ~30 min; end-to-end cluster run ~5–12 h |
 
-> **Runtimes** are approximate for a laptop with 8+ cores. Modules with non-linear searches (03–06, 09) take longer on first run; results are cached for subsequent runs. **Modules 04, 05, 09** have ready-made cluster drop-ins (`Modules/10_Cluster_Computing/scripts/fit_module{04,05,09}.py`) if your laptop can't keep up.
+### Part VI: Physics, Not Just Pipelines
+
+| # | Module | What You'll Learn | Runtime |
+|---|--------|-------------------|---------|
+| 11 | [Physical Mass Models](Modules/11_Physical_Mass_Models/) | Auditing a converged fit against the *physical* bar (decomposability, light-consistency, reasonable scales, stability), six mandatory diagnostics, reading `model_results.txt` as a reviewer, upgrade path from Isothermal → composite → PowerLaw, when to refuse to publish | < 5 min (read-only on committed results) |
+
+> **Runtimes** are approximate for a laptop with 8+ cores. Modules with non-linear searches (03–06, 09) take longer on first run; results are cached for subsequent runs. **Modules 04, 05, 06, 09** have ready-made cluster drop-ins (`Modules/10_Cluster_Computing/scripts/fit_module{04,05,06,09}.py`) if your laptop can't keep up.
 
 See the **"Viewing pre-computed Cannon results"** section above for how to inspect finished fits without running anything.
 

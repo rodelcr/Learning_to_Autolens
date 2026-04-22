@@ -155,10 +155,16 @@ echo "====================================================================="
 # ---- Run --------------------------------------------------------------------
 cd "${REPO_ROOT}"
 
+# Optional extra args can be passed via FIT_EXTRA_ARGS in --export. E.g.
+# `--export=ALL,MODULE=04,FIT_EXTRA_ARGS=--part=slam` to skip the Mod 04
+# pedagogical chain section (which is prone to Nautilus f_live=1.0 stalls
+# on the wide-prior source_bulge — see the pipeline comments in
+# fit_module04.py).
 srun python "${FIT_SCRIPT}" \
     --repo-root    "${REPO_ROOT}" \
     --dataset-root "${DATASET_ROOT}" \
-    --output-root  "${OUTPUT_ROOT}"
+    --output-root  "${OUTPUT_ROOT}" \
+    ${FIT_EXTRA_ARGS:-}
 
 echo "End time: $(date -Is)"
 

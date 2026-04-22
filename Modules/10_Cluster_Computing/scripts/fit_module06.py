@@ -115,14 +115,23 @@ def build_fit(dataset, output_root, n_live):
     print(f"[MOD06] composite model: {model.total_free_parameters} free parameters",
           flush=True)
 
+    # Backend selection — see fit_module05.py for the pattern. Set
+    # USE_JAX_GPU=1 to route likelihood evaluation through JAX/CUDA
+    # (requires `--gres=gpu:1` + `jax[cuda12]` installed in the env).
+    use_jax = os.environ.get("USE_JAX_GPU", "").lower() in ("1", "true", "yes")
+    ncores_default = int(os.environ.get("SLURM_CPUS_PER_TASK", "1"))
+    ncores = 1 if use_jax else ncores_default
+    print(f"[MOD06] backend: {'GPU/JAX' if use_jax else f'{ncores_default}-core CPU MP'}",
+          flush=True)
+
     search = af.Nautilus(
         path_prefix=output_root / "module_06",
         name="composite_mass",
         n_live=n_live,
-        number_of_cores=int(os.environ.get("SLURM_CPUS_PER_TASK", "1")),
+        number_of_cores=ncores,
     )
 
-    analysis = al.AnalysisImaging(dataset=dataset, use_jax=False)
+    analysis = al.AnalysisImaging(dataset=dataset, use_jax=use_jax)
 
     t0 = time.time()
     result = search.fit(model=model, analysis=analysis)
