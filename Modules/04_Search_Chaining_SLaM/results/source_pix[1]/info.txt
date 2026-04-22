@@ -15,28 +15,28 @@ galaxies
     lens
         redshift                                                                0.5
         bulge
-            centre                                                              (-0.008589316091266164, -0.002962811342077332)
-            ell_comps                                                           (-0.011175227413278538, 0.004116372282952668)
-            intensity                                                           3.5446728840886714
-            effective_radius                                                    0.4533698463508872
-            sersic_index                                                        1.9227618029393834
+            centre                                                              (9.275848366846262e-05, 0.000812061195163858)
+            ell_comps                                                           (-0.051467556359755785, -0.0015224995762558617)
+            intensity                                                           2.0763766716592325
+            effective_radius                                                    0.5884639316309808
+            sersic_index                                                        2.9298450755349124
         mass
             centre
-                centre_0                                                        GaussianPrior [53], mean = 0.0, sigma = 0.05
-                centre_1                                                        GaussianPrior [54], mean = 0.0, sigma = 0.05
+                centre_0                                                        GaussianPrior [5], mean = 0.0, sigma = 0.1
+                centre_1                                                        GaussianPrior [6], mean = 0.0, sigma = 0.1
             ell_comps
-                ell_comps_0                                                     TruncatedGaussianPrior [36], mean = 0.0, sigma = 0.3, lower_limit = -1.0, upper_limit = 1.0
-                ell_comps_1                                                     TruncatedGaussianPrior [37], mean = 0.0, sigma = 0.3, lower_limit = -1.0, upper_limit = 1.0
-            einstein_radius                                                     UniformPrior [38], lower_limit = 0.0, upper_limit = 8.0
+                ell_comps_0                                                     GaussianPrior [8], mean = -0.053, sigma = 0.05
+                ell_comps_1                                                     GaussianPrior [9], mean = 0.0, sigma = 0.05
+            einstein_radius                                                     UniformPrior [7], lower_limit = 0.5, upper_limit = 3.0
         shear
-            gamma_1                                                             UniformPrior [39], lower_limit = -0.3, upper_limit = 0.3
-            gamma_2                                                             UniformPrior [40], lower_limit = -0.3, upper_limit = 0.3
+            gamma_1                                                             GaussianPrior [12], mean = 0.05, sigma = 0.03
+            gamma_2                                                             GaussianPrior [13], mean = -0.05, sigma = 0.03
     source
         redshift                                                                1.0
         pixelization
             mesh
                 shape                                                           (28, 28)
             regularization
-                inner_coefficient                                               LogUniformPrior [55], lower_limit = 1e-06, upper_limit = 1000000.0
-                outer_coefficient                                               LogUniformPrior [56], lower_limit = 1e-06, upper_limit = 1000000.0
-                signal_scale                                                    UniformPrior [57], lower_limit = 0.0, upper_limit = 1.0
+                inner_coefficient                                               LogUniformPrior [42], lower_limit = 1e-06, upper_limit = 1000000.0
+                outer_coefficient                                               LogUniformPrior [43], lower_limit = 1e-06, upper_limit = 1000000.0
+                signal_scale                                                    UniformPrior [44], lower_limit = 0.0, upper_limit = 1.0

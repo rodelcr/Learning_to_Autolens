@@ -1,0 +1,10 @@
+{
+  "search_name": "composite_mass",
+  "source_dir": "output/module_06/composite_mass/873312e2af07cf50533d7f5cf0315d6e",
+  "max_log_likelihood": 5422.817794515344,
+  "log_evidence": 5315.490028693252,
+  "chi_squared_total": 2977.704138060715,
+  "chi_squared_per_pixel": 1.0529363995971412,
+  "n_unmasked_pixels": 2828,
+  "max_abs_normalized_residual": 4.543918966605248
+}

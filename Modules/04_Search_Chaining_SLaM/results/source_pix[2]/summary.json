@@ -1,10 +1,10 @@
 {
   "search_name": "source_pix[2]",
-  "source_dir": "output/module_04/slam/simple/source_pix[2]/d0b1b2946a2ada0022fdbf32d021c6fb",
-  "max_log_likelihood": 4936.085529433949,
-  "log_evidence": 4920.162170370308,
-  "chi_squared_total": 3917.5871041683527,
-  "chi_squared_per_pixel": 1.3852853975135617,
+  "source_dir": "/n/netscratch/hernquist_lab/Lab/rcordova/learning_to_autolens/output/module_04/slam/simple/source_pix[2]/a3c128b7e8fae9987b456ac4a99833c7",
+  "max_log_likelihood": 5608.318901097371,
+  "log_evidence": 5600.5858117627795,
+  "chi_squared_total": 2573.1203608415085,
+  "chi_squared_per_pixel": 0.9098728291518772,
   "n_unmasked_pixels": 2828,
-  "max_abs_normalized_residual": 7.459933948882198
+  "max_abs_normalized_residual": 4.464594777161792
 }

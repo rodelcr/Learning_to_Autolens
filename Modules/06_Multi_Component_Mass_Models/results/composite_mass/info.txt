@@ -1,0 +1,47 @@
+Total Free Parameters = 19
+
+model                                                                           Collection (N=19)
+    galaxies                                                                    Collection (N=19)
+        lens                                                                    Galaxy (N=12)
+            stellar_mass                                                        Sersic (N=8)
+            dark_matter                                                         NFWSph (N=4)
+            shear                                                               ExternalShear (N=2)
+        source                                                                  Galaxy (N=7)
+            bulge                                                               SersicCore (N=7)
+
+galaxies
+    lens
+        redshift                                                                0.5
+        dark_matter - stellar_mass
+            centre
+                centre_0                                                        GaussianPrior [0], mean = 0.0, sigma = 0.3
+                centre_1                                                        GaussianPrior [1], mean = 0.0, sigma = 0.3
+        stellar_mass
+            ell_comps
+                ell_comps_0                                                     GaussianPrior [8], mean = -0.053, sigma = 0.08
+                ell_comps_1                                                     GaussianPrior [9], mean = 0.0, sigma = 0.08
+            intensity                                                           LogUniformPrior [4], lower_limit = 1e-06, upper_limit = 1000000.0
+            effective_radius                                                    UniformPrior [5], lower_limit = 0.0, upper_limit = 30.0
+            sersic_index                                                        UniformPrior [6], lower_limit = 0.8, upper_limit = 5.0
+            mass_to_light_ratio                                                 GaussianPrior [10], mean = 0.2, sigma = 0.15
+        dark_matter
+            kappa_s                                                             UniformPrior [13], lower_limit = 0.0, upper_limit = 1.0
+            scale_radius                                                        UniformPrior [14], lower_limit = 0.0, upper_limit = 30.0
+        shear
+            gamma_1                                                             GaussianPrior [17], mean = -0.02, sigma = 0.03
+            gamma_2                                                             GaussianPrior [18], mean = -0.005, sigma = 0.03
+    source
+        redshift                                                                1.0
+        bulge
+            centre
+                centre_0                                                        GaussianPrior [19], mean = 0.0, sigma = 0.3
+                centre_1                                                        GaussianPrior [20], mean = 0.0, sigma = 0.3
+            ell_comps
+                ell_comps_0                                                     TruncatedGaussianPrior [21], mean = 0.0, sigma = 0.3, lower_limit = -1.0, upper_limit = 1.0
+                ell_comps_1                                                     TruncatedGaussianPrior [22], mean = 0.0, sigma = 0.3, lower_limit = -1.0, upper_limit = 1.0
+            effective_radius                                                    UniformPrior [23], lower_limit = 0.0, upper_limit = 30.0
+            sersic_index                                                        UniformPrior [24], lower_limit = 0.8, upper_limit = 5.0
+            radius_break                                                        0.025
+            intensity                                                           LogUniformPrior [25], lower_limit = 1e-05, upper_limit = 1000.0
+            gamma                                                               0.25
+            alpha                                                               3.0
