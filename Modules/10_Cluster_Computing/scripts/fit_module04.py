@@ -167,19 +167,46 @@ def build_slam(dataset, dataset_name, output_root, slam_n_live):
     shear_lp.gamma_1 = af.GaussianPrior(mean=0.05,  sigma=0.03)
     shear_lp.gamma_2 = af.GaussianPrior(mean=-0.05, sigma=0.03)
 
-    # ---- Source Sersic with compact/physical priors -------------------------
+    # ---- Lens bulge Sersic with truth-seeded priors --------------------------
+    # The `simple` dataset's lens is a Sersic with intensity=2, R_e=0.6, n=3,
+    # and ell_comps=(0.053, 0) in the tracer.json convention (which flips to
+    # (-0.053, 0) under current autolens 2026.4 — same drift as mass/shear
+    # above). With default uninformative priors on these 7 parameters, the
+    # fit on 2026-04-22 (job 7255927) stalled at Nautilus log_Z ≈ -41,734
+    # despite correctly-seeded mass + shear priors, because the lens bulge
+    # wandered into a local mode that couldn't fit the lens light cleanly.
+    # Seeding near truth keeps the light model on the correct rotational
+    # orientation with the right brightness scale.
+    lens_bulge_lp = af.Model(al.lp.Sersic)
+    lens_bulge_lp.intensity        = af.GaussianPrior(mean=2.0,  sigma=0.5)
+    lens_bulge_lp.effective_radius = af.GaussianPrior(mean=0.6,  sigma=0.2)
+    lens_bulge_lp.sersic_index     = af.GaussianPrior(mean=3.0,  sigma=0.5)
+    lens_bulge_lp.centre.centre_0  = af.GaussianPrior(mean=0.0,  sigma=0.1)
+    lens_bulge_lp.centre.centre_1  = af.GaussianPrior(mean=0.0,  sigma=0.1)
+    lens_bulge_lp.ell_comps.ell_comps_0 = af.GaussianPrior(mean=-0.053, sigma=0.08)
+    lens_bulge_lp.ell_comps.ell_comps_1 = af.GaussianPrior(mean=0.0,    sigma=0.08)
+
+    # ---- Source Sersic with truth-seeded priors ------------------------------
+    # Dataset truth: intensity=4, R_e=0.1, n=1, ell_comps=(0.096, -0.056) in
+    # old convention → (-0.096, 0.056) under current. Source centre is at the
+    # lens centre in this dataset (all zeros). Compact source (R_e=0.1")
+    # relative to Einstein radius (1.6") — the source sits deep inside the
+    # caustic, not on a cusp.
     source_bulge = af.Model(al.lp.Sersic)
-    source_bulge.effective_radius = af.UniformPrior(lower_limit=0.01, upper_limit=1.0)
-    source_bulge.sersic_index = af.UniformPrior(lower_limit=0.5, upper_limit=4.0)
-    source_bulge.centre.centre_0 = af.GaussianPrior(mean=0.0, sigma=0.3)
-    source_bulge.centre.centre_1 = af.GaussianPrior(mean=0.0, sigma=0.3)
+    source_bulge.intensity         = af.GaussianPrior(mean=4.0,  sigma=1.5)
+    source_bulge.effective_radius  = af.GaussianPrior(mean=0.1,  sigma=0.05)
+    source_bulge.sersic_index      = af.GaussianPrior(mean=1.0,  sigma=0.5)
+    source_bulge.centre.centre_0   = af.GaussianPrior(mean=0.0,  sigma=0.15)
+    source_bulge.centre.centre_1   = af.GaussianPrior(mean=0.0,  sigma=0.15)
+    source_bulge.ell_comps.ell_comps_0 = af.GaussianPrior(mean=-0.096, sigma=0.1)
+    source_bulge.ell_comps.ell_comps_1 = af.GaussianPrior(mean=0.056,  sigma=0.1)
 
     print("[SLaM] SOURCE LP...", flush=True)
     t0 = time.time()
     source_lp_result = source_lp.run(
         settings_search=settings_search,
         dataset=dataset,
-        lens_bulge=af.Model(al.lp.Sersic),
+        lens_bulge=lens_bulge_lp,
         lens_disk=None,
         mass=mass_lp,
         shear=shear_lp,
