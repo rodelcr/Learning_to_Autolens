@@ -43,6 +43,17 @@ def build(dataset_root, output_root, dataset_name,
     import autofit as af
     import autolens as al
 
+    # Opt-in JAX+GPU path. Set USE_JAX_GPU=1 in the slurm environment to
+    # route likelihood evaluation through JAX (which uses CUDA when a GPU
+    # is visible via --gres=gpu:1). When JAX is in charge, Nautilus's own
+    # multiprocessing is bypassed — JAX handles the batched `vmap`, so we
+    # drop `number_of_cores` from the search (it would only spawn workers
+    # that contend with the JAX vmap for CPU cycles).
+    _use_jax = os.environ.get("USE_JAX_GPU", "").lower() in ("1", "true", "yes")
+    _analysis_ncores = 1 if _use_jax else ncores
+    _tag = "GPU/JAX" if _use_jax else f"{ncores}-core CPU MP"
+    print(f"[MOD05] backend: {_tag}", flush=True)
+
     path = dataset_root / dataset_name
     dataset = al.Imaging.from_fits(
         data_path=path / "data.fits",
@@ -83,9 +94,9 @@ def build(dataset_root, output_root, dataset_name,
         path_prefix=output_root / "module_05",
         name="search1_parametric_source",
         n_live=n_live_1,
-        number_of_cores=ncores,
+        number_of_cores=_analysis_ncores,
     )
-    analysis_1 = al.AnalysisImaging(dataset=dataset, use_jax=False)
+    analysis_1 = al.AnalysisImaging(dataset=dataset, use_jax=_use_jax)
     t0 = time.time()
     result_1 = search_1.fit(model=model_1, analysis=analysis_1)
     print(f"[MOD05] Search 1 done in {(time.time()-t0)/60:.1f} min; "
@@ -127,7 +138,7 @@ def build(dataset_root, output_root, dataset_name,
         path_prefix=output_root / "module_05",
         name="search2_pixelized_source",
         n_live=n_live_2,
-        number_of_cores=ncores,
+        number_of_cores=_analysis_ncores,
     )
     analysis_2 = SafeAnalysisImaging(
         dataset=dataset,
@@ -140,7 +151,7 @@ def build(dataset_root, output_root, dataset_name,
             # holdover from an earlier notebook draft.
             use_positive_only_solver=True,
         ),
-        use_jax=False,
+        use_jax=_use_jax,
     )
     t0 = time.time()
     result_2 = search_2.fit(model=model_2, analysis=analysis_2)
