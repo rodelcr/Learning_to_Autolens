@@ -204,12 +204,16 @@ def export_one(search_dir: Path, dest: Path, repo_root: Path | None = None, forc
     # 4. Fit subplot — autolens has already rendered image/fit.png for every
     # search during the run, so we just copy it rather than rebuilding a Fit
     # object (which would require the dataset + tracer reconstruction).
-    fit_png_src = search_dir / "image" / "fit.png"
+    # Multi-plane fits produce per-plane fit_1.png / fit_2.png instead of the
+    # single-plane fit.png — prefer fit.png, fall back to fit_1.png.
     fit_png_dst = dest / "fit_subplot.png"
-    if fit_png_src.exists():
-        shutil.copy2(fit_png_src, fit_png_dst)
+    for candidate in ("fit.png", "fit_1.png"):
+        fit_png_src = search_dir / "image" / candidate
+        if fit_png_src.exists():
+            shutil.copy2(fit_png_src, fit_png_dst)
+            break
     else:
-        print(f"[export] no image/fit.png under {search_dir} — skipping fit subplot",
+        print(f"[export] no image/fit*.png under {search_dir} — skipping fit subplot",
               flush=True)
 
     # 5. Corner plot — render to PDF unless already there

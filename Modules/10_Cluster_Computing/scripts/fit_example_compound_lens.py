@@ -130,11 +130,16 @@ def build_direct_fit(dataset, output_root: Path, n_live: int = 250):
                       bulge=bulge_1, mass=mass_1)
 
     # ---- Source (z=1.7) -------------------------------------------------
+    # Prior box widened after job 7299592 rail-pinned centre_1 at -0.2 and
+    # effective_radius at 0.01″ (sub-pixel, pixel_scale=0.05″). The previous
+    # (-0.2, 0.2) centre box and 0.01″ radius floor let Nautilus collapse
+    # the source to a point-sized, off-box centroid — residual showed a
+    # coherent arc on the left side of the ring at 12σ. Widen both.
     bulge_src = af.Model(al.lp.SersicCore)
-    bulge_src.centre.centre_0  = af.UniformPrior(lower_limit=-0.2, upper_limit=0.2)
-    bulge_src.centre.centre_1  = af.UniformPrior(lower_limit=-0.2, upper_limit=0.2)
+    bulge_src.centre.centre_0  = af.UniformPrior(lower_limit=-0.5, upper_limit=0.5)
+    bulge_src.centre.centre_1  = af.UniformPrior(lower_limit=-0.5, upper_limit=0.5)
     bulge_src.effective_radius = af.TruncatedGaussianPrior(
-        mean=0.2, sigma=0.15, lower_limit=0.01, upper_limit=1.5)
+        mean=0.2, sigma=0.15, lower_limit=0.05, upper_limit=1.5)
     bulge_src.sersic_index     = af.TruncatedGaussianPrior(
         mean=2.0, sigma=0.8, lower_limit=0.5, upper_limit=6.0)
     source = af.Model(al.Galaxy, redshift=1.7, bulge=bulge_src)
@@ -202,7 +207,9 @@ def build_slam_effective(dataset, output_root: Path, slam_n_live: int = 100):
     shear_lp = af.Model(al.mp.ExternalShear)
 
     source_bulge = af.Model(al.lp.Sersic)
-    source_bulge.effective_radius = af.UniformPrior(lower_limit=0.01, upper_limit=1.0)
+    # Lower effective_radius floor 0.01→0.05 to prevent sub-pixel point-source
+    # collapse (pixel_scale=0.05″).
+    source_bulge.effective_radius = af.UniformPrior(lower_limit=0.05, upper_limit=1.0)
     source_bulge.sersic_index     = af.UniformPrior(lower_limit=0.5, upper_limit=4.0)
     source_bulge.centre.centre_0  = af.GaussianPrior(mean=0.0, sigma=0.3)
     source_bulge.centre.centre_1  = af.GaussianPrior(mean=0.0, sigma=0.3)
@@ -319,8 +326,12 @@ def build_slam_staged(dataset, output_root: Path):
                            bulge=bulge_0, mass=mass_0, shear=shear_stg1)
 
     bulge_src = af.Model(al.lp.SersicCore)
-    bulge_src.centre.centre_0 = af.UniformPrior(lower_limit=-0.2, upper_limit=0.2)
-    bulge_src.centre.centre_1 = af.UniformPrior(lower_limit=-0.2, upper_limit=0.2)
+    # Widened source centre box (see build_direct_fit — the true source sits
+    # outside the ±0.2″ box, so the tighter prior rail-pinned the fit).
+    bulge_src.centre.centre_0 = af.UniformPrior(lower_limit=-0.5, upper_limit=0.5)
+    bulge_src.centre.centre_1 = af.UniformPrior(lower_limit=-0.5, upper_limit=0.5)
+    bulge_src.effective_radius = af.TruncatedGaussianPrior(
+        mean=0.2, sigma=0.15, lower_limit=0.05, upper_limit=1.5)
     source_stg1 = af.Model(al.Galaxy, redshift=1.7, bulge=bulge_src)
 
     model_1 = af.Collection(galaxies=af.Collection(
