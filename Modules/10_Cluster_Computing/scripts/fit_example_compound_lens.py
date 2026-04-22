@@ -88,60 +88,74 @@ def build_direct_fit(dataset, output_root: Path, n_live: int = 250):
     import autofit as af
     import autolens as al
 
-    # ---- Primary lens (z=0.5) with shear --------------------------------
+    # Priors mirror the loose, minimally-informative setup that the user's
+    # original notebook `20251125_Mocks_redo_autolens_2src.ipynb` used to
+    # reach log_Z≈30,700 on this same dataset. Key differences from earlier
+    # tighter-prior attempts (jobs 7299592 and 7351708):
+    #   - mass einstein_radius is UniformPrior(0, 8) — wide enough that
+    #     the secondary (z=0.8) can collapse to near-zero if the data
+    #     supports that. The compound-lens geometry is partially degenerate
+    #     with a single effective lens, and forcing a ~1″ secondary mass
+    #     locks the fit into a higher-chi² suboptimum (12σ arc residual).
+    #   - bulge and mass centres are INDEPENDENT (not tied). Lets the
+    #     light and mass centroids disagree when the data asks for it.
+    #   - No external shear (user's best fit didn't need one).
+    #   - intensity / effective_radius / sersic_index priors are wide
+    #     LogUniform / Uniform, matching typical free-fit practice.
+
+    # ---- Primary lens (z=0.5) -------------------------------------------
     bulge_0 = af.Model(al.lp.Sersic)
     mass_0  = af.Model(al.mp.Isothermal)
-    mass_0.centre.centre_0  = af.UniformPrior(lower_limit=-0.1, upper_limit=0.1)
-    mass_0.centre.centre_1  = af.UniformPrior(lower_limit=-0.1, upper_limit=0.1)
-    bulge_0.centre.centre_0 = mass_0.centre.centre_0
-    bulge_0.centre.centre_1 = mass_0.centre.centre_1
+    mass_0.centre.centre_0  = af.GaussianPrior(mean=0.0, sigma=0.1)
+    mass_0.centre.centre_1  = af.GaussianPrior(mean=0.0, sigma=0.1)
+    bulge_0.centre.centre_0 = af.GaussianPrior(mean=0.0, sigma=0.3)
+    bulge_0.centre.centre_1 = af.GaussianPrior(mean=0.0, sigma=0.3)
     bulge_0.ell_comps.ell_comps_0 = af.TruncatedGaussianPrior(
-        mean=0.33, sigma=0.15, lower_limit=-1.0, upper_limit=1.0)
+        mean=0.0, sigma=0.3, lower_limit=-1.0, upper_limit=1.0)
     bulge_0.ell_comps.ell_comps_1 = af.TruncatedGaussianPrior(
-        mean=0.00, sigma=0.15, lower_limit=-1.0, upper_limit=1.0)
-    bulge_0.effective_radius = af.TruncatedGaussianPrior(
-        mean=1.0, sigma=0.5, lower_limit=0.01, upper_limit=5.0)
-    bulge_0.sersic_index     = af.TruncatedGaussianPrior(
-        mean=3.0, sigma=0.8, lower_limit=0.5, upper_limit=6.0)
+        mean=0.0, sigma=0.3, lower_limit=-1.0, upper_limit=1.0)
+    bulge_0.intensity        = af.LogUniformPrior(lower_limit=1e-6, upper_limit=1e6)
+    bulge_0.effective_radius = af.UniformPrior(lower_limit=0.0, upper_limit=30.0)
+    bulge_0.sersic_index     = af.UniformPrior(lower_limit=0.8, upper_limit=5.0)
     mass_0.ell_comps.ell_comps_0 = af.TruncatedGaussianPrior(
-        mean=0.33, sigma=0.2, lower_limit=-1.0, upper_limit=1.0)
+        mean=0.0, sigma=0.3, lower_limit=-1.0, upper_limit=1.0)
     mass_0.ell_comps.ell_comps_1 = af.TruncatedGaussianPrior(
-        mean=0.00, sigma=0.2, lower_limit=-1.0, upper_limit=1.0)
-    mass_0.einstein_radius       = af.TruncatedGaussianPrior(
-        mean=1.6, sigma=0.2, lower_limit=0.3, upper_limit=3.0)
-    shear = af.Model(al.mp.ExternalShear)
-    lens_0 = af.Model(al.Galaxy, redshift=0.5,
-                      bulge=bulge_0, mass=mass_0, shear=shear)
+        mean=0.0, sigma=0.3, lower_limit=-1.0, upper_limit=1.0)
+    mass_0.einstein_radius       = af.UniformPrior(lower_limit=0.0, upper_limit=8.0)
+    lens_0 = af.Model(al.Galaxy, redshift=0.5, bulge=bulge_0, mass=mass_0)
 
-    # ---- Secondary lens (z=0.8), no shear -------------------------------
+    # ---- Secondary lens (z=0.8) -----------------------------------------
     bulge_1 = af.Model(al.lp.Sersic)
     mass_1  = af.Model(al.mp.Isothermal)
-    mass_1.centre.centre_0  = af.UniformPrior(lower_limit=-0.1, upper_limit=0.1)
-    mass_1.centre.centre_1  = af.UniformPrior(lower_limit=-0.1, upper_limit=0.1)
-    bulge_1.centre.centre_0 = mass_1.centre.centre_0
-    bulge_1.centre.centre_1 = mass_1.centre.centre_1
-    bulge_1.effective_radius = af.TruncatedGaussianPrior(
-        mean=1.0, sigma=0.5, lower_limit=0.01, upper_limit=5.0)
-    bulge_1.sersic_index     = af.TruncatedGaussianPrior(
-        mean=3.0, sigma=0.8, lower_limit=0.5, upper_limit=6.0)
-    mass_1.einstein_radius   = af.TruncatedGaussianPrior(
-        mean=1.0, sigma=0.2, lower_limit=0.1, upper_limit=3.0)
-    lens_1 = af.Model(al.Galaxy, redshift=0.8,
-                      bulge=bulge_1, mass=mass_1)
+    mass_1.centre.centre_0  = af.GaussianPrior(mean=0.0, sigma=0.1)
+    mass_1.centre.centre_1  = af.GaussianPrior(mean=0.0, sigma=0.1)
+    bulge_1.centre.centre_0 = af.GaussianPrior(mean=0.0, sigma=0.3)
+    bulge_1.centre.centre_1 = af.GaussianPrior(mean=0.0, sigma=0.3)
+    bulge_1.ell_comps.ell_comps_0 = af.TruncatedGaussianPrior(
+        mean=0.0, sigma=0.3, lower_limit=-1.0, upper_limit=1.0)
+    bulge_1.ell_comps.ell_comps_1 = af.TruncatedGaussianPrior(
+        mean=0.0, sigma=0.3, lower_limit=-1.0, upper_limit=1.0)
+    bulge_1.intensity        = af.LogUniformPrior(lower_limit=1e-6, upper_limit=1e6)
+    bulge_1.effective_radius = af.UniformPrior(lower_limit=0.0, upper_limit=30.0)
+    bulge_1.sersic_index     = af.UniformPrior(lower_limit=0.8, upper_limit=5.0)
+    mass_1.ell_comps.ell_comps_0 = af.TruncatedGaussianPrior(
+        mean=0.0, sigma=0.3, lower_limit=-1.0, upper_limit=1.0)
+    mass_1.ell_comps.ell_comps_1 = af.TruncatedGaussianPrior(
+        mean=0.0, sigma=0.3, lower_limit=-1.0, upper_limit=1.0)
+    mass_1.einstein_radius   = af.UniformPrior(lower_limit=0.0, upper_limit=8.0)
+    lens_1 = af.Model(al.Galaxy, redshift=0.8, bulge=bulge_1, mass=mass_1)
 
     # ---- Source (z=1.7) -------------------------------------------------
-    # Prior box widened after job 7299592 rail-pinned centre_1 at -0.2 and
-    # effective_radius at 0.01″ (sub-pixel, pixel_scale=0.05″). The previous
-    # (-0.2, 0.2) centre box and 0.01″ radius floor let Nautilus collapse
-    # the source to a point-sized, off-box centroid — residual showed a
-    # coherent arc on the left side of the ring at 12σ. Widen both.
     bulge_src = af.Model(al.lp.SersicCore)
-    bulge_src.centre.centre_0  = af.UniformPrior(lower_limit=-0.5, upper_limit=0.5)
-    bulge_src.centre.centre_1  = af.UniformPrior(lower_limit=-0.5, upper_limit=0.5)
-    bulge_src.effective_radius = af.TruncatedGaussianPrior(
-        mean=0.2, sigma=0.15, lower_limit=0.05, upper_limit=1.5)
-    bulge_src.sersic_index     = af.TruncatedGaussianPrior(
-        mean=2.0, sigma=0.8, lower_limit=0.5, upper_limit=6.0)
+    bulge_src.centre.centre_0  = af.GaussianPrior(mean=0.0, sigma=0.3)
+    bulge_src.centre.centre_1  = af.GaussianPrior(mean=0.0, sigma=0.3)
+    bulge_src.ell_comps.ell_comps_0 = af.TruncatedGaussianPrior(
+        mean=0.0, sigma=0.3, lower_limit=-1.0, upper_limit=1.0)
+    bulge_src.ell_comps.ell_comps_1 = af.TruncatedGaussianPrior(
+        mean=0.0, sigma=0.3, lower_limit=-1.0, upper_limit=1.0)
+    bulge_src.intensity        = af.LogUniformPrior(lower_limit=1e-5, upper_limit=1e3)
+    bulge_src.effective_radius = af.UniformPrior(lower_limit=0.0, upper_limit=30.0)
+    bulge_src.sersic_index     = af.UniformPrior(lower_limit=0.8, upper_limit=5.0)
     source = af.Model(al.Galaxy, redshift=1.7, bulge=bulge_src)
 
     model = af.Collection(galaxies=af.Collection(
