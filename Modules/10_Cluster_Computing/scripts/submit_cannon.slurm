@@ -81,6 +81,10 @@ if [[ -n "${EXAMPLE:-}" ]]; then
             DATASET_ROOT="${REPO_ROOT}/Examples/double_source_plane/mocks"
             FIT_SCRIPT="${REPO_ROOT}/Modules/10_Cluster_Computing/scripts/fit_example_double_source_plane.py"
             ;;
+        disky_spiral_lens)
+            DATASET_ROOT="${REPO_ROOT}/Examples/disky_spiral_lens/mocks"
+            FIT_SCRIPT="${REPO_ROOT}/Modules/10_Cluster_Computing/scripts/fit_example_disky_spiral_lens.py"
+            ;;
         *) echo "unknown EXAMPLE=${EXAMPLE}"; exit 2 ;;
     esac
 else
