@@ -16,33 +16,33 @@ galaxies
         redshift                                                                0.5
         bulge
             centre
-                centre_0                                                        GaussianPrior [63], mean = 0.0, sigma = 0.3
-                centre_1                                                        GaussianPrior [64], mean = 0.0, sigma = 0.3
+                centre_0                                                        GaussianPrior [50], mean = 0.0, sigma = 0.3
+                centre_1                                                        GaussianPrior [51], mean = 0.0, sigma = 0.3
             ell_comps
-                ell_comps_0                                                     GaussianPrior [65], mean = 0.0, sigma = 0.3
-                ell_comps_1                                                     GaussianPrior [66], mean = 0.0, sigma = 0.3
-            intensity                                                           LogUniformPrior [67], lower_limit = 1e-06, upper_limit = 1000000.0
-            effective_radius                                                    UniformPrior [68], lower_limit = 0.0, upper_limit = 30.0
-            sersic_index                                                        UniformPrior [69], lower_limit = 0.8, upper_limit = 5.0
+                ell_comps_0                                                     GaussianPrior [52], mean = 0.0, sigma = 0.3
+                ell_comps_1                                                     GaussianPrior [53], mean = 0.0, sigma = 0.3
+            intensity                                                           LogUniformPrior [54], lower_limit = 1e-06, upper_limit = 1000000.0
+            effective_radius                                                    UniformPrior [55], lower_limit = 0.0, upper_limit = 30.0
+            sersic_index                                                        UniformPrior [56], lower_limit = 0.8, upper_limit = 5.0
         mass
-            centre                                                              (0.00638767683239245, 0.008155855335537109)
-            ell_comps                                                           (-0.03924878992139944, -0.00014062172314440697)
-            einstein_radius                                                     1.5953735644655418
+            centre                                                              (0.0016047742181926998, 0.0006420489865776378)
+            ell_comps                                                           (-0.05033296854204784, -0.004994728589419081)
+            einstein_radius                                                     1.5995001866455025
             slope                                                               2.0
             core_radius                                                         0.0
         shear
             centre - ell_comps                                                  (0.0, 0.0)
-            gamma_1                                                             0.05023447473979337
-            gamma_2                                                             -0.041824078875639825
+            gamma_1                                                             0.04895940596426698
+            gamma_2                                                             -0.04909174720083703
     source
         redshift                                                                1.0
         pixelization
             mesh
                 shape                                                           (28, 28)
                 pixels                                                          784
-                weight_power                                                    0.0007582022129228663
-                weight_floor                                                    0.059190501109320545
+                weight_power                                                    0.9084307848775387
+                weight_floor                                                    1.29324769286754e-05
             regularization
-                inner_coefficient                                               0.008631434841617986
-                outer_coefficient                                               0.001715148499955409
-                signal_scale                                                    0.700875277856976
+                inner_coefficient                                               0.000924045712571188
+                outer_coefficient                                               0.054636416851194726
+                signal_scale                                                    0.17118257471927123

@@ -1,5 +1,5 @@
-Bayesian Evidence                                                               -13852.25028916
-Maximum Log Likelihood                                                          -13778.62435520
+Bayesian Evidence                                                               -7038.41999946
+Maximum Log Likelihood                                                          -6958.88547356
 
 model                                                                           Collection (N=7)
     galaxies                                                                    Collection (N=7)
@@ -13,17 +13,17 @@ Maximum Log Likelihood Model:
 galaxies
     lens
         mass
-            einstein_radius                                                     1.582
+            einstein_radius                                                     1.613
     source
         bulge
             ell_comps
-                ell_comps_0                                                     0.006
-                ell_comps_1                                                     -0.011
-            effective_radius                                                    0.208
-            intensity                                                           1.078
+                ell_comps_0                                                     -0.115
+                ell_comps_1                                                     0.186
+            intensity                                                           1.698
             centre
-                centre_0                                                        0.015
-                centre_1                                                        -0.009
+                centre_0                                                        -0.000
+                centre_1                                                        -0.000
+            effective_radius                                                    0.122
 
 
 Summary (3.0 sigma limits):
@@ -31,17 +31,17 @@ Summary (3.0 sigma limits):
 galaxies
     lens
         mass
-            einstein_radius                                                     1.5821 (1.5820, 1.5822)
+            einstein_radius                                                     1.6133 (1.6133, 1.6133)
     source
         bulge
             ell_comps
-                ell_comps_0                                                     0.0061 (-0.0015, 0.0141)
-                ell_comps_1                                                     -0.0113 (-0.0200, -0.0027)
-            effective_radius                                                    0.2079 (0.2067, 0.2095)
-            intensity                                                           1.0778 (1.0752, 1.0803)
+                ell_comps_0                                                     -0.1152 (-0.1288, -0.1026)
+                ell_comps_1                                                     0.1883 (0.1733, 0.2038)
+            intensity                                                           1.6978 (1.6631, 1.7290)
             centre
-                centre_0                                                        0.0147 (0.0146, 0.0147)
-                centre_1                                                        -0.0089 (-0.0090, -0.0089)
+                centre_0                                                        -0.0000 (-0.0000, 0.0000)
+                centre_1                                                        -0.0000 (-0.0000, 0.0000)
+            effective_radius                                                    0.1216 (0.1184, 0.1250)
 
 
 Summary (1.0 sigma limits):
@@ -49,17 +49,17 @@ Summary (1.0 sigma limits):
 galaxies
     lens
         mass
-            einstein_radius                                                     1.5821 (1.5821, 1.5821)
+            einstein_radius                                                     1.6133 (1.6133, 1.6133)
     source
         bulge
             ell_comps
-                ell_comps_0                                                     0.0061 (0.0035, 0.0089)
-                ell_comps_1                                                     -0.0113 (-0.0143, -0.0084)
-            effective_radius                                                    0.2079 (0.2075, 0.2084)
-            intensity                                                           1.0778 (1.0770, 1.0787)
+                ell_comps_0                                                     -0.1152 (-0.1199, -0.1110)
+                ell_comps_1                                                     0.1883 (0.1829, 0.1935)
+            intensity                                                           1.6978 (1.6865, 1.7084)
             centre
-                centre_0                                                        0.0147 (0.0146, 0.0147)
-                centre_1                                                        -0.0089 (-0.0089, -0.0089)
+                centre_0                                                        -0.0000 (-0.0000, 0.0000)
+                centre_1                                                        -0.0000 (-0.0000, 0.0000)
+            effective_radius                                                    0.1216 (0.1204, 0.1227)
 
 instances
 

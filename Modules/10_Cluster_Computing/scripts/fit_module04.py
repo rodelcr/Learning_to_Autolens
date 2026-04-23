@@ -18,7 +18,12 @@ Inputs (CLI):
     --slam-n-live    n_live for SLaM stages (default: 100)
 
 Outputs:
-    output/module_04/chaining/... and output/module_04/slam/...
+    output/module_04/<unique_tag>/<search_name>/<hash>/
+    (chain and SLaM share the top-level module_04/ prefix; they're
+    distinguished by different unique_tags — "simple__no_lens_light"
+    for the chain, "simple" for SLaM — so the flat layout has no
+    namespace collisions and matches the committed results/ layout
+    the 04_search_chaining_slam notebook's show_result() expects.)
 
 Usage on Cannon:
     python fit_module04.py --part all \
@@ -82,7 +87,7 @@ def build_chain(dataset, dataset_name, output_root, n_live_s1, n_live_s2):
     print(f"[CHAIN] Search 1: {model_1.total_free_parameters} free parameters", flush=True)
 
     search_1 = af.Nautilus(
-        path_prefix=output_root / "module_04" / "chaining",
+        path_prefix=output_root / "module_04",
         name="search_1_sis_nolenslight",
         unique_tag=dataset_name,
         n_live=n_live_s1,
@@ -111,7 +116,7 @@ def build_chain(dataset, dataset_name, output_root, n_live_s1, n_live_s2):
     print(f"[CHAIN] Search 2: {model_2.total_free_parameters} free parameters", flush=True)
 
     search_2 = af.Nautilus(
-        path_prefix=output_root / "module_04" / "chaining",
+        path_prefix=output_root / "module_04",
         name="search_2_sie_nolenslight",
         unique_tag=dataset_name,
         n_live=n_live_s2,
@@ -147,7 +152,7 @@ def build_slam(dataset, dataset_name, output_root, slam_n_live):
     from slam_v2026 import source_lp, source_pix, light_lp, mass_total
 
     settings_search = af.SettingsSearch(
-        path_prefix=output_root / "module_04" / "slam",
+        path_prefix=output_root / "module_04",
         unique_tag=dataset_name,
         number_of_cores=int(os.environ.get("SLURM_CPUS_PER_TASK", "1")),
     )

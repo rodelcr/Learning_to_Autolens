@@ -1,10 +1,10 @@
 {
   "search_name": "search_1_sis_nolenslight",
-  "source_dir": "output/module_04/chaining/simple__no_lens_light/search_1_sis_nolenslight/66f106d550ca4d8f94a228bd6503220a",
-  "max_log_likelihood": -13778.62435519959,
-  "log_evidence": -13852.250289159192,
-  "chi_squared_total": 43690.95473921492,
-  "chi_squared_per_pixel": 15.449418224616307,
+  "source_dir": "/n/netscratch/hernquist_lab/Lab/rcordova/learning_to_autolens/output/module_04/chaining/simple__no_lens_light/search_1_sis_nolenslight/7f8ceefbdd8ffab25fd0e46c013e67cd",
+  "max_log_likelihood": -6958.885473562808,
+  "log_evidence": -7038.419999461178,
+  "chi_squared_total": 30051.476975941347,
+  "chi_squared_per_pixel": 10.626406285693545,
   "n_unmasked_pixels": 2828,
-  "max_abs_normalized_residual": 19.496637806771073
+  "max_abs_normalized_residual": 16.689441051079694
 }
