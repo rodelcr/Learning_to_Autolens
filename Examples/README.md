@@ -53,5 +53,5 @@ To add a new architecture:
 ## See also
 
 - **[Module 11: Physical Mass Models](../Modules/11_Physical_Mass_Models/)** — the physical-bar audit methodology these examples lean on.
-- **[`memory/project_fit_failure_patterns.md`](/Users/rosador/.claude/projects/-Users-rosador-Documents-AGEL-Learning-to-Autolens/memory/project_fit_failure_patterns.md)** — the four recurring failure patterns (rotational mirror, sign-convention drift, SLaM cascade, doc/code mismatch) and how to recognize each.
+- **Recurring failure patterns** — five modes keep showing up across Modules and Examples: rotational mirror-image optimum (SIE+shear without seeded priors), autolens sign-convention drift between versions, SLaM stage cascade (early stage fails quietly and contaminates downstream), doc/code dataset mismatch (narrative says one dataset, code loads another), and forced-compound suboptimum (tight priors on a secondary Einstein radius when the data supports a single effective lens). Pattern E was discovered while shipping the compound_lens example. The Mod 04 and 11 notebooks document the first four in their audit sections; Example 1's `02_compound_slam.ipynb` documents the fifth.
 - **[`Modules/10_Cluster_Computing/`](../Modules/10_Cluster_Computing/)** — the Cannon submit/pull workflow that produces the committed artifacts.
