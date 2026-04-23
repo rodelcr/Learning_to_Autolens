@@ -288,7 +288,22 @@ def main():
 
     n = 0
     for search_dir in find_search_dirs(args.output_root):
-        dest = results_root / search_dir.parent.name
+        # Preserve any track/subdir hierarchy between output_root and the
+        # search folder. The layout is:
+        #
+        #   <output_root>/<track?>/<unique_tag>/<search_name>/<hash>/
+        #
+        # where <track?> is optional (present for multi-stage pipelines
+        # like slam_effective/ and slam_staged/ in compound_lens, absent
+        # for single-search drivers). We strip off <unique_tag> (assumed
+        # second-to-last) and keep anything before it as a track prefix so
+        # Examples/compound_lens/results/slam_effective/source_lp[1]/ stays
+        # distinct from Examples/compound_lens/results/slam_staged/....
+        rel_parent = search_dir.parent.relative_to(args.output_root)
+        parts = rel_parent.parts
+        search_name = parts[-1]
+        track_parts = parts[:-2] if len(parts) >= 2 else ()
+        dest = results_root.joinpath(*track_parts, search_name)
         export_one(search_dir, dest, repo_root=args.repo_root, force=args.force)
         n += 1
     print(f"[export] exported {n} search(es) → {results_root}", flush=True)
