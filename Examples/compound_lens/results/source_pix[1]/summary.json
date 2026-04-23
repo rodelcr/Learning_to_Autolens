@@ -1,0 +1,10 @@
+{
+  "search_name": "source_pix[1]",
+  "source_dir": "/n/netscratch/hernquist_lab/Lab/rcordova/learning_to_autolens/output/compound_lens/slam_effective/mock_1/source_pix[1]/27b7e7a858d76285fc2800858de66cb3",
+  "max_log_likelihood": 28879.26794482678,
+  "log_evidence": 28823.894978005523,
+  "chi_squared_total": 10625.341402265723,
+  "chi_squared_per_pixel": 1.1579491502033263,
+  "n_unmasked_pixels": 9176,
+  "max_abs_normalized_residual": 8.5886061378261
+}

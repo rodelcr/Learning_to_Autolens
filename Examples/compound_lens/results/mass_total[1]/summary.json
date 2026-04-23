@@ -1,0 +1,10 @@
+{
+  "search_name": "mass_total[1]",
+  "source_dir": "/n/netscratch/hernquist_lab/Lab/rcordova/learning_to_autolens/output/compound_lens/slam_effective/mock_1/mass_total[1]/e5545de669d97fe9c22b0cfd599ca0f5",
+  "max_log_likelihood": 29938.831870104397,
+  "log_evidence": 29882.35118983039,
+  "chi_squared_total": 8506.213551710494,
+  "chi_squared_per_pixel": 0.9270067079021899,
+  "n_unmasked_pixels": 9176,
+  "max_abs_normalized_residual": 7.332061438903596
+}

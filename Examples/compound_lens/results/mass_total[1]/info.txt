@@ -1,0 +1,45 @@
+Total Free Parameters = 7
+
+model                                                                           Collection (N=7)
+    galaxies                                                                    Collection (N=7)
+        lens                                                                    Galaxy (N=7)
+            bulge                                                               Sersic (N=0)
+            mass                                                                Isothermal (N=5)
+            shear                                                               ExternalShear (N=2)
+        source                                                                  Galaxy (N=0)
+            pixelization                                                        Pixelization (N=0)
+                mesh                                                            RectangularAdaptImage (N=0)
+                regularization                                                  Adapt (N=0)
+
+galaxies
+    lens
+        redshift                                                                0.5
+        bulge
+            centre                                                              (0.08356935332590183, 0.007165536598370556)
+            ell_comps                                                           (0.10206479087754652, -0.0753700487979611)
+            intensity                                                           0.018527041325925468
+            effective_radius                                                    1.0451111049172237
+            sersic_index                                                        4.24309794432276
+        mass
+            centre
+                centre_0                                                        GaussianPrior [5], mean = 0.0, sigma = 0.1
+                centre_1                                                        GaussianPrior [6], mean = 0.0, sigma = 0.1
+            ell_comps
+                ell_comps_0                                                     GaussianPrior [8], mean = 0.33, sigma = 0.15
+                ell_comps_1                                                     GaussianPrior [9], mean = 0.0, sigma = 0.15
+            einstein_radius                                                     UniformPrior [7], lower_limit = 0.5, upper_limit = 3.0
+        shear
+            gamma_1                                                             UniformPrior [10], lower_limit = -0.3, upper_limit = 0.3
+            gamma_2                                                             UniformPrior [11], lower_limit = -0.3, upper_limit = 0.3
+    source
+        redshift                                                                1.7
+        pixelization
+            mesh
+                shape                                                           (28, 28)
+                pixels                                                          784
+                weight_power                                                    1.7090989869918014
+                weight_floor                                                    0.3409061253236624
+            regularization
+                inner_coefficient                                               9.129812322607411e-05
+                outer_coefficient                                               0.05750611289936543
+                signal_scale                                                    0.5477716286976417

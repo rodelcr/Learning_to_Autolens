@@ -1,0 +1,10 @@
+{
+  "search_name": "light[1]",
+  "source_dir": "/n/netscratch/hernquist_lab/Lab/rcordova/learning_to_autolens/output/compound_lens/slam_effective/mock_1/light[1]/0125b9f63b804409a89c50dedfb971d0",
+  "max_log_likelihood": 29685.05775453549,
+  "log_evidence": 29649.113976863882,
+  "chi_squared_total": 9013.761782848305,
+  "chi_squared_per_pixel": 0.9823192875815503,
+  "n_unmasked_pixels": 9176,
+  "max_abs_normalized_residual": 8.29230825823311
+}

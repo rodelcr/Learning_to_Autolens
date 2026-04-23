@@ -1,0 +1,132 @@
+Bayesian Evidence                                                               24936.61685510
+Maximum Log Likelihood                                                          25060.43695276
+
+model                                                                           Collection (N=21)
+    galaxies                                                                    Collection (N=21)
+        lens                                                                    Galaxy (N=14)
+            mass                                                                Isothermal (N=5)
+            shear                                                               ExternalShear (N=2)
+        source                                                                  Galaxy (N=7)
+        lens - source
+            bulge                                                               Sersic (N=7)
+
+Maximum Log Likelihood Model:
+
+galaxies
+    lens
+        mass
+            centre
+                centre_0                                                        0.088
+                centre_1                                                        0.000
+            einstein_radius                                                     0.970
+            ell_comps
+                ell_comps_0                                                     0.029
+                ell_comps_1                                                     -0.106
+        shear
+            gamma_1                                                             -0.001
+            gamma_2                                                             -0.014
+        bulge
+            centre
+                centre_0                                                        0.081
+                centre_1                                                        0.006
+            ell_comps
+                ell_comps_0                                                     0.025
+                ell_comps_1                                                     -0.124
+            intensity                                                           0.006
+            effective_radius                                                    2.572
+            sersic_index                                                        5.012
+    source
+        bulge
+            ell_comps
+                ell_comps_0                                                     0.087
+                ell_comps_1                                                     0.177
+            intensity                                                           0.006
+            effective_radius                                                    0.336
+            sersic_index                                                        3.881
+            centre
+                centre_0                                                        0.001
+                centre_1                                                        -0.052
+
+
+Summary (3.0 sigma limits):
+
+galaxies
+    lens
+        mass
+            centre
+                centre_0                                                        0.0879 (0.0827, 0.0943)
+                centre_1                                                        0.0005 (-0.0043, 0.0052)
+            einstein_radius                                                     0.9700 (0.9674, 0.9728)
+            ell_comps
+                ell_comps_0                                                     0.0316 (0.0213, 0.0413)
+                ell_comps_1                                                     -0.1074 (-0.1222, -0.0936)
+        shear
+            gamma_1                                                             -0.0023 (-0.0101, 0.0047)
+            gamma_2                                                             -0.0130 (-0.0193, -0.0067)
+        bulge
+            centre
+                centre_0                                                        0.0813 (0.0811, 0.0815)
+                centre_1                                                        0.0063 (0.0061, 0.0065)
+            ell_comps
+                ell_comps_0                                                     0.0271 (0.0186, 0.0376)
+                ell_comps_1                                                     -0.1263 (-0.1350, -0.1171)
+            intensity                                                           0.0056 (0.0055, 0.0059)
+            effective_radius                                                    2.5372 (2.4584, 2.6059)
+            sersic_index                                                        4.9624 (4.8869, 5.0691)
+    source
+        bulge
+            ell_comps
+                ell_comps_0                                                     0.0854 (0.0564, 0.1124)
+                ell_comps_1                                                     0.1832 (0.1551, 0.2095)
+            intensity                                                           0.0064 (0.0051, 0.0086)
+            effective_radius                                                    0.3354 (0.2752, 0.3952)
+            sersic_index                                                        3.8537 (3.5341, 3.9990)
+            centre
+                centre_0                                                        0.0004 (-0.0019, 0.0030)
+                centre_1                                                        -0.0521 (-0.0570, -0.0478)
+
+
+Summary (1.0 sigma limits):
+
+galaxies
+    lens
+        mass
+            centre
+                centre_0                                                        0.0879 (0.0861, 0.0900)
+                centre_1                                                        0.0005 (-0.0011, 0.0020)
+            einstein_radius                                                     0.9700 (0.9691, 0.9709)
+            ell_comps
+                ell_comps_0                                                     0.0316 (0.0279, 0.0353)
+                ell_comps_1                                                     -0.1074 (-0.1118, -0.1030)
+        shear
+            gamma_1                                                             -0.0023 (-0.0047, 0.0000)
+            gamma_2                                                             -0.0130 (-0.0153, -0.0107)
+        bulge
+            centre
+                centre_0                                                        0.0813 (0.0812, 0.0813)
+                centre_1                                                        0.0063 (0.0062, 0.0063)
+            ell_comps
+                ell_comps_0                                                     0.0271 (0.0241, 0.0304)
+                ell_comps_1                                                     -0.1263 (-0.1291, -0.1233)
+            intensity                                                           0.0056 (0.0056, 0.0057)
+            effective_radius                                                    2.5372 (2.5122, 2.5622)
+            sersic_index                                                        4.9624 (4.9319, 4.9964)
+    source
+        bulge
+            ell_comps
+                ell_comps_0                                                     0.0854 (0.0758, 0.0944)
+                ell_comps_1                                                     0.1832 (0.1732, 0.1928)
+            intensity                                                           0.0064 (0.0058, 0.0071)
+            effective_radius                                                    0.3354 (0.3115, 0.3582)
+            sersic_index                                                        3.8537 (3.7479, 3.9442)
+            centre
+                centre_0                                                        0.0004 (-0.0005, 0.0013)
+                centre_1                                                        -0.0521 (-0.0536, -0.0506)
+
+instances
+
+galaxies
+    lens
+        redshift                                                                0.5
+    source
+        redshift                                                                1.7

@@ -1,0 +1,266 @@
+{
+    "type": "instance",
+    "class_path": "autofit.non_linear.samples.summary.SamplesSummary",
+    "arguments": {
+        "values_at_sigma_1": {
+            "type": "dict",
+            "arguments": {
+                "galaxies.lens.bulge.centre.centre_0": {
+                    "type": "tuple",
+                    "values": [
+                        0.08271991345825447,
+                        0.08454891406346948
+                    ]
+                },
+                "galaxies.lens.bulge.centre.centre_1": {
+                    "type": "tuple",
+                    "values": [
+                        0.006418553455685634,
+                        0.008145742315598723
+                    ]
+                },
+                "galaxies.lens.bulge.ell_comps.ell_comps_0": {
+                    "type": "tuple",
+                    "values": [
+                        0.09710757761032197,
+                        0.10794267234296957
+                    ]
+                },
+                "galaxies.lens.bulge.ell_comps.ell_comps_1": {
+                    "type": "tuple",
+                    "values": [
+                        -0.0806458144140374,
+                        -0.06969536916666519
+                    ]
+                },
+                "galaxies.lens.bulge.intensity": {
+                    "type": "tuple",
+                    "values": [
+                        0.014825045387441001,
+                        0.01944645550893241
+                    ]
+                },
+                "galaxies.lens.bulge.effective_radius": {
+                    "type": "tuple",
+                    "values": [
+                        1.0121448888368476,
+                        1.2009701004745281
+                    ]
+                },
+                "galaxies.lens.bulge.sersic_index": {
+                    "type": "tuple",
+                    "values": [
+                        4.163351685654205,
+                        4.5012351215835
+                    ]
+                }
+            }
+        },
+        "values_at_sigma_3": {
+            "type": "dict",
+            "arguments": {
+                "galaxies.lens.bulge.centre.centre_0": {
+                    "type": "tuple",
+                    "values": [
+                        0.0811230662713024,
+                        0.086239448040101
+                    ]
+                },
+                "galaxies.lens.bulge.centre.centre_1": {
+                    "type": "tuple",
+                    "values": [
+                        0.00495048303194232,
+                        0.009886708329495281
+                    ]
+                },
+                "galaxies.lens.bulge.ell_comps.ell_comps_0": {
+                    "type": "tuple",
+                    "values": [
+                        0.08467553829305396,
+                        0.11830906331888229
+                    ]
+                },
+                "galaxies.lens.bulge.ell_comps.ell_comps_1": {
+                    "type": "tuple",
+                    "values": [
+                        -0.09010964390381124,
+                        -0.05714088892217771
+                    ]
+                },
+                "galaxies.lens.bulge.intensity": {
+                    "type": "tuple",
+                    "values": [
+                        0.010827321395743581,
+                        0.022655573819819707
+                    ]
+                },
+                "galaxies.lens.bulge.effective_radius": {
+                    "type": "tuple",
+                    "values": [
+                        0.9112306599905087,
+                        1.4633772849089828
+                    ]
+                },
+                "galaxies.lens.bulge.sersic_index": {
+                    "type": "tuple",
+                    "values": [
+                        3.9446980801554017,
+                        4.917331732893324
+                    ]
+                }
+            }
+        },
+        "median_pdf_sample": {
+            "type": "instance",
+            "class_path": "autofit.non_linear.samples.sample.Sample",
+            "arguments": {
+                "log_likelihood": 29685.05775453549,
+                "log_prior": 54.10367585693032,
+                "weight": 0.00012410304904734862,
+                "kwargs": {
+                    "type": "dict",
+                    "arguments": {
+                        "galaxies.lens.bulge.centre.centre_0": 0.08362891229599063,
+                        "galaxies.lens.bulge.centre.centre_1": 0.0072982867552793635,
+                        "galaxies.lens.bulge.ell_comps.ell_comps_0": 0.10208224598032498,
+                        "galaxies.lens.bulge.ell_comps.ell_comps_1": -0.07487893398615394,
+                        "galaxies.lens.bulge.intensity": 0.01721180598491479,
+                        "galaxies.lens.bulge.effective_radius": 1.0963972887096642,
+                        "galaxies.lens.bulge.sersic_index": 4.319080148613608
+                    }
+                }
+            }
+        },
+        "log_evidence": 29649.113976863882,
+        "errors_at_sigma_1": {
+            "type": "dict",
+            "arguments": {
+                "galaxies.lens.bulge.centre.centre_0": {
+                    "type": "tuple",
+                    "values": [
+                        0.0009089988377361663,
+                        0.000920001767478848
+                    ]
+                },
+                "galaxies.lens.bulge.centre.centre_1": {
+                    "type": "tuple",
+                    "values": [
+                        0.0008797332995937298,
+                        0.0008474555603193599
+                    ]
+                },
+                "galaxies.lens.bulge.ell_comps.ell_comps_0": {
+                    "type": "tuple",
+                    "values": [
+                        0.004974668370003002,
+                        0.005860426362644597
+                    ]
+                },
+                "galaxies.lens.bulge.ell_comps.ell_comps_1": {
+                    "type": "tuple",
+                    "values": [
+                        0.005766880427883453,
+                        0.005183564819488756
+                    ]
+                },
+                "galaxies.lens.bulge.intensity": {
+                    "type": "tuple",
+                    "values": [
+                        0.0023867605974737874,
+                        0.0022346495240176227
+                    ]
+                },
+                "galaxies.lens.bulge.effective_radius": {
+                    "type": "tuple",
+                    "values": [
+                        0.08425239987281663,
+                        0.10457281176486388
+                    ]
+                },
+                "galaxies.lens.bulge.sersic_index": {
+                    "type": "tuple",
+                    "values": [
+                        0.15572846295940312,
+                        0.18215497296989192
+                    ]
+                }
+            }
+        },
+        "model": null,
+        "max_log_likelihood_sample": {
+            "type": "instance",
+            "class_path": "autofit.non_linear.samples.sample.Sample",
+            "arguments": {
+                "log_likelihood": 29685.05775453549,
+                "log_prior": 54.10367585693032,
+                "weight": 0.00012410304904734862,
+                "kwargs": {
+                    "type": "dict",
+                    "arguments": {
+                        "galaxies.lens.bulge.centre.centre_0": 0.08356935332590183,
+                        "galaxies.lens.bulge.centre.centre_1": 0.007165536598370556,
+                        "galaxies.lens.bulge.ell_comps.ell_comps_0": 0.10206479087754652,
+                        "galaxies.lens.bulge.ell_comps.ell_comps_1": -0.0753700487979611,
+                        "galaxies.lens.bulge.intensity": 0.018527041325925468,
+                        "galaxies.lens.bulge.effective_radius": 1.0451111049172237,
+                        "galaxies.lens.bulge.sersic_index": 4.24309794432276
+                    }
+                }
+            }
+        },
+        "errors_at_sigma_3": {
+            "type": "dict",
+            "arguments": {
+                "galaxies.lens.bulge.centre.centre_0": {
+                    "type": "tuple",
+                    "values": [
+                        0.0025058460246882297,
+                        0.0026105357441103677
+                    ]
+                },
+                "galaxies.lens.bulge.centre.centre_1": {
+                    "type": "tuple",
+                    "values": [
+                        0.0023478037233370438,
+                        0.0025884215742159175
+                    ]
+                },
+                "galaxies.lens.bulge.ell_comps.ell_comps_0": {
+                    "type": "tuple",
+                    "values": [
+                        0.01740670768727101,
+                        0.01622681733855731
+                    ]
+                },
+                "galaxies.lens.bulge.ell_comps.ell_comps_1": {
+                    "type": "tuple",
+                    "values": [
+                        0.015230709917657292,
+                        0.017738045063976235
+                    ]
+                },
+                "galaxies.lens.bulge.intensity": {
+                    "type": "tuple",
+                    "values": [
+                        0.006384484589171208,
+                        0.005443767834904918
+                    ]
+                },
+                "galaxies.lens.bulge.effective_radius": {
+                    "type": "tuple",
+                    "values": [
+                        0.18516662871915557,
+                        0.36697999619931854
+                    ]
+                },
+                "galaxies.lens.bulge.sersic_index": {
+                    "type": "tuple",
+                    "values": [
+                        0.37438206845820643,
+                        0.5982515842797156
+                    ]
+                }
+            }
+        }
+    }
+}

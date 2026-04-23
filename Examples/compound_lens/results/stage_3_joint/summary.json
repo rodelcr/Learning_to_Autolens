@@ -1,0 +1,10 @@
+{
+  "search_name": "stage_3_joint",
+  "source_dir": "/n/netscratch/hernquist_lab/Lab/rcordova/learning_to_autolens/output/compound_lens/slam_staged/mock_1/stage_3_joint/6bd28aefa5796075c872e0324b148bdd",
+  "max_log_likelihood": 27953.4164511616,
+  "log_evidence": 27805.002024247424,
+  "chi_squared_total": 12477.044389596083,
+  "chi_squared_per_pixel": 1.3597476448993115,
+  "n_unmasked_pixels": 9176,
+  "max_abs_normalized_residual": 12.25420301957503
+}

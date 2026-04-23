@@ -1,0 +1,10 @@
+{
+  "search_name": "stage_1_primary",
+  "source_dir": "/n/netscratch/hernquist_lab/Lab/rcordova/learning_to_autolens/output/compound_lens/slam_staged/mock_1/stage_1_primary/c97518190118038259bbee5f7c0a0900",
+  "max_log_likelihood": 25152.974276641064,
+  "log_evidence": 25027.48346928257,
+  "chi_squared_total": 18077.92873863716,
+  "chi_squared_per_pixel": 1.9701317282734483,
+  "n_unmasked_pixels": 9176,
+  "max_abs_normalized_residual": 13.392855243507695
+}
