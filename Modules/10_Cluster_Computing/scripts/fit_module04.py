@@ -68,8 +68,15 @@ def build_chain(dataset, dataset_name, output_root, n_live_s1, n_live_s2):
 
     source_1 = af.Model(al.Galaxy, redshift=1.0, bulge=al.lp.SersicCore)
     source_1.bulge.sersic_index = 1.0
-    source_1.bulge.centre.centre_0 = af.GaussianPrior(mean=0.0, sigma=0.3)
-    source_1.bulge.centre.centre_1 = af.GaussianPrior(mean=0.0, sigma=0.3)
+    # Seed centre + size near the simple__no_lens_light truth values
+    # (derived from prior cluster-recovered posteriors, in 2026.4
+    # convention). A wide default GaussianPrior(0, 0.3) on centre was
+    # letting Nautilus drift into source-collapse basins with the chain's
+    # simpler-than-SLaM mass model — see HANDOFF_2026_04_22.md §TODO.
+    source_1.bulge.centre.centre_0    = af.GaussianPrior(mean=-0.096, sigma=0.05)
+    source_1.bulge.centre.centre_1    = af.GaussianPrior(mean=+0.056, sigma=0.05)
+    source_1.bulge.effective_radius   = af.TruncatedGaussianPrior(
+        mean=0.1, sigma=0.05, lower_limit=0.02, upper_limit=1.0)
 
     model_1 = af.Collection(galaxies=af.Collection(lens=lens_1, source=source_1))
     print(f"[CHAIN] Search 1: {model_1.total_free_parameters} free parameters", flush=True)
