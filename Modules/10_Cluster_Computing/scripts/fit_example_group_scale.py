@@ -62,6 +62,28 @@ def load_dataset(dataset_root: Path, mask_radius: float = 3.5):
 _SAT_POS = [(1.8, 0.7), (-1.5, -1.2), (0.5, -2.0)]
 
 
+def _satellite_light_only_model(y, x):
+    """Satellite as LIGHT-ONLY (Sersic), NO mass. For bgg_shear_only fit —
+    we still need to subtract each satellite's photometric flux, otherwise
+    the unmodelled bright spots dominate chi² and the 'shear absorbs
+    satellite mass?' question becomes unanswerable."""
+    import autofit as af
+    import autolens as al
+    sat_bulge = af.Model(al.lp.Sersic)
+    sat_bulge.centre.centre_0 = y  # fixed
+    sat_bulge.centre.centre_1 = x  # fixed
+    sat_bulge.ell_comps.ell_comps_0 = af.TruncatedGaussianPrior(
+        mean=0.0, sigma=0.3, lower_limit=-1.0, upper_limit=1.0)
+    sat_bulge.ell_comps.ell_comps_1 = af.TruncatedGaussianPrior(
+        mean=0.0, sigma=0.3, lower_limit=-1.0, upper_limit=1.0)
+    sat_bulge.intensity        = af.LogUniformPrior(lower_limit=0.05, upper_limit=5.0)
+    sat_bulge.effective_radius = af.TruncatedGaussianPrior(
+        mean=0.25, sigma=0.15, lower_limit=0.05, upper_limit=1.0)
+    sat_bulge.sersic_index     = af.TruncatedGaussianPrior(
+        mean=2.0, sigma=0.8, lower_limit=0.8, upper_limit=4.0)
+    return af.Model(al.Galaxy, redshift=0.4, bulge=sat_bulge)
+
+
 def _bgg_model():
     """BGG: Sersic bulge + Isothermal mass (full ellipticity)."""
     import autofit as af
@@ -120,8 +142,18 @@ def build_bgg_shear_only(dataset, output_root: Path, n_live: int = 200):
 
     bgg = af.Model(al.Galaxy, redshift=0.4,
                    bulge=bulge, mass=mass, shear=shear)
+
+    # Include satellite LIGHT (no mass) so the photometric flux at
+    # satellite positions is subtracted from the data. Without this the
+    # bright unmodelled galaxy cores dominate chi² and the comparison
+    # against bgg_plus_satellites becomes apples-to-oranges.
+    galaxies_dict = {"bgg": bgg}
+    for i, (y, x) in enumerate(_SAT_POS):
+        galaxies_dict[f"satellite_light_{i+1}"] = _satellite_light_only_model(y, x)
+
     source = _source_model()
-    model = af.Collection(galaxies=af.Collection(bgg=bgg, source=source))
+    galaxies_dict["source"] = source
+    model = af.Collection(galaxies=af.Collection(**galaxies_dict))
     print(f"[GROUP/shear_only] total free parameters: {model.total_free_parameters}",
           flush=True)
 

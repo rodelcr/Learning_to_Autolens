@@ -207,6 +207,35 @@ The BGG still gets full SIE in the model — that's where the ellipticity
 
 ---
 
+## 2026-04-24 — Lesson while debugging group_scale
+
+### "Simpler model" must still model the *light*, or you're comparing apples to oranges
+
+group_scale job v1 stalled at log_Z = -270,000 on the `bgg_shear_only`
+variant. Root cause: my variant model was `bgg + source` only. No
+satellite light at all. The 3 bright unmodelled satellite cores in the
+data were dominating chi² — the fit wasn't actually testing "is
+satellite mass resolvable", it was testing "can we fit 3 unmodelled
+galaxy cores with shear" (answer: no).
+
+**The pedagogical question was supposed to be**: does modelling
+satellite MASS (in addition to their light) do better than shear alone?
+For that comparison, both variants need to include satellite LIGHT —
+only vary whether mass is on or off.
+
+**Fix.** In the `bgg_shear_only` variant, add each satellite as a
+LIGHT-ONLY galaxy (Sersic bulge with fixed centre, no mass component).
+In the `bgg_plus_satellites` variant, give each satellite BOTH light
+AND a SIS mass. The delta is now purely the 3 einstein_radius params.
+
+**Generalisation.** When comparing models that differ in a single
+physical quantity, every *other* component must be present in both
+models at the same level of fidelity. "Simpler" should mean "fewer
+free parameters at the thing-we're-testing", not "entirely missing
+unrelated components."
+
+---
+
 ## Open questions to investigate later
 
 - What is autolens's default policy on `centre_0` sign convention changes
