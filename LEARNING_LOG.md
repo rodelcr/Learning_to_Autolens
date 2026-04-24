@@ -250,6 +250,37 @@ redundant; let the posterior tell you.
 
 ---
 
+## 2026-04-24 — al.mesh.Delaunay needs runtime `pixels=` arg
+
+cl_pix job 8028859 FAILED at stage 2 start with:
+
+```
+TypeError: Delaunay.__init__() missing 1 required positional argument: 'pixels'
+```
+
+In autolens 2026.4, `al.mesh.Delaunay(pixels=int, zeroed_pixels=0,
+areas_factor=0.5)`. The `pixels` arg is computed at runtime from
+`image_plane_mesh_grid = al.image_mesh.Overlay(shape=(N, N))
+    .image_plane_mesh_grid_from(mask=dataset.mask)`, then passed as
+`al.mesh.Delaunay(pixels=image_plane_mesh_grid.shape[0])`. Awkward in
+a Cannon-job driver where the model is defined at script-load time,
+before the dataset is even loaded.
+
+**Workaround.** Use `al.mesh.RectangularAdaptImage(shape=(28, 28))` —
+simpler constructor, 784 source pixels, same `al.reg.Adapt`
+regularisation works. Adequate for our problem size.
+
+Delaunay is worth the complexity when:
+- The source morphology has compact features smaller than a rectangular
+  pixel would resolve (e.g. a tiny central spike).
+- You're doing cluster-scale lensing where the pixel count needs to
+  scale with the lens's critical-curve area.
+
+For galaxy-scale compound lenses with 10k-pixel cutouts, Rectangular
+is plenty.
+
+---
+
 ## 2026-04-24 — Autolens 2026.4 pixelisation API renames
 
 Building the `--part=direct_pix` pipeline for compound_lens surfaced
