@@ -425,7 +425,11 @@ def build_direct_pix(dataset, output_root: Path, n_live: int = 200):
         lower_limit=1e-3, upper_limit=10.0)
     pixelization = af.Model(
         al.Pixelization,
-        mesh=al.mesh.RectangularAdaptImage(shape=(28, 28)),
+        # 20×20 = 400 source pixels. (28×28 = 784 caused OOM in
+        # export_results post-phase on cl_pix_v4 — 60 GB peak vs 64 GB
+        # SLURM cap. The 9176 image × 400 source mapping matrix is
+        # ~3.7M elements — comfortable.)
+        mesh=al.mesh.RectangularAdaptImage(shape=(20, 20)),
         regularization=regularization,
     )
     source_pix_gal = af.Model(al.Galaxy, redshift=1.7, pixelization=pixelization)
