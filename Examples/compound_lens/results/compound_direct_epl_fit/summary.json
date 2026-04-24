@@ -1,0 +1,10 @@
+{
+  "search_name": "compound_direct_epl_fit",
+  "source_dir": "/n/netscratch/hernquist_lab/Lab/rcordova/learning_to_autolens/output/compound_lens/mock_1/compound_direct_epl_fit/7190eb098f3efe7aae0fcf33908bc762",
+  "max_log_likelihood": 31161.189224056798,
+  "log_evidence": 31000.50421487963,
+  "chi_squared_total": 6061.498843805688,
+  "chi_squared_per_pixel": 0.660581826918667,
+  "n_unmasked_pixels": 9176,
+  "max_abs_normalized_residual": 3.821346611534094
+}

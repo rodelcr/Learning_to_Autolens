@@ -250,6 +250,41 @@ redundant; let the posterior tell you.
 
 ---
 
+## 2026-04-24 — EPL beats v4 *and* PIX on this mock; pedagogical model-comparison
+
+Three-way comparison committed:
+
+| Variant | n_params | chi²/N | max\|res\| | log_Z | Δ vs v4 |
+|---|---|---|---|---|---|
+| v4 (Isothermal+shear) | 33 | 0.693 | 4.40σ | +30,856 | baseline |
+| **EPL** (PowerLaw+shear) | **34** | **0.661** | **3.82σ** ← below 4σ | **+31,000** | **+144** |
+| PIX stage 2 (Iso+shear, fixed mass + RectAdaptImage source) | 3 + ~400 inversion | 0.672 | 4.49σ | **+31,107** | **+250** |
+
+**EPL wins on both bars.** Recovered slope γ' = 2.142 ± 0.02 — 7σ from
+SIS (γ'=2). The mass profile is slightly steeper than isothermal,
+which is the residual asymmetry v4 couldn't fit. Matches Auger+10
+SLACS for real ellipticals. PowerLaw is the right next-rung upgrade.
+
+**PIX wins on log_Z but max\|res\| stays at 4.49σ.** Why?
+
+The mock's source IS a SersicCore — there's no extra source structure
+for pixelisation to capture. The +250 log_Z just from going pixelised
+comes from being able to slightly better adapt to the noise, not from
+modelling new source physics. Visually, the pixelised source ends up
+looking like a smoothed Sersic — confirms there's nothing extra to find.
+
+**General lesson.** Pixelised source is the right tool when the source
+has structure (spiral arms, clumps, asymmetry). For a smooth elliptical
+Sersic source, PowerLaw on the mass profile is the better next step —
+fewer params, cleaner physical interpretation, and on this mock it gets
+us below the 4σ pass bar. The model-comparison ladder is **always**:
+
+  Isothermal → Isothermal+shear → PowerLaw+shear → (PowerLaw+pix if source has structure)
+
+not "always pixelise".
+
+---
+
 ## 2026-04-24 — Pixelised fits need positions_likelihood_list
 
 cl_pix_v3 (8082405) FAILED in 53 seconds at stage 2 with:

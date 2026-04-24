@@ -1,0 +1,10 @@
+{
+  "search_name": "compound_direct_pix_stage1",
+  "source_dir": "/n/netscratch/hernquist_lab/Lab/rcordova/learning_to_autolens/output/compound_lens/mock_1/compound_direct_pix_stage1/3b6d6651608f93031cf203e5f228dd23",
+  "max_log_likelihood": 31014.044830969888,
+  "log_evidence": 30856.518612824766,
+  "chi_squared_total": 6355.787629979508,
+  "chi_squared_per_pixel": 0.6926534034415331,
+  "n_unmasked_pixels": 9176,
+  "max_abs_normalized_residual": 4.496335220162105
+}

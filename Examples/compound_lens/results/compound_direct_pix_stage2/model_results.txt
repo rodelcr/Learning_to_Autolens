@@ -1,0 +1,79 @@
+Bayesian Evidence                                                               31106.99671213
+Maximum Log Likelihood                                                          31108.26369754
+
+model                                                                           Collection (N=3)
+    galaxies                                                                    Collection (N=3)
+        lens_0 - lens_1                                                         Galaxy (N=0)
+            bulge                                                               Sersic (N=0)
+            mass                                                                Isothermal (N=0)
+        source                                                                  Galaxy (N=3)
+            pixelization                                                        Pixelization (N=3)
+                mesh                                                            RectangularAdaptImage (N=0)
+                regularization                                                  Adapt (N=3)
+        lens_0
+            shear                                                               ExternalShear (N=0)
+
+Maximum Log Likelihood Model:
+
+galaxies
+    source
+        pixelization
+            regularization
+                inner_coefficient                                               0.030
+                outer_coefficient                                               1.001
+                signal_scale                                                    0.004
+
+
+Summary (3.0 sigma limits):
+
+galaxies
+    source
+        pixelization
+            regularization
+                inner_coefficient                                               0.0159 (0.0001, 0.9743)
+                outer_coefficient                                               3.0069 (1.0071, 242.7716)
+                signal_scale                                                    0.0270 (0.0010, 7.1938)
+
+
+Summary (1.0 sigma limits):
+
+galaxies
+    source
+        pixelization
+            regularization
+                inner_coefficient                                               0.0159 (0.0004, 0.2201)
+                outer_coefficient                                               3.0069 (1.4199, 8.0154)
+                signal_scale                                                    0.0270 (0.0030, 0.3871)
+
+instances
+
+galaxies
+    lens_0
+        redshift                                                                0.5
+        bulge
+            intensity                                                           0.008533831647371311
+            effective_radius                                                    1.8071530556740014
+            sersic_index                                                        4.987087385202347
+        mass
+            einstein_radius                                                     1.7851192501791944
+        shear
+            gamma_1                                                             0.00753193996860853
+            gamma_2                                                             0.02284779720703999
+    lens_1
+        redshift                                                                0.8
+        bulge
+            intensity                                                           0.008807660374047047
+            effective_radius                                                    0.28241907186098475
+            sersic_index                                                        3.3221463108177716
+        mass
+            einstein_radius                                                     1.379758446331839e-05
+    source
+        redshift                                                                1.7
+        pixelization
+            mesh
+                weight_power                                                    1.0
+                weight_floor                                                    0.0
+    lens_0 - lens_1
+        mass
+            slope                                                               2.0
+            core_radius                                                         0.0
