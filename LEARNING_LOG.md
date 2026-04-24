@@ -207,6 +207,49 @@ The BGG still gets full SIE in the model — that's where the ellipticity
 
 ---
 
+## 2026-04-24 — compound_lens v4 vindicates BOTH findings at once
+
+v3 had achieved log_Z=+30,705 with `lens_1.einstein_radius → 0`
+(single-effective-deflector) but `max|res|=6.18σ` with coherent chi²
+hot spots on the arc and counter-image. v4 added external shear back
+to the primary (`ExternalShear` + `GaussianPrior(0, 0.15)`) and:
+
+- log_Z: +30,705 → **+30,856.5** (+151 log units, Bayes factor e^151)
+- max|res|: 6.18σ → **4.40σ** (just over the 4σ pass bar but visually
+  salt-and-pepper; chi² hot spots gone)
+- `lens_1.einstein_radius`: **still 0.000** (still collapsed)
+- Recovered shear: γ = (0.007, 0.023), |γ| ≈ 0.024 — small but
+  well-separated from zero (3σ)
+
+**The lesson:** the single-effective-deflector finding (lens_1 mass
+collapses) and the missing-shear finding (asymmetry absorbed into a
+γ≈0.024 shear) are **additive, not competing**. They describe the
+same underlying data:
+
+- Primary SIE at z=0.5 with θ_E ≈ 1.78″ and modest ell_comps.
+- An extra ~2.4% external shear from whatever isn't modelled
+  (large-scale structure, a true distant perturber, or a small
+  asymmetry in the true mass profile).
+- The z=0.8 "secondary" galaxy is real *as light* but contributes
+  essentially zero mass deflection — consistent with Keeton &
+  Zabludoff's (2004) degeneracy regime.
+
+v3's architectural mistake was to *remove* shear when adopting the
+loose-prior approach (because the user's reference notebook didn't
+use shear, and we were matching it). But the reference notebook's
+log_Z=30,698 vs v3's log_Z=30,705 is essentially the same value —
+they were BOTH stuck in the no-shear basin for reasons that are
+probably autolens-version-sign-convention-drift (Pattern B) more
+than anything else. v4 is the genuinely better fit.
+
+**For any future Bayes-factor hypothesis test**: adding a
+seemingly-redundant term (external shear when you already have an
+SIE) can still earn +100 log units if there's actual asymmetry the
+other params can't capture. Don't drop terms just because they feel
+redundant; let the posterior tell you.
+
+---
+
 ## 2026-04-24 — Lesson while debugging group_scale
 
 ### "Simpler model" must still model the *light*, or you're comparing apples to oranges
