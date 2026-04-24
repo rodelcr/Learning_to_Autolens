@@ -250,6 +250,46 @@ redundant; let the posterior tell you.
 
 ---
 
+## 2026-04-24 — Pixelised fits need positions_likelihood_list
+
+cl_pix_v3 (8082405) FAILED in 53 seconds at stage 2 with:
+
+```
+AnalysisException: You have begun a model-fit which reconstructs the source
+using a pixelization. However, you have not input a `positions_likelihood_list`
+object. It is likely your model-fit will infer an inaccurate solution.
+```
+
+This is a HARD requirement in autolens 2026.4 — not a soft warning. The
+pixelisation inversion is degenerate to "demagnified solutions" where a
+tiny faint compact source + low-magnification mass model can mimic an
+extended bright source. PositionsLH penalises mass models whose
+multiple-image positions don't trace through the hand-given image-plane
+positions, breaking that degeneracy.
+
+**Fix.** In stage 2's `AnalysisImaging`, add:
+
+```python
+positions_likelihood_list=[
+    result_1.positions_likelihood_from(factor=3.0, minimum_threshold=0.2),
+]
+```
+
+`result_1.positions_likelihood_from(...)` is the autolens 2026.4 helper
+that auto-derives image positions from stage 1's MAP tracer (same
+pattern slam_v2026 uses for its own pixelised stages, e.g. `source_pix.run_2`).
+`factor=3.0` and `minimum_threshold=0.2` are the slam_v2026 defaults.
+
+**Three-strikes pattern this session for pixelisation in 2026.4:**
+
+1. `al.mesh.Delaunay()` needs `pixels=int` arg → use RectangularAdaptImage instead.
+2. `al.reg.Adapt(...)` with fixed coefficients gives a 0-dim model → wrap in af.Model with priors on inner/outer/signal coefficients.
+3. Pixelised AnalysisImaging requires `positions_likelihood_list` to break the demagnified-solution degeneracy.
+
+For future fits, just take the slam_v2026 source_pix.run_1/run_2 pattern as a template.
+
+---
+
 ## 2026-04-24 — al.mesh.Delaunay needs runtime `pixels=` arg
 
 cl_pix job 8028859 FAILED at stage 2 start with:

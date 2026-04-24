@@ -436,8 +436,20 @@ def build_direct_pix(dataset, output_root: Path, n_live: int = 200):
         galaxy_name_image_dict=
             al.galaxy_name_image_dict_via_result_from(result=result_1),
     )
+    # Pixelised fits MUST have a positions_likelihood_list, otherwise the
+    # inversion is degenerate to demagnified solutions (a tiny faint
+    # source + low-magnification model can mimic an extended source).
+    # autolens 2026.4 explicitly raises AnalysisException without this.
+    # `positions_likelihood_from(factor, minimum_threshold)` auto-derives
+    # the image positions from stage 1's MAP tracer — same pattern slam_v2026
+    # uses for its own pixelised stages.
     analysis_pix = al.AnalysisImaging(
-        dataset=dataset, use_jax=False, adapt_images=adapt_images,
+        dataset=dataset,
+        use_jax=False,
+        adapt_images=adapt_images,
+        positions_likelihood_list=[
+            result_1.positions_likelihood_from(factor=3.0, minimum_threshold=0.2),
+        ],
     )
     search_2 = af.Nautilus(
         path_prefix=output_root / "compound_lens",
