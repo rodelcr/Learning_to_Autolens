@@ -205,6 +205,249 @@ def build_direct_fit(dataset, output_root: Path, n_live: int = 250):
 
 
 # -----------------------------------------------------------------------
+# Part 1b: direct_epl — same as direct but mass_0 is PowerLaw (free slope)
+# -----------------------------------------------------------------------
+# Why: v4 reached max|res|=4.40σ with Isothermal (γ'=2 fixed). The residual
+# was salt-and-pepper but just over the 4σ pass bar. Hypothesis B from
+# CLEANUP_PLAN.md: the real primary mass has γ' ≠ 2, and an EPL (Elliptical
+# Power Law) fit recovers the slope and reduces max|res| further. This is
+# the standard Mod 11 mass-model upgrade ladder: SIE → EPL is cheap (+1
+# param) and often informative.
+
+def build_direct_epl(dataset, output_root: Path, n_live: int = 250):
+    """Same as build_direct_fit but lens_0.mass = PowerLaw (slope free)."""
+    import autofit as af
+    import autolens as al
+
+    # ---- Primary lens (z=0.5) — PowerLaw mass --------------------------
+    bulge_0 = af.Model(al.lp.Sersic)
+    mass_0  = af.Model(al.mp.PowerLaw)
+    mass_0.centre.centre_0  = af.GaussianPrior(mean=0.0, sigma=0.1)
+    mass_0.centre.centre_1  = af.GaussianPrior(mean=0.0, sigma=0.1)
+    bulge_0.centre.centre_0 = af.GaussianPrior(mean=0.0, sigma=0.3)
+    bulge_0.centre.centre_1 = af.GaussianPrior(mean=0.0, sigma=0.3)
+    bulge_0.ell_comps.ell_comps_0 = af.TruncatedGaussianPrior(
+        mean=0.0, sigma=0.3, lower_limit=-1.0, upper_limit=1.0)
+    bulge_0.ell_comps.ell_comps_1 = af.TruncatedGaussianPrior(
+        mean=0.0, sigma=0.3, lower_limit=-1.0, upper_limit=1.0)
+    bulge_0.intensity        = af.LogUniformPrior(lower_limit=1e-6, upper_limit=1e6)
+    bulge_0.effective_radius = af.UniformPrior(lower_limit=0.0, upper_limit=30.0)
+    bulge_0.sersic_index     = af.UniformPrior(lower_limit=0.8, upper_limit=5.0)
+    mass_0.ell_comps.ell_comps_0 = af.TruncatedGaussianPrior(
+        mean=0.0, sigma=0.3, lower_limit=-1.0, upper_limit=1.0)
+    mass_0.ell_comps.ell_comps_1 = af.TruncatedGaussianPrior(
+        mean=0.0, sigma=0.3, lower_limit=-1.0, upper_limit=1.0)
+    mass_0.einstein_radius       = af.UniformPrior(lower_limit=0.0, upper_limit=8.0)
+    # EPL slope: Isothermal = γ'=2. Typical real lenses γ' ∈ [1.8, 2.2].
+    # Moderate GaussianPrior centred at 2 with sigma 0.2 — lets data drive
+    # without wandering to unphysical extremes.
+    mass_0.slope = af.TruncatedGaussianPrior(
+        mean=2.0, sigma=0.2, lower_limit=1.5, upper_limit=2.5)
+
+    shear_0 = af.Model(al.mp.ExternalShear)
+    shear_0.gamma_1 = af.GaussianPrior(mean=0.0, sigma=0.15)
+    shear_0.gamma_2 = af.GaussianPrior(mean=0.0, sigma=0.15)
+
+    lens_0 = af.Model(al.Galaxy, redshift=0.5,
+                      bulge=bulge_0, mass=mass_0, shear=shear_0)
+
+    # ---- Secondary lens (z=0.8) — still Isothermal (data doesn't support
+    # freeing its slope too; lens_1.mass.einstein_radius is rail-pinned at 0
+    # in v4 anyway, so slope is meaningless).
+    bulge_1 = af.Model(al.lp.Sersic)
+    mass_1  = af.Model(al.mp.Isothermal)
+    mass_1.centre.centre_0  = af.GaussianPrior(mean=0.0, sigma=0.1)
+    mass_1.centre.centre_1  = af.GaussianPrior(mean=0.0, sigma=0.1)
+    bulge_1.centre.centre_0 = af.GaussianPrior(mean=0.0, sigma=0.3)
+    bulge_1.centre.centre_1 = af.GaussianPrior(mean=0.0, sigma=0.3)
+    bulge_1.ell_comps.ell_comps_0 = af.TruncatedGaussianPrior(
+        mean=0.0, sigma=0.3, lower_limit=-1.0, upper_limit=1.0)
+    bulge_1.ell_comps.ell_comps_1 = af.TruncatedGaussianPrior(
+        mean=0.0, sigma=0.3, lower_limit=-1.0, upper_limit=1.0)
+    bulge_1.intensity        = af.LogUniformPrior(lower_limit=1e-6, upper_limit=1e6)
+    bulge_1.effective_radius = af.UniformPrior(lower_limit=0.0, upper_limit=30.0)
+    bulge_1.sersic_index     = af.UniformPrior(lower_limit=0.8, upper_limit=5.0)
+    mass_1.ell_comps.ell_comps_0 = af.TruncatedGaussianPrior(
+        mean=0.0, sigma=0.3, lower_limit=-1.0, upper_limit=1.0)
+    mass_1.ell_comps.ell_comps_1 = af.TruncatedGaussianPrior(
+        mean=0.0, sigma=0.3, lower_limit=-1.0, upper_limit=1.0)
+    mass_1.einstein_radius   = af.UniformPrior(lower_limit=0.0, upper_limit=8.0)
+    lens_1 = af.Model(al.Galaxy, redshift=0.8, bulge=bulge_1, mass=mass_1)
+
+    # ---- Source (z=1.7) — same as direct -------------------------------
+    bulge_src = af.Model(al.lp.SersicCore)
+    bulge_src.centre.centre_0  = af.GaussianPrior(mean=0.0, sigma=0.3)
+    bulge_src.centre.centre_1  = af.GaussianPrior(mean=0.0, sigma=0.3)
+    bulge_src.ell_comps.ell_comps_0 = af.TruncatedGaussianPrior(
+        mean=0.0, sigma=0.3, lower_limit=-1.0, upper_limit=1.0)
+    bulge_src.ell_comps.ell_comps_1 = af.TruncatedGaussianPrior(
+        mean=0.0, sigma=0.3, lower_limit=-1.0, upper_limit=1.0)
+    bulge_src.intensity        = af.LogUniformPrior(lower_limit=1e-5, upper_limit=1e3)
+    bulge_src.effective_radius = af.UniformPrior(lower_limit=0.0, upper_limit=30.0)
+    bulge_src.sersic_index     = af.UniformPrior(lower_limit=0.8, upper_limit=5.0)
+    source = af.Model(al.Galaxy, redshift=1.7, bulge=bulge_src)
+
+    model = af.Collection(galaxies=af.Collection(
+        lens_0=lens_0, lens_1=lens_1, source=source))
+    print(f"[CL/direct_epl] total free parameters: {model.total_free_parameters}",
+          flush=True)
+
+    analysis = al.AnalysisImaging(dataset=dataset, use_jax=False)
+    search = af.Nautilus(
+        path_prefix           = output_root / "compound_lens",
+        name                  = "compound_direct_epl_fit",
+        unique_tag            = "mock_1",
+        n_live                = n_live,
+        n_batch               = 50,
+        iterations_per_update = 30000,
+        number_of_cores       = int(os.environ.get("SLURM_CPUS_PER_TASK", "1")),
+    )
+    print("[CL/direct_epl] Nautilus starting...", flush=True)
+    t0 = time.time()
+    result = search.fit(model=model, analysis=analysis)
+    print(f"[CL/direct_epl] done in {(time.time()-t0)/60:.1f} min", flush=True)
+    _force_visualize(analysis, result, tag="direct_epl")
+    print(result.info, flush=True)
+    return result
+
+
+# -----------------------------------------------------------------------
+# Part 1c: direct_pix — Isothermal + shear + pixelized source (2-stage)
+# -----------------------------------------------------------------------
+# Why: v4 has salt-and-pepper residual at 4.4σ. Hypothesis C from
+# CLEANUP_PLAN.md: a pixelized source captures structure a 7-param
+# SersicCore cannot, potentially dropping residuals further. Uses a
+# 2-stage pipeline:
+#   stage_1: Same as v4 (Isothermal + shear + Sersic source). This is
+#            the "initialise adapt image" step — the Sersic source
+#            becomes the model_image for the pixelization's adapt prior.
+#   stage_2: Fix mass at stage_1 MAP, swap source to a pixelised
+#            reconstruction (al.mesh.RectangularAdaptImage + al.reg.Adapt).
+
+def build_direct_pix(dataset, output_root: Path, n_live: int = 200):
+    """2-stage: Sersic source (init) → pixelised source (refine)."""
+    import autofit as af
+    import autolens as al
+
+    # ---- Stage 1: full direct fit with Sersic source (v4 config) -------
+    print("[CL/direct_pix] Stage 1: Sersic-source init fit...", flush=True)
+    t0 = time.time()
+
+    bulge_0 = af.Model(al.lp.Sersic)
+    mass_0  = af.Model(al.mp.Isothermal)
+    mass_0.centre.centre_0  = af.GaussianPrior(mean=0.0, sigma=0.1)
+    mass_0.centre.centre_1  = af.GaussianPrior(mean=0.0, sigma=0.1)
+    bulge_0.centre.centre_0 = af.GaussianPrior(mean=0.0, sigma=0.3)
+    bulge_0.centre.centre_1 = af.GaussianPrior(mean=0.0, sigma=0.3)
+    for comp in (bulge_0.ell_comps, mass_0.ell_comps):
+        comp.ell_comps_0 = af.TruncatedGaussianPrior(
+            mean=0.0, sigma=0.3, lower_limit=-1.0, upper_limit=1.0)
+        comp.ell_comps_1 = af.TruncatedGaussianPrior(
+            mean=0.0, sigma=0.3, lower_limit=-1.0, upper_limit=1.0)
+    bulge_0.intensity        = af.LogUniformPrior(lower_limit=1e-6, upper_limit=1e6)
+    bulge_0.effective_radius = af.UniformPrior(lower_limit=0.0, upper_limit=30.0)
+    bulge_0.sersic_index     = af.UniformPrior(lower_limit=0.8, upper_limit=5.0)
+    mass_0.einstein_radius   = af.UniformPrior(lower_limit=0.0, upper_limit=8.0)
+    shear_0 = af.Model(al.mp.ExternalShear)
+    shear_0.gamma_1 = af.GaussianPrior(mean=0.0, sigma=0.15)
+    shear_0.gamma_2 = af.GaussianPrior(mean=0.0, sigma=0.15)
+    lens_0 = af.Model(al.Galaxy, redshift=0.5,
+                      bulge=bulge_0, mass=mass_0, shear=shear_0)
+
+    bulge_1 = af.Model(al.lp.Sersic)
+    mass_1  = af.Model(al.mp.Isothermal)
+    mass_1.centre.centre_0 = af.GaussianPrior(mean=0.0, sigma=0.1)
+    mass_1.centre.centre_1 = af.GaussianPrior(mean=0.0, sigma=0.1)
+    bulge_1.centre.centre_0 = af.GaussianPrior(mean=0.0, sigma=0.3)
+    bulge_1.centre.centre_1 = af.GaussianPrior(mean=0.0, sigma=0.3)
+    for comp in (bulge_1.ell_comps, mass_1.ell_comps):
+        comp.ell_comps_0 = af.TruncatedGaussianPrior(
+            mean=0.0, sigma=0.3, lower_limit=-1.0, upper_limit=1.0)
+        comp.ell_comps_1 = af.TruncatedGaussianPrior(
+            mean=0.0, sigma=0.3, lower_limit=-1.0, upper_limit=1.0)
+    bulge_1.intensity        = af.LogUniformPrior(lower_limit=1e-6, upper_limit=1e6)
+    bulge_1.effective_radius = af.UniformPrior(lower_limit=0.0, upper_limit=30.0)
+    bulge_1.sersic_index     = af.UniformPrior(lower_limit=0.8, upper_limit=5.0)
+    mass_1.einstein_radius   = af.UniformPrior(lower_limit=0.0, upper_limit=8.0)
+    lens_1 = af.Model(al.Galaxy, redshift=0.8, bulge=bulge_1, mass=mass_1)
+
+    bulge_src_lp = af.Model(al.lp.SersicCore)
+    bulge_src_lp.centre.centre_0 = af.GaussianPrior(mean=0.0, sigma=0.3)
+    bulge_src_lp.centre.centre_1 = af.GaussianPrior(mean=0.0, sigma=0.3)
+    bulge_src_lp.ell_comps.ell_comps_0 = af.TruncatedGaussianPrior(
+        mean=0.0, sigma=0.3, lower_limit=-1.0, upper_limit=1.0)
+    bulge_src_lp.ell_comps.ell_comps_1 = af.TruncatedGaussianPrior(
+        mean=0.0, sigma=0.3, lower_limit=-1.0, upper_limit=1.0)
+    bulge_src_lp.intensity = af.LogUniformPrior(lower_limit=1e-5, upper_limit=1e3)
+    bulge_src_lp.effective_radius = af.UniformPrior(lower_limit=0.0, upper_limit=30.0)
+    bulge_src_lp.sersic_index = af.UniformPrior(lower_limit=0.8, upper_limit=5.0)
+    source_lp_gal = af.Model(al.Galaxy, redshift=1.7, bulge=bulge_src_lp)
+
+    model_1 = af.Collection(galaxies=af.Collection(
+        lens_0=lens_0, lens_1=lens_1, source=source_lp_gal))
+    analysis = al.AnalysisImaging(dataset=dataset, use_jax=False)
+    search_1 = af.Nautilus(
+        path_prefix=output_root / "compound_lens",
+        name="compound_direct_pix_stage1",
+        unique_tag="mock_1",
+        n_live=n_live, n_batch=50, iterations_per_update=30000,
+        number_of_cores=int(os.environ.get("SLURM_CPUS_PER_TASK", "1")),
+    )
+    result_1 = search_1.fit(model=model_1, analysis=analysis)
+    print(f"[CL/direct_pix] Stage 1 done in {(time.time()-t0)/60:.1f} min; "
+          f"θ_E_0 = {result_1.max_log_likelihood_instance.galaxies.lens_0.mass.einstein_radius:.3f}",
+          flush=True)
+    _force_visualize(analysis, result_1, tag="direct_pix_stage1")
+
+    # ---- Stage 2: mass fixed, pixelised source ------------------------
+    print("[CL/direct_pix] Stage 2: pixelised source refinement...", flush=True)
+    t0 = time.time()
+
+    # Fix both lens galaxies' light + mass at stage 1 MAP via `.instance`
+    lens_0_fix = result_1.instance.galaxies.lens_0
+    lens_1_fix = result_1.instance.galaxies.lens_1
+
+    # Pixelised source: rectangular adaptive mesh, adapt-regularised,
+    # using stage 1's Sersic-source reconstruction as the adapt image.
+    # autolens 2026.4: al.reg.Adapt is the brightness-adaptive regularizer
+    # (replaces AdaptiveBrightness from older versions). inner/outer
+    # coefficients scale smoothness in high-/low-brightness regions.
+    pixelization = af.Model(
+        al.Pixelization,
+        image_mesh=al.image_mesh.Overlay(shape=(28, 28)),
+        mesh=al.mesh.Delaunay(),
+        regularization=al.reg.Adapt(
+            inner_coefficient=0.01,
+            outer_coefficient=100.0,
+            signal_scale=0.1,
+        ),
+    )
+    source_pix_gal = af.Model(al.Galaxy, redshift=1.7, pixelization=pixelization)
+
+    model_2 = af.Collection(galaxies=af.Collection(
+        lens_0=lens_0_fix, lens_1=lens_1_fix, source=source_pix_gal))
+    adapt_images = al.AdaptImages(
+        galaxy_name_image_dict=
+            al.galaxy_name_image_dict_via_result_from(result=result_1),
+    )
+    analysis_pix = al.AnalysisImaging(
+        dataset=dataset, use_jax=False, adapt_images=adapt_images,
+    )
+    search_2 = af.Nautilus(
+        path_prefix=output_root / "compound_lens",
+        name="compound_direct_pix_stage2",
+        unique_tag="mock_1",
+        n_live=150, n_batch=50, iterations_per_update=30000,
+        number_of_cores=int(os.environ.get("SLURM_CPUS_PER_TASK", "1")),
+    )
+    result_2 = search_2.fit(model=model_2, analysis=analysis_pix)
+    print(f"[CL/direct_pix] Stage 2 done in {(time.time()-t0)/60:.1f} min", flush=True)
+    _force_visualize(analysis_pix, result_2, tag="direct_pix_stage2")
+    print(result_2.info, flush=True)
+    return result_1, result_2
+
+
+# -----------------------------------------------------------------------
 # Part 2: single-effective-deflector SLaM (Track A)
 # -----------------------------------------------------------------------
 
@@ -447,7 +690,8 @@ def build_slam_staged(dataset, output_root: Path):
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--part",
-                   choices=("direct", "slam_effective", "slam_staged", "all"),
+                   choices=("direct", "direct_epl", "direct_pix",
+                            "slam_effective", "slam_staged", "all"),
                    default="direct")
     p.add_argument("--output-root", type=Path,
                    default=Path("./output").resolve())
@@ -479,6 +723,12 @@ def main():
 
     if args.part in ("direct", "all"):
         build_direct_fit(dataset, args.output_root, n_live=args.n_live)
+
+    if args.part in ("direct_epl", "all"):
+        build_direct_epl(dataset, args.output_root, n_live=args.n_live)
+
+    if args.part in ("direct_pix", "all"):
+        build_direct_pix(dataset, args.output_root, n_live=args.n_live)
 
     if args.part in ("slam_effective", "all"):
         build_slam_effective(dataset, args.output_root,
