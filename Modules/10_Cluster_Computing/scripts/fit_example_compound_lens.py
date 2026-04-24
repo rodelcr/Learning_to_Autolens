@@ -409,21 +409,24 @@ def build_direct_pix(dataset, output_root: Path, n_live: int = 200):
 
     # Pixelised source: rectangular adaptive mesh, adapt-regularised,
     # using stage 1's Sersic-source reconstruction as the adapt image.
-    # autolens 2026.4: use al.mesh.RectangularAdaptImage (shape arg is all
-    # that's needed — no separate image_mesh prefix required). Delaunay
-    # in 2026.4 requires a runtime `pixels=image_plane_mesh_grid.shape[0]`
-    # which makes the model-construction + Cannon-job plumbing harder;
-    # Rectangular is simpler and adequate for our problem size.
-    # al.reg.Adapt is the brightness-adaptive regularizer (was
-    # AdaptiveBrightness in older autolens).
+    # autolens 2026.4: use al.mesh.RectangularAdaptImage as a fixed
+    # instance (shape isn't a fitted parameter). The REGULARISER must
+    # be wrapped in af.Model with priors on its coefficients —
+    # otherwise stage 2 has zero free parameters (mass fixed, source
+    # pixelisation hyperparameters all fixed), which Nautilus refuses
+    # to sample. AssertionError: "Model has no priors!" is the symptom
+    # (caught on cl_pix_v2 job 8070792).
+    regularization = af.Model(al.reg.Adapt)
+    regularization.inner_coefficient = af.LogUniformPrior(
+        lower_limit=1e-4, upper_limit=1.0)
+    regularization.outer_coefficient = af.LogUniformPrior(
+        lower_limit=1.0, upper_limit=1e3)
+    regularization.signal_scale = af.LogUniformPrior(
+        lower_limit=1e-3, upper_limit=10.0)
     pixelization = af.Model(
         al.Pixelization,
         mesh=al.mesh.RectangularAdaptImage(shape=(28, 28)),
-        regularization=al.reg.Adapt(
-            inner_coefficient=0.01,
-            outer_coefficient=100.0,
-            signal_scale=0.1,
-        ),
+        regularization=regularization,
     )
     source_pix_gal = af.Model(al.Galaxy, redshift=1.7, pixelization=pixelization)
 
