@@ -104,8 +104,10 @@ _fits.PrimaryHDU(data=np.asarray(dataset.data.native)).writeto(
     OUT / "mock_image.fits", overwrite=True)
 _fits.PrimaryHDU(data=np.asarray(dataset.noise_map.native)).writeto(
     OUT / "mock_noise.fits", overwrite=True)
-# Convolver's underlying kernel array — attribute is `kernel`
-_fits.PrimaryHDU(data=np.asarray(psf.kernel)).writeto(
+# Convolver's underlying kernel array — `psf.kernel` is slim (49,);
+# use its `.native` for the 2D (7, 7) representation autolens expects
+# when reading back via `al.Imaging.from_fits`.
+_fits.PrimaryHDU(data=np.asarray(psf.kernel.native)).writeto(
     OUT / "mock_psf.fits", overwrite=True)
 
 truth = {

@@ -96,7 +96,9 @@ _fits.PrimaryHDU(data=np.asarray(dataset.data.native)).writeto(
     OUT / "mock_image.fits", overwrite=True)
 _fits.PrimaryHDU(data=np.asarray(dataset.noise_map.native)).writeto(
     OUT / "mock_noise.fits", overwrite=True)
-_fits.PrimaryHDU(data=np.asarray(psf.kernel)).writeto(
+# psf.kernel is slim (49,); `.native` gives the 2D (7, 7) autolens
+# reads back via al.Imaging.from_fits.
+_fits.PrimaryHDU(data=np.asarray(psf.kernel.native)).writeto(
     OUT / "mock_psf.fits", overwrite=True)
 
 truth = {
