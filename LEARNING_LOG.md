@@ -250,6 +250,30 @@ redundant; let the posterior tell you.
 
 ---
 
+## 2026-04-24 — Autolens 2026.4 pixelisation API renames
+
+Building the `--part=direct_pix` pipeline for compound_lens surfaced
+some API drift from older autolens docs:
+
+- **`al.reg.AdaptiveBrightness` → `al.reg.Adapt`** in 2026.4. Same
+  algorithm (brightness-adaptive regularisation, smoother in faint
+  regions, less smoothing where source is bright). Same constructor
+  signature (`inner_coefficient`, `outer_coefficient`, `signal_scale`).
+- **`al.AdaptImages` + `al.galaxy_name_image_dict_via_result_from`**
+  is the canonical way to seed a pixelised source from a previous
+  Sersic-stage fit. The old Mod-04 `AdaptImageMaker` pattern still
+  works but the new helpers are cleaner.
+- **`al.mesh.Delaunay` + `al.image_mesh.Overlay(shape=(N,N))`** is the
+  recommended combo for cluster/galaxy-scale pixelised sources in 2026.4.
+  The Rectangular mesh also still works but autolens's own examples
+  have all moved to Delaunay.
+
+Documenting because these don't appear in most published autolens
+tutorials (which were written pre-2026.4) and you'd waste time
+searching for the old names otherwise.
+
+---
+
 ## 2026-04-24 — Multi-plane visualization inventory
 
 PyAutoLens 2026.4's default `analysis.visualize()` emits **more files
