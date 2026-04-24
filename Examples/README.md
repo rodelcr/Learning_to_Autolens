@@ -24,7 +24,7 @@ Examples/<name>/
 | 1 | **[compound_lens/](compound_lens/)** | Two deflectors at different z, one source | ✓ shipped | Multi-plane `al.Tracer`, staged chaining across lens bodies, when to simplify to an effective deflector |
 | 2 | [double_source_plane/](double_source_plane/) | One lens, two sources at different z | ◯ stub | Cosmological distance ratios, joint multi-source posterior, β cosmography |
 | 3 | [group_scale/](group_scale/) | BGG + satellites + extended envelope (same z) | ◯ stub | Cluster-lite multi-component mass, common-halo modelling |
-| 4 | [disky_spiral_lens/](disky_spiral_lens/) | Non-elliptical lens morphology | ◯ stub | MGE-light advantages over Sérsic, mass/light PA misalignment |
+| 4 | **[disky_spiral_lens/](disky_spiral_lens/)** | Non-elliptical lens morphology | ✓ shipped | Two-component Sersic vs. single Sersic, mass/light PA misalignment, Bayes-factor model comparison |
 | 5 | [quad_time_delay/](quad_time_delay/) | Point-source quasar, four images, time delays | ◯ stub | Point-source likelihood, time-delay cosmography, H₀ |
 | 6 | [agel_real_target/](agel_real_target/) | A real AGEL survey lens on HST data | ◯ stub | Everything together on actual HST data |
 

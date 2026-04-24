@@ -1,0 +1,10 @@
+{
+  "search_name": "single_sersic_fit",
+  "source_dir": "/n/netscratch/hernquist_lab/Lab/rcordova/learning_to_autolens/output/disky_spiral_lens/mock_1/single_sersic_fit/1ddb92f8a5c568100dd185d0205e8997",
+  "max_log_likelihood": -33119.406005107434,
+  "log_evidence": -33255.45839350925,
+  "chi_squared_total": 133805.28953875217,
+  "chi_squared_per_pixel": 13.576023695084434,
+  "n_unmasked_pixels": 9856,
+  "max_abs_normalized_residual": 43.190334701566606
+}

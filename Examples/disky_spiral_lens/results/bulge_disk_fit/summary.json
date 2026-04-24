@@ -1,0 +1,10 @@
+{
+  "search_name": "bulge_disk_fit",
+  "source_dir": "/n/netscratch/hernquist_lab/Lab/rcordova/learning_to_autolens/output/disky_spiral_lens/mock_1/bulge_disk_fit/9eca548a1bdf997bf23c0bc6013298f6",
+  "max_log_likelihood": 28876.466186372447,
+  "log_evidence": 28713.67608988282,
+  "chi_squared_total": 9813.545155792379,
+  "chi_squared_per_pixel": 0.9956924873977657,
+  "n_unmasked_pixels": 9856,
+  "max_abs_normalized_residual": 4.214765308779094
+}
