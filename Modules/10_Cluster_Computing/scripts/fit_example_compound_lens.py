@@ -122,7 +122,19 @@ def build_direct_fit(dataset, output_root: Path, n_live: int = 250):
     mass_0.ell_comps.ell_comps_1 = af.TruncatedGaussianPrior(
         mean=0.0, sigma=0.3, lower_limit=-1.0, upper_limit=1.0)
     mass_0.einstein_radius       = af.UniformPrior(lower_limit=0.0, upper_limit=8.0)
-    lens_0 = af.Model(al.Galaxy, redshift=0.5, bulge=bulge_0, mass=mass_0)
+
+    # v4 cleanup (CLEANUP_PLAN.md Hypothesis A): re-enable external
+    # shear on the primary. v3 reached log_Z=+30,705 but had max|res|
+    # = 6.18σ with coherent chi² hot spots on the arc / counter-image —
+    # the signature of missing shear that the v3 collapsed-secondary
+    # couldn't absorb. Wide Gaussian(0, 0.15) — not truth-seeded, lets
+    # data drive. Expected: max|res| drops to ≤4σ.
+    shear_0 = af.Model(al.mp.ExternalShear)
+    shear_0.gamma_1 = af.GaussianPrior(mean=0.0, sigma=0.15)
+    shear_0.gamma_2 = af.GaussianPrior(mean=0.0, sigma=0.15)
+
+    lens_0 = af.Model(al.Galaxy, redshift=0.5,
+                      bulge=bulge_0, mass=mass_0, shear=shear_0)
 
     # ---- Secondary lens (z=0.8) -----------------------------------------
     bulge_1 = af.Model(al.lp.Sersic)
