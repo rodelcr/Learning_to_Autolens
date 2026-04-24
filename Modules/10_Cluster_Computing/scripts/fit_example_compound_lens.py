@@ -409,13 +409,16 @@ def build_direct_pix(dataset, output_root: Path, n_live: int = 200):
 
     # Pixelised source: rectangular adaptive mesh, adapt-regularised,
     # using stage 1's Sersic-source reconstruction as the adapt image.
-    # autolens 2026.4: al.reg.Adapt is the brightness-adaptive regularizer
-    # (replaces AdaptiveBrightness from older versions). inner/outer
-    # coefficients scale smoothness in high-/low-brightness regions.
+    # autolens 2026.4: use al.mesh.RectangularAdaptImage (shape arg is all
+    # that's needed — no separate image_mesh prefix required). Delaunay
+    # in 2026.4 requires a runtime `pixels=image_plane_mesh_grid.shape[0]`
+    # which makes the model-construction + Cannon-job plumbing harder;
+    # Rectangular is simpler and adequate for our problem size.
+    # al.reg.Adapt is the brightness-adaptive regularizer (was
+    # AdaptiveBrightness in older autolens).
     pixelization = af.Model(
         al.Pixelization,
-        image_mesh=al.image_mesh.Overlay(shape=(28, 28)),
-        mesh=al.mesh.Delaunay(),
+        mesh=al.mesh.RectangularAdaptImage(shape=(28, 28)),
         regularization=al.reg.Adapt(
             inner_coefficient=0.01,
             outer_coefficient=100.0,
