@@ -22,7 +22,7 @@ Examples/<name>/
 | # | Example | Architecture | Status | What it teaches |
 |---|---|---|---|---|
 | 1 | **[compound_lens/](compound_lens/)** | Two deflectors at different z, one source | ✓ shipped | Multi-plane `al.Tracer`, staged chaining across lens bodies, when to simplify to an effective deflector |
-| 2 | [double_source_plane/](double_source_plane/) | One lens, two sources at different z | ◯ stub | Cosmological distance ratios, joint multi-source posterior, β cosmography |
+| 2 | **[double_source_plane/](double_source_plane/)** | One lens, two sources at different z | ✓ shipped | Cosmological distance ratios, joint multi-source posterior, β cosmography |
 | 3 | [group_scale/](group_scale/) | BGG + satellites + extended envelope (same z) | ◯ stub | Cluster-lite multi-component mass, common-halo modelling |
 | 4 | **[disky_spiral_lens/](disky_spiral_lens/)** | Non-elliptical lens morphology | ✓ shipped | Two-component Sersic vs. single Sersic, mass/light PA misalignment, Bayes-factor model comparison |
 | 5 | [quad_time_delay/](quad_time_delay/) | Point-source quasar, four images, time delays | ◯ stub | Point-source likelihood, time-delay cosmography, H₀ |

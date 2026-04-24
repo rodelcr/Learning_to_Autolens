@@ -1,0 +1,10 @@
+{
+  "search_name": "dspl_direct_fit",
+  "source_dir": "/n/netscratch/hernquist_lab/Lab/rcordova/learning_to_autolens/output/double_source_plane/mock_1/dspl_direct_fit/5075fe15ddf596a4497d03e3b55a4762",
+  "max_log_likelihood": 29171.835060948124,
+  "log_evidence": 29014.385513714908,
+  "chi_squared_total": 9765.2306481856,
+  "chi_squared_per_pixel": 0.9907904472590908,
+  "n_unmasked_pixels": 9856,
+  "max_abs_normalized_residual": 3.89997701616197
+}
