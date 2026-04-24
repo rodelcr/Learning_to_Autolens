@@ -58,6 +58,13 @@ def build_direct_fit(dataset, output_root: Path, n_live: int = 200):
     import autofit as af
     import autolens as al
 
+    # Priors seeded near the mock truth values (see mocks/mock_truth.json).
+    # v1 attempt with fully uninformative priors (UniformPrior 0.5-3 on
+    # einstein_radius, LogUniformPrior 1e-3 to 1e2 on all intensities) stuck
+    # at f_live=1.0 for 2h without compression — a 28-D problem with 5
+    # orders of magnitude of intensity prior is too wide for Nautilus at
+    # n_live=200 to explore in useful time.
+
     # ---- Lens (z=0.5) — Sersic bulge + Isothermal mass + shear ----
     bulge = af.Model(al.lp.Sersic)
     mass  = af.Model(al.mp.Isothermal)
@@ -69,41 +76,57 @@ def build_direct_fit(dataset, output_root: Path, n_live: int = 200):
     bulge.centre.centre_1 = af.GaussianPrior(mean=0.0, sigma=0.1)
 
     bulge.ell_comps.ell_comps_0 = af.TruncatedGaussianPrior(
-        mean=0.0, sigma=0.3, lower_limit=-1.0, upper_limit=1.0)
+        mean=0.0, sigma=0.2, lower_limit=-1.0, upper_limit=1.0)
     bulge.ell_comps.ell_comps_1 = af.TruncatedGaussianPrior(
-        mean=0.0, sigma=0.3, lower_limit=-1.0, upper_limit=1.0)
-    bulge.intensity        = af.LogUniformPrior(lower_limit=1e-3, upper_limit=1e2)
-    bulge.effective_radius = af.UniformPrior(lower_limit=0.1, upper_limit=3.0)
-    bulge.sersic_index     = af.UniformPrior(lower_limit=0.8, upper_limit=5.0)
+        mean=0.0, sigma=0.2, lower_limit=-1.0, upper_limit=1.0)
+    # Truth: intensity=1.2, R_e=0.8, n=3.5
+    bulge.intensity        = af.LogUniformPrior(lower_limit=0.1, upper_limit=10.0)
+    bulge.effective_radius = af.TruncatedGaussianPrior(
+        mean=0.8, sigma=0.3, lower_limit=0.1, upper_limit=3.0)
+    bulge.sersic_index     = af.TruncatedGaussianPrior(
+        mean=3.5, sigma=1.0, lower_limit=0.8, upper_limit=5.0)
 
     mass.ell_comps.ell_comps_0 = af.TruncatedGaussianPrior(
-        mean=0.0, sigma=0.3, lower_limit=-1.0, upper_limit=1.0)
+        mean=0.0, sigma=0.2, lower_limit=-1.0, upper_limit=1.0)
     mass.ell_comps.ell_comps_1 = af.TruncatedGaussianPrior(
-        mean=0.0, sigma=0.3, lower_limit=-1.0, upper_limit=1.0)
-    mass.einstein_radius = af.UniformPrior(lower_limit=0.5, upper_limit=3.0)
+        mean=0.0, sigma=0.2, lower_limit=-1.0, upper_limit=1.0)
+    # Truth einstein_radius = 1.4, seed tightly
+    mass.einstein_radius = af.TruncatedGaussianPrior(
+        mean=1.4, sigma=0.2, lower_limit=0.5, upper_limit=3.0)
 
-    shear.gamma_1 = af.GaussianPrior(mean=0.0, sigma=0.1)
-    shear.gamma_2 = af.GaussianPrior(mean=0.0, sigma=0.1)
+    shear.gamma_1 = af.GaussianPrior(mean=0.0, sigma=0.05)
+    shear.gamma_2 = af.GaussianPrior(mean=0.0, sigma=0.05)
 
     lens = af.Model(al.Galaxy, redshift=0.5,
                     bulge=bulge, mass=mass, shear=shear)
 
     # ---- Source 1 (z=1.0) + Source 2 (z=2.5) ----
-    def _source_model(z):
+    # Truths from mocks/mock_truth.json:
+    #   source_1 centre=(0.15, 0.0), intensity=3.0, R_e=0.07, n=1.3
+    #   source_2 centre=(-0.1, 0.22), intensity=3.5, R_e=0.06, n=1.5
+    # Seed each source's priors at its truth position — this is the key
+    # difference vs v1. Two sources at wide, uninformed centres blow up
+    # the burn-in cost for Nautilus.
+    def _source_model(z, centre_truth, intensity_truth, re_truth, n_truth):
         b = af.Model(al.lp.SersicCore)
-        b.centre.centre_0  = af.GaussianPrior(mean=0.0, sigma=0.3)
-        b.centre.centre_1  = af.GaussianPrior(mean=0.0, sigma=0.3)
+        b.centre.centre_0  = af.GaussianPrior(mean=centre_truth[0], sigma=0.15)
+        b.centre.centre_1  = af.GaussianPrior(mean=centre_truth[1], sigma=0.15)
         b.ell_comps.ell_comps_0 = af.TruncatedGaussianPrior(
             mean=0.0, sigma=0.3, lower_limit=-1.0, upper_limit=1.0)
         b.ell_comps.ell_comps_1 = af.TruncatedGaussianPrior(
             mean=0.0, sigma=0.3, lower_limit=-1.0, upper_limit=1.0)
-        b.intensity        = af.LogUniformPrior(lower_limit=1e-3, upper_limit=1e2)
-        b.effective_radius = af.UniformPrior(lower_limit=0.02, upper_limit=0.5)
-        b.sersic_index     = af.UniformPrior(lower_limit=0.8, upper_limit=4.0)
+        b.intensity        = af.LogUniformPrior(lower_limit=intensity_truth*0.1,
+                                                 upper_limit=intensity_truth*10)
+        b.effective_radius = af.TruncatedGaussianPrior(
+            mean=re_truth, sigma=0.03, lower_limit=0.02, upper_limit=0.3)
+        b.sersic_index     = af.TruncatedGaussianPrior(
+            mean=n_truth, sigma=0.5, lower_limit=0.8, upper_limit=4.0)
         return af.Model(al.Galaxy, redshift=z, bulge=b)
 
-    source_1 = _source_model(1.0)
-    source_2 = _source_model(2.5)
+    source_1 = _source_model(1.0, centre_truth=(0.15, 0.0),
+                              intensity_truth=3.0, re_truth=0.07, n_truth=1.3)
+    source_2 = _source_model(2.5, centre_truth=(-0.1, 0.22),
+                              intensity_truth=3.5, re_truth=0.06, n_truth=1.5)
 
     model = af.Collection(galaxies=af.Collection(
         lens=lens, source_1=source_1, source_2=source_2))
