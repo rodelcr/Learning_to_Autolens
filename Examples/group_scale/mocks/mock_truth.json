@@ -1,0 +1,98 @@
+{
+  "pixel_scales": 0.05,
+  "shape": [
+    160,
+    160
+  ],
+  "redshifts": {
+    "lens": 0.4,
+    "source": 1.8
+  },
+  "bgg": {
+    "bulge": {
+      "centre": [
+        0,
+        0
+      ],
+      "ell_comps": [
+        0.08,
+        -0.02
+      ],
+      "intensity": 1.5,
+      "effective_radius": 0.9,
+      "sersic_index": 4.0
+    },
+    "mass": {
+      "centre": [
+        0,
+        0
+      ],
+      "ell_comps": [
+        0.08,
+        -0.02
+      ],
+      "einstein_radius": 1.5
+    }
+  },
+  "satellites": [
+    {
+      "centre": [
+        1.8,
+        0.7
+      ],
+      "einstein_radius": 0.35,
+      "intensity": 0.4,
+      "effective_radius": 0.25,
+      "sersic_index": 2.0,
+      "mass": "SIS"
+    },
+    {
+      "centre": [
+        -1.5,
+        -1.2
+      ],
+      "einstein_radius": 0.45,
+      "intensity": 0.5,
+      "effective_radius": 0.3,
+      "sersic_index": 1.8,
+      "mass": "SIS"
+    },
+    {
+      "centre": [
+        0.5,
+        -2.0
+      ],
+      "einstein_radius": 0.25,
+      "intensity": 0.3,
+      "effective_radius": 0.2,
+      "sersic_index": 2.5,
+      "mass": "SIS"
+    }
+  ],
+  "source": {
+    "bulge": {
+      "centre": [
+        0.12,
+        0.08
+      ],
+      "ell_comps": [
+        -0.08,
+        0.15
+      ],
+      "intensity": 3.5,
+      "effective_radius": 0.08,
+      "sersic_index": 1.4
+    }
+  },
+  "pedagogical_note": "Four galaxies at z=0.4 deflecting a source at z=1.8. The BGG (\u03b8_E=1.5\u2033) dominates; three satellites at offset positions (\u03b8_E=0.25-0.45\u2033) perturb the image positions and shape of the ring. All lenses share ONE redshift plane \u2014 Tracer sums their deflection fields. The fit can (a) absorb the satellite mass into shear (simpler), or (b) model each satellite's mass explicitly with centres fixed at photometric positions (the survey-scale pattern). Compare log_Z.",
+  "simulator": {
+    "exposure_time": 2000,
+    "psf_sigma": 0.08,
+    "background_sky_level": 0.05,
+    "noise_seed": 7
+  },
+  "mask_suggestion": {
+    "type": "circular",
+    "radius_arcsec": 3.5
+  }
+}

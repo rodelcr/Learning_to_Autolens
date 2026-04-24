@@ -166,6 +166,47 @@ audit template that looks for "two cleanly subtracted centres."
 
 ---
 
+## 2026-04-24 — Group-scale build
+
+### Group-scale mocks: the arc visibly remembers every satellite
+
+Wrote a mock with a BGG (θ_E=1.5″) + 3 satellites (θ_E=0.25–0.45″) at
+fixed offset positions, all at z=0.4. The Einstein ring is clearly
+circular dominated by the BGG, but with **visible kinks and brightness
+modulations precisely where each satellite sits**. The arcsinh×5
+preview shows three local arc deformations corresponding to the three
+satellite positions.
+
+**Why this matters pedagogically.** Unlike compound_lens (where the
+secondary's effect is degenerate with shear because it's at a different
+redshift, partially absorbable), **satellites at the same z produce
+localised, visually-identifiable perturbations** on the arc. A student
+looking at the image can *point at* each satellite and predict which
+part of the ring it's warping.
+
+This should make the "is the satellite mass real or shear-absorbable?"
+question much more visually compelling than the compound_lens version.
+
+### `IsothermalSph` vs `Isothermal` for satellites
+
+For satellites in the mock, I used `al.mp.IsothermalSph` (spherical,
+no ell_comps) instead of `al.mp.Isothermal`. Three reasons:
+
+1. **Fewer params per satellite** — SIS has 3 (centre + θ_E) vs SIE's 5.
+   For a 3-satellite fit, that's 9 params saved, meaningful at ~30 total.
+2. **Satellite ellipticity isn't resolvable on this mock** — the light
+   from each satellite is faint, so even if we modelled it as SIE, the
+   data couldn't constrain the ell_comps. Nautilus would explore a
+   uniformly-posterior direction, wasting compute.
+3. **It's the survey-scale default.** Real group-lens papers (e.g.
+   cluster pipelines) typically use SIS for satellites and SIE only for
+   the BGG, for exactly this reason.
+
+The BGG still gets full SIE in the model — that's where the ellipticity
+*is* constrained by the arc shape.
+
+---
+
 ## Open questions to investigate later
 
 - What is autolens's default policy on `centre_0` sign convention changes
