@@ -76,11 +76,14 @@ def _satellite_light_only_model(y, x):
         mean=0.0, sigma=0.3, lower_limit=-1.0, upper_limit=1.0)
     sat_bulge.ell_comps.ell_comps_1 = af.TruncatedGaussianPrior(
         mean=0.0, sigma=0.3, lower_limit=-1.0, upper_limit=1.0)
-    sat_bulge.intensity        = af.LogUniformPrior(lower_limit=0.05, upper_limit=5.0)
+    # Tightened vs v1 (was LogUniformPrior 0.05-5): truth intensities are
+    # 0.3-0.5 so 0.1-2 covers the full range comfortably and cuts the
+    # 3-satellite joint prior volume by 9× (2^9 vs previous 5^9 ratio).
+    sat_bulge.intensity        = af.LogUniformPrior(lower_limit=0.1, upper_limit=2.0)
     sat_bulge.effective_radius = af.TruncatedGaussianPrior(
-        mean=0.25, sigma=0.15, lower_limit=0.05, upper_limit=1.0)
+        mean=0.25, sigma=0.10, lower_limit=0.05, upper_limit=0.6)
     sat_bulge.sersic_index     = af.TruncatedGaussianPrior(
-        mean=2.0, sigma=0.8, lower_limit=0.8, upper_limit=4.0)
+        mean=2.0, sigma=0.6, lower_limit=0.8, upper_limit=4.0)
     return af.Model(al.Galaxy, redshift=0.4, bulge=sat_bulge)
 
 
@@ -189,7 +192,8 @@ def build_bgg_plus_satellites(dataset, output_root: Path, n_live: int = 200):
     # Satellites: fixed centres at photometric positions, SIS mass (1 free
     # param each), Sersic light (5 free params) with moderate priors.
     # Satellite *light* is constrained by the photometric data; its MASS
-    # is the pedagogical test.
+    # is the pedagogical test. Priors match _satellite_light_only_model
+    # so the two variants differ only in the presence of satellite mass.
     for i, (y, x) in enumerate(_SAT_POS):
         sat_bulge = af.Model(al.lp.Sersic)
         sat_bulge.centre.centre_0 = y  # fixed
@@ -198,11 +202,11 @@ def build_bgg_plus_satellites(dataset, output_root: Path, n_live: int = 200):
             mean=0.0, sigma=0.3, lower_limit=-1.0, upper_limit=1.0)
         sat_bulge.ell_comps.ell_comps_1 = af.TruncatedGaussianPrior(
             mean=0.0, sigma=0.3, lower_limit=-1.0, upper_limit=1.0)
-        sat_bulge.intensity        = af.LogUniformPrior(lower_limit=0.05, upper_limit=5.0)
+        sat_bulge.intensity        = af.LogUniformPrior(lower_limit=0.1, upper_limit=2.0)
         sat_bulge.effective_radius = af.TruncatedGaussianPrior(
-            mean=0.25, sigma=0.15, lower_limit=0.05, upper_limit=1.0)
+            mean=0.25, sigma=0.10, lower_limit=0.05, upper_limit=0.6)
         sat_bulge.sersic_index     = af.TruncatedGaussianPrior(
-            mean=2.0, sigma=0.8, lower_limit=0.8, upper_limit=4.0)
+            mean=2.0, sigma=0.6, lower_limit=0.8, upper_limit=4.0)
 
         sat_mass = af.Model(al.mp.IsothermalSph)
         sat_mass.centre.centre_0 = y  # fixed — satellite mass at photometric position
