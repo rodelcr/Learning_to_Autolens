@@ -216,6 +216,29 @@ def export_one(search_dir: Path, dest: Path, repo_root: Path | None = None, forc
         print(f"[export] no image/fit*.png under {search_dir} — skipping fit subplot",
               flush=True)
 
+    # 4b. Additional autolens-generated views — not critical for every fit
+    # but pedagogically rich for compound / multi-plane examples:
+    #   - fit_N.png for N ≥ 2: per-source-plane subplots (multi-plane fits
+    #     emit one per plane; each differs only in the "Source Plane (Zoomed)"
+    #     panel, but that's where the multi-plane physics is visible)
+    #   - tracer.png: 9-panel Model+Source+Convergence+Potential+Deflections
+    #     with critical curves & caustics overlaid
+    #   - galaxies.png: per-galaxy convergence/potential/deflection maps
+    #     (useful to see which galaxy contributes what)
+    # These are all already rendered by autolens during the fit — we just
+    # copy them alongside fit_subplot.png.
+    image_dir = search_dir / "image"
+    if image_dir.exists():
+        # Copy every fit_N.png for N=2,3,…  (fit_1.png already landed as
+        # fit_subplot.png above; don't overwrite it by copying fit_1.png too).
+        for fit_n in sorted(image_dir.glob("fit_[2-9]*.png")):
+            shutil.copy2(fit_n, dest / fit_n.name)
+        # Copy the tracer/galaxies overviews
+        for fname in ("tracer.png", "galaxies.png"):
+            src = image_dir / fname
+            if src.exists():
+                shutil.copy2(src, dest / fname)
+
     # 5. Corner plot — render to PDF unless already there
     corner_pdf = dest / "corner.pdf"
     if corner_pdf.exists() and not force:

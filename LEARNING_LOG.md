@@ -250,6 +250,59 @@ redundant; let the posterior tell you.
 
 ---
 
+## 2026-04-24 — Multi-plane visualization inventory
+
+PyAutoLens 2026.4's default `analysis.visualize()` emits **more files
+than we were copying**. Until today `export_results.py` only grabbed
+`fit.png` (or `fit_1.png` as a fallback for multi-plane). On inspection
+of v4 compound_lens's Cannon output dir, we also find:
+
+- **`fit_2.png`** (and `fit_3`, `fit_4`, … for N source planes): full
+  12-panel subplots identical to `fit_1.png` EXCEPT the "Source Plane
+  (Zoomed)" panel, which varies per plane. These are the multi-plane
+  views we needed.
+- **`tracer.png`**: 9-panel view with Model, Source Model Image, Source
+  Plane (No Zoom) **with caustics overlaid**, Lens Image (log10),
+  Convergence κ, Potential Φ, Deflections Y, Deflections X, Magnification.
+  Critical curves show as white ellipses where applicable.
+- **`galaxies.png`**: 5-panel per-galaxy (or aggregate-lens-plane)
+  Image, Convergence, Potential, Deflections Y/X. Useful when you want
+  to see which galaxy contributes what.
+
+**Fix.** `export_results.py` now copies `fit_[2-9]*.png`, `tracer.png`,
+`galaxies.png` alongside `fit_subplot.png` into the committed
+`results/<stage>/` dir. Marginal git cost (each ~500-800 KB) for
+substantial pedagogical gain.
+
+### compound_multiplane.png — compact per-plane view
+
+Each autolens `fit_N.png` is 3.5 MB and a 12-panel grid, so flipping
+between `fit_1` and `fit_2` to see what differs is awkward — the ONLY
+thing that actually changes is one panel out of twelve.
+
+Built `Modules/10_Cluster_Computing/scripts/compound_multiplane_plot.py`
+that PIL-crops the shared panels (Data / Model / Residual / Chi²) from
+`fit_1`/`fit_subplot.png` and the Source Plane (Zoomed) from each
+`fit_N`, then tiles them into a single `compound_multiplane.png` with
+a header strip labelling each source plane. 445 KB output; the pedagogy
+is now visible at a glance.
+
+**When to use it.** Any multi-plane fit — compound_lens, DSPL,
+group_scale — where the user wants to compare source-plane
+reconstructions across redshifts side-by-side. Run manually after
+a fit:
+
+```bash
+python Modules/10_Cluster_Computing/scripts/compound_multiplane_plot.py \
+    --results-dir Examples/compound_lens/results/compound_direct_fit/ \
+    --plane-labels "source plane @ z=0.8 (relay)" "source plane @ z=1.7 (true source)"
+```
+
+Future improvement: auto-detect redshifts from model_results.txt so
+the `--plane-labels` argument isn't required.
+
+---
+
 ## 2026-04-24 — Lesson while debugging group_scale
 
 ### "Simpler model" must still model the *light*, or you're comparing apples to oranges
