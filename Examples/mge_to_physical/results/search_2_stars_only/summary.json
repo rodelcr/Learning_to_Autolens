@@ -1,0 +1,10 @@
+{
+  "search_name": "search_2_stars_only",
+  "source_dir": "output/lmp_sersic_no_dark/search_2_stars_only/65d6693bded5c9eb299ed2c2b0a94f8e",
+  "max_log_likelihood": 22739.442056954576,
+  "log_evidence": 22653.70403416907,
+  "chi_squared_total": 28719.63178745984,
+  "chi_squared_per_pixel": 3.129863969862668,
+  "n_unmasked_pixels": 9176,
+  "max_abs_normalized_residual": 9.935169472737888
+}

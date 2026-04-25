@@ -1,0 +1,10 @@
+{
+  "search_name": "mock_6",
+  "source_dir": "output/powerlaw_shear_sersic_unified/mock_6/5d4777cd1f9ca855052e0485a779a729",
+  "max_log_likelihood": 26944.36008212294,
+  "log_evidence": 26836.14244315451,
+  "chi_squared_total": 17834.322271990124,
+  "chi_squared_per_pixel": 1.9435835082813997,
+  "n_unmasked_pixels": 9176,
+  "max_abs_normalized_residual": 10.304243377878183
+}

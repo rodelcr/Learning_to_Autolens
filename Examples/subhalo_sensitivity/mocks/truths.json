@@ -1,0 +1,55 @@
+{
+  "redshifts": {
+    "lens": 0.5,
+    "source": 1.0
+  },
+  "main_lens": {
+    "mass": "Isothermal",
+    "centre": [
+      0.0,
+      0.0
+    ],
+    "einstein_radius": 1.6,
+    "ell_comps_from_axis_ratio": [
+      0.9,
+      45.0
+    ]
+  },
+  "shear": {
+    "gamma_1": 0.05,
+    "gamma_2": 0.05
+  },
+  "subhalo": {
+    "mass_class": "NFWTruncatedMCRDuffySph",
+    "centre": [
+      0.5,
+      0.5
+    ],
+    "mass_at_200": 1000000000.0,
+    "comment": "Just above the canonical PyAutoLens detection threshold (~10^8.5 Msun for HST-class data)"
+  },
+  "source": {
+    "kind": "SersicCore",
+    "centre": [
+      0.0,
+      0.05
+    ],
+    "ell_comps_from_axis_ratio": [
+      0.8,
+      60.0
+    ],
+    "intensity": 0.5,
+    "effective_radius": 0.1,
+    "sersic_index": 1.5
+  },
+  "imaging": {
+    "shape_native": [
+      110,
+      110
+    ],
+    "pixel_scales_arcsec": 0.05,
+    "exposure_time_s": 300.0,
+    "psf_sigma_arcsec": 0.05,
+    "background_sky_level": 0.1
+  }
+}

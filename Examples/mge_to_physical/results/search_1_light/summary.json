@@ -1,0 +1,10 @@
+{
+  "search_name": "search_1_light",
+  "source_dir": "output/mge_lens_light/search_1_light/0dbbe86bde1c4fc3b0e25d3403d11649",
+  "max_log_likelihood": 22277.639003380682,
+  "log_evidence": 22252.679498649904,
+  "chi_squared_total": 29643.23789460763,
+  "chi_squared_per_pixel": 3.2305185151054525,
+  "n_unmasked_pixels": 9176,
+  "max_abs_normalized_residual": 10.989998638162271
+}

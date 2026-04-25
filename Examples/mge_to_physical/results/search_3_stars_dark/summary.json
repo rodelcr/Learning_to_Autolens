@@ -1,0 +1,10 @@
+{
+  "search_name": "search_3_stars_dark",
+  "source_dir": "output/lmp_sersic_plus_nfw/search_3_stars_dark/2bf53130f0248fac6785556abf6bae8f",
+  "max_log_likelihood": 23045.01914873537,
+  "log_evidence": 22941.53972289642,
+  "chi_squared_total": 28108.47760389826,
+  "chi_squared_per_pixel": 3.063260418907831,
+  "n_unmasked_pixels": 9176,
+  "max_abs_normalized_residual": 9.929138905947049
+}

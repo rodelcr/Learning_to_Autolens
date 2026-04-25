@@ -1,0 +1,51 @@
+Total Free Parameters = 22
+
+model                                                                           Collection (N=22)
+    galaxies                                                                    Collection (N=22)
+        lens                                                                    Galaxy (N=15)
+            bulge                                                               Sersic (N=7)
+            mass                                                                PowerLaw (N=6)
+            shear                                                               ExternalShear (N=2)
+        source                                                                  Galaxy (N=7)
+            bulge                                                               SersicCore (N=7)
+
+galaxies
+    lens
+        redshift                                                                0.3
+        bulge
+            centre
+                centre_0                                                        GaussianPrior [149], mean = 0.0, sigma = 0.5
+                centre_1                                                        GaussianPrior [150], mean = 0.0, sigma = 0.5
+            ell_comps
+                ell_comps_0                                                     TruncatedGaussianPrior [158], mean = 0.0, sigma = 0.3, lower_limit = -1.0, upper_limit = 1.0
+                ell_comps_1                                                     TruncatedGaussianPrior [159], mean = 0.0, sigma = 0.3, lower_limit = -1.0, upper_limit = 1.0
+            intensity                                                           LogUniformPrior [155], lower_limit = 1e-06, upper_limit = 1000000.0
+            effective_radius                                                    UniformPrior [156], lower_limit = 0.1, upper_limit = 5.0
+            sersic_index                                                        UniformPrior [157], lower_limit = 0.5, upper_limit = 8.0
+        mass
+            centre
+                centre_0                                                        GaussianPrior [147], mean = 0.0, sigma = 0.3
+                centre_1                                                        GaussianPrior [148], mean = 0.0, sigma = 0.3
+            ell_comps
+                ell_comps_0                                                     TruncatedGaussianPrior [153], mean = 0.0, sigma = 0.3, lower_limit = -1.0, upper_limit = 1.0
+                ell_comps_1                                                     TruncatedGaussianPrior [154], mean = 0.0, sigma = 0.3, lower_limit = -1.0, upper_limit = 1.0
+            einstein_radius                                                     UniformPrior [151], lower_limit = 0.5, upper_limit = 3.5
+            slope                                                               TruncatedGaussianPrior [152], mean = 2.0, sigma = 0.3, lower_limit = 1.5, upper_limit = 2.7
+        shear
+            gamma_1                                                             GaussianPrior [160], mean = 0.0, sigma = 0.1
+            gamma_2                                                             GaussianPrior [161], mean = 0.0, sigma = 0.1
+    source
+        redshift                                                                1.7
+        bulge
+            centre
+                centre_0                                                        GaussianPrior [169], mean = 0.0, sigma = 0.5
+                centre_1                                                        GaussianPrior [170], mean = 0.0, sigma = 0.5
+            ell_comps
+                ell_comps_0                                                     TruncatedGaussianPrior [171], mean = 0.0, sigma = 0.3, lower_limit = -1.0, upper_limit = 1.0
+                ell_comps_1                                                     TruncatedGaussianPrior [172], mean = 0.0, sigma = 0.3, lower_limit = -1.0, upper_limit = 1.0
+            effective_radius                                                    UniformPrior [174], lower_limit = 0.0, upper_limit = 2.0
+            sersic_index                                                        UniformPrior [175], lower_limit = 0.5, upper_limit = 4.0
+            radius_break                                                        0.025
+            intensity                                                           LogUniformPrior [173], lower_limit = 0.001, upper_limit = 1000.0
+            gamma                                                               0.25
+            alpha                                                               3.0
