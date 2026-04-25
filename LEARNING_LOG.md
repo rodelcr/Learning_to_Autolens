@@ -505,6 +505,52 @@ unrelated components."
 
 ---
 
+## 2026-04-25 — MGE-to-physical example, lenstronomy-mock adaptation
+
+### Lenstronomy → autolens parameter convention quick-reference
+
+While building `Examples/mge_to_physical/` from the lenstronomy
+`tutorials_DB_2025_09/mock_1` dataset, codified the cross-framework
+translation in `Examples/mge_to_physical/mocks/PROVENANCE.md`. The
+non-obvious bits:
+
+- **Centre tuple axis swap.** Lenstronomy uses `(center_x, center_y)`;
+  autolens uses `centre = (centre_0, centre_1)` where `centre_0` is the
+  vertical (y) axis. So lenstronomy `center_x=0.01, center_y=-0.08` →
+  autolens `centre = (-0.08, 0.01)`. Forgetting this maps your light
+  centroid 90° off and produces a fit that converges to the wrong
+  rotational mode (Pattern A revisited via convention-confusion).
+- **SHEAR_GAMMA_PSI rotation.** Lenstronomy ships `(γ_ext, ψ_ext)`;
+  autolens consumes `(gamma_1, gamma_2)`. Conversion:
+  `gamma_1 = γ_ext * cos(2 ψ_ext)`, `gamma_2 = γ_ext * sin(2 ψ_ext)`.
+  Note the **factor of 2** in the angle — shear is a spin-2 quantity.
+- **SERSIC_ELLIPSE `e1, e2`.** Same flavour in both frameworks (axis-ratio
+  + PA convention, NOT `(1−q²)/(1+q²)` which some other tools use). Pass
+  through directly.
+- **`amp` vs `intensity`.** Lenstronomy `amp` is the surface brightness
+  AT `R_sersic`, autolens `intensity` is the same definition. Match the
+  per-pixel normalisation (both per pixel² in our mocks) and pass through.
+- **Noise map.** Lenstronomy mocks ship image+truth+PSF but no noise FITS.
+  Build it analytically from `truth.background_rms` and `truth.exp_time`:
+  `sigma = sqrt(max(image, 0)/exp_time + bg_rms²)`. Matches autolens's
+  own `simulator.py` recipe — the Gaussian-equivalent assumption is exact
+  for synthetic data.
+
+### Smoke-fit evidence that the chain wires up correctly
+
+`fit_example_mge_to_physical.py --part light` with `n_live=50` (smoke
+config) on the lenstronomy mock_1 took 6 wall-min on 15 cores. Recovered
+a clean MGE light fit with `log_Z=+22,252`, smooth model image, and Lens-
+Light-Subtracted panel showing the source arcs in *clean isolation* (the
+expected outcome since Search 1 has no source model — large coherent
+arc residuals are NOT a fit failure here, they're the data Search 2+3
+will subsequently fit). MGE light-only is an inversion-heavy problem
+(60 Gaussians; per-eval linear inversion solves the amplitudes) so the
+likelihood eval is expensive even with 6 free shape params; the per-CPU
+cost is comparable to a 30-D mass fit.
+
+---
+
 ## Open questions to investigate later
 
 - What is autolens's default policy on `centre_0` sign convention changes
