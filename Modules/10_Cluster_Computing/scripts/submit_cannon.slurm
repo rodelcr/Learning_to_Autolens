@@ -93,6 +93,10 @@ if [[ -n "${EXAMPLE:-}" ]]; then
             DATASET_ROOT="${REPO_ROOT}/Examples/quad_time_delay/mocks"
             FIT_SCRIPT="${REPO_ROOT}/Modules/10_Cluster_Computing/scripts/fit_example_quad_time_delay.py"
             ;;
+        mge_to_physical)
+            DATASET_ROOT="${REPO_ROOT}/Examples/mge_to_physical/mocks"
+            FIT_SCRIPT="${REPO_ROOT}/Modules/10_Cluster_Computing/scripts/fit_example_mge_to_physical.py"
+            ;;
         *) echo "unknown EXAMPLE=${EXAMPLE}"; exit 2 ;;
     esac
 else
