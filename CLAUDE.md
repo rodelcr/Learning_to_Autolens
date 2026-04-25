@@ -53,8 +53,11 @@ Learning_to_Autolens/
 | 07 | Real Data: FITS to Model | Data preparation, masking, PSF handling, AGEL targets | — |
 | 08 | Results, Diagnostics & Figures | Corner plots, residuals, publication figures | — |
 | 09 | MGE & Linear Light Profiles | lp_linear, lp_basis.Basis, mge_model_from, MGE SLaM | Cappellari 2002, Emsellem+ 1994 |
+| 10 | Cluster Computing | push/pull/submit on Cannon, Nautilus checkpointing, slurm provenance | — |
+| 11 | Physical Mass Models | Six-panel physical-bar audit, f_DM, γ′ recovery | C&K Ch.4-6, Auger+10 |
+| 12 | Time-Delay Cosmography & MSD | Fermat potential, mass-sheet degeneracy derivation, H0 from time delays, TDCOSMO chain | Refsdal 1964, S92 Ch.5+11, Wong+20, Birrer+20, Treu & Marshall 2016 |
 
-**Key:** C&K = Congdon & Keeton (2018), N&B = Narayan & Bartelmann (1997)
+**Key:** C&K = Congdon & Keeton (2018), N&B = Narayan & Bartelmann (1997), S92 = Schneider Ehlers Falco (1992)
 
 ## Key Conventions
 
