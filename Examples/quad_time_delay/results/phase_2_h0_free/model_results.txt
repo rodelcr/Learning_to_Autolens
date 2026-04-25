@@ -1,0 +1,99 @@
+Bayesian Evidence                                                               -30.25037678
+Maximum Log Likelihood                                                          15.55268457
+
+model                                                                           Collection (N=11)
+    galaxies                                                                    Collection (N=10)
+        lens                                                                    Galaxy (N=8)
+            mass                                                                PowerLaw (N=6)
+            shear                                                               ExternalShear (N=2)
+        source                                                                  Galaxy (N=2)
+            point_0                                                             Point (N=2)
+    cosmology                                                                   FlatLambdaCDM (N=1)
+
+Maximum Log Likelihood Model:
+
+cosmology
+    H0                                                                          74.595
+galaxies
+    lens
+        mass
+            centre
+                centre_0                                                        0.001
+                centre_1                                                        0.002
+            einstein_radius                                                     1.226
+            slope                                                               2.131
+            ell_comps
+                ell_comps_0                                                     0.116
+                ell_comps_1                                                     0.139
+        shear
+            gamma_1                                                             0.020
+            gamma_2                                                             0.022
+    source
+        point_0
+            centre
+                centre_0                                                        0.054
+                centre_1                                                        0.076
+
+
+Summary (3.0 sigma limits):
+
+cosmology
+    H0                                                                          92.6537 (67.4181, 119.6807)
+galaxies
+    lens
+        mass
+            centre
+                centre_0                                                        -0.0141 (-0.0416, 0.0054)
+                centre_1                                                        -0.0227 (-0.0649, 0.0075)
+            einstein_radius                                                     1.2433 (1.2017, 1.3027)
+            slope                                                               2.0698 (1.9041, 2.2316)
+            ell_comps
+                ell_comps_0                                                     0.1473 (0.1036, 0.2049)
+                ell_comps_1                                                     0.1860 (0.1277, 0.2650)
+        shear
+            gamma_1                                                             0.0396 (0.0110, 0.0823)
+            gamma_2                                                             0.0342 (0.0095, 0.0674)
+    source
+        point_0
+            centre
+                centre_0                                                        0.0516 (0.0338, 0.0659)
+                centre_1                                                        0.0691 (0.0480, 0.0836)
+
+
+Summary (1.0 sigma limits):
+
+cosmology
+    H0                                                                          92.6537 (82.6072, 105.0277)
+galaxies
+    lens
+        mass
+            centre
+                centre_0                                                        -0.0141 (-0.0241, -0.0059)
+                centre_1                                                        -0.0227 (-0.0371, -0.0107)
+            einstein_radius                                                     1.2433 (1.2264, 1.2651)
+            slope                                                               2.0698 (2.0080, 2.1273)
+            ell_comps
+                ell_comps_0                                                     0.1473 (0.1280, 0.1682)
+                ell_comps_1                                                     0.1860 (0.1619, 0.2148)
+        shear
+            gamma_1                                                             0.0396 (0.0282, 0.0529)
+            gamma_2                                                             0.0342 (0.0248, 0.0451)
+    source
+        point_0
+            centre
+                centre_0                                                        0.0516 (0.0470, 0.0558)
+                centre_1                                                        0.0691 (0.0622, 0.0748)
+
+instances
+
+galaxies
+    lens
+        redshift                                                                0.5
+    source
+        redshift                                                                2.0
+cosmology
+    Om0                                                                         0.3
+    Tcmb0                                                                       2.7255
+    Neff                                                                        3.046
+    m_nu                                                                        0.06
+    Ob0                                                                         0.04897

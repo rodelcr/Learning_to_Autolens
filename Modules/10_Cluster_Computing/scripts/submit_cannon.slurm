@@ -211,13 +211,23 @@ echo "End time: $(date -Is)"
 # without needing the full Nautilus output tree.
 echo "Exporting lightweight result artifacts..."
 if [[ -n "${EXAMPLE:-}" ]]; then
-    # Example-mode: Nautilus wrote into ${OUTPUT_ROOT}/<example>/... (the fit
-    # driver sets path_prefix=output_root/<example>/...). Point export at
-    # that subtree and target Examples/<example>/results/.
-    python "${REPO_ROOT}/Modules/10_Cluster_Computing/scripts/export_results.py" \
-        --output-root "${OUTPUT_ROOT}/${EXAMPLE}" \
-        --example     "${EXAMPLE}" \
-        --repo-root   "${REPO_ROOT}" || echo "(export_results.py failed — see above)"
+    # Example-mode: Some drivers write to ${OUTPUT_ROOT}/<example>/... (e.g.
+    # compound_lens, disky_spiral_lens), others write directly to
+    # ${OUTPUT_ROOT}/<unique_tag>/<search_name>/... (e.g. quad_time_delay,
+    # mge_to_physical, compound_lens_zoo). Try the example-subdir first
+    # for backward compat, then fall back to scanning the whole
+    # ${OUTPUT_ROOT} so newer drivers also export cleanly.
+    if [[ -d "${OUTPUT_ROOT}/${EXAMPLE}" ]]; then
+        python "${REPO_ROOT}/Modules/10_Cluster_Computing/scripts/export_results.py" \
+            --output-root "${OUTPUT_ROOT}/${EXAMPLE}" \
+            --example     "${EXAMPLE}" \
+            --repo-root   "${REPO_ROOT}" || echo "(export_results.py failed — see above)"
+    else
+        python "${REPO_ROOT}/Modules/10_Cluster_Computing/scripts/export_results.py" \
+            --output-root "${OUTPUT_ROOT}" \
+            --example     "${EXAMPLE}" \
+            --repo-root   "${REPO_ROOT}" || echo "(export_results.py failed — see above)"
+    fi
 else
     python "${REPO_ROOT}/Modules/10_Cluster_Computing/scripts/export_results.py" \
         --output-root "${OUTPUT_ROOT}/module_${MODULE}" \

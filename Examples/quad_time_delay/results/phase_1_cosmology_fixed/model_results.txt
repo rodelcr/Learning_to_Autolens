@@ -1,0 +1,86 @@
+Bayesian Evidence                                                               -29.06476799
+Maximum Log Likelihood                                                          15.61922190
+
+model                                                                           Collection (N=10)
+    galaxies                                                                    Collection (N=10)
+        lens                                                                    Galaxy (N=8)
+            mass                                                                PowerLaw (N=6)
+            shear                                                               ExternalShear (N=2)
+        source                                                                  Galaxy (N=2)
+            point_0                                                             Point (N=2)
+
+Maximum Log Likelihood Model:
+
+galaxies
+    lens
+        mass
+            centre
+                centre_0                                                        0.001
+                centre_1                                                        0.002
+            einstein_radius                                                     1.211
+            slope                                                               2.070
+            ell_comps
+                ell_comps_0                                                     0.105
+                ell_comps_1                                                     0.128
+        shear
+            gamma_1                                                             0.023
+            gamma_2                                                             0.021
+    source
+        point_0
+            centre
+                centre_0                                                        0.049
+                centre_1                                                        0.071
+
+
+Summary (3.0 sigma limits):
+
+galaxies
+    lens
+        mass
+            centre
+                centre_0                                                        0.0000 (-0.0122, 0.0107)
+                centre_1                                                        -0.0007 (-0.0197, 0.0151)
+            einstein_radius                                                     1.2081 (1.1788, 1.2284)
+            slope                                                               2.0458 (1.8710, 2.2327)
+            ell_comps
+                ell_comps_0                                                     0.1088 (0.0797, 0.1340)
+                ell_comps_1                                                     0.1320 (0.1046, 0.1562)
+        shear
+            gamma_1                                                             0.0252 (0.0024, 0.0492)
+            gamma_2                                                             0.0245 (0.0008, 0.0471)
+    source
+        point_0
+            centre
+                centre_0                                                        0.0489 (0.0356, 0.0602)
+                centre_1                                                        0.0689 (0.0528, 0.0837)
+
+
+Summary (1.0 sigma limits):
+
+galaxies
+    lens
+        mass
+            centre
+                centre_0                                                        0.0000 (-0.0043, 0.0041)
+                centre_1                                                        -0.0007 (-0.0075, 0.0053)
+            einstein_radius                                                     1.2081 (1.1986, 1.2172)
+            slope                                                               2.0458 (1.9779, 2.1206)
+            ell_comps
+                ell_comps_0                                                     0.1088 (0.0995, 0.1168)
+                ell_comps_1                                                     0.1320 (0.1229, 0.1408)
+        shear
+            gamma_1                                                             0.0252 (0.0172, 0.0343)
+            gamma_2                                                             0.0245 (0.0169, 0.0316)
+    source
+        point_0
+            centre
+                centre_0                                                        0.0489 (0.0445, 0.0534)
+                centre_1                                                        0.0689 (0.0631, 0.0749)
+
+instances
+
+galaxies
+    lens
+        redshift                                                                0.5
+    source
+        redshift                                                                2.0

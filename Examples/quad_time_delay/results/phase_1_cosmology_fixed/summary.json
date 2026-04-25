@@ -1,0 +1,11 @@
+{
+  "search_name": "quad_direct_fit",
+  "source_dir": "output/phase_1_cosmology_fixed/quad_direct_fit/c295cf22f224ca3bb35f5916c69e5bf4",
+  "max_log_likelihood": 15.619221901154535,
+  "log_evidence": -29.064767993202175,
+  "chi_squared_total": null,
+  "chi_squared_per_pixel": null,
+  "n_unmasked_pixels": null,
+  "max_abs_normalized_residual": null,
+  "chi_squared_status": "image/fit.fits not found \u2014 likely a resumed search skipped visualization. Fix: re-run with force_visualize_overwrite=True in the config, or call analysis.visualize(paths, instance, during_analysis=False) post-fit in the fit script."
+}
