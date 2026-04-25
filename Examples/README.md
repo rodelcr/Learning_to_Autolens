@@ -27,7 +27,8 @@ Examples/<name>/
 | 4 | **[disky_spiral_lens/](disky_spiral_lens/)** | Non-elliptical lens morphology | ✓ shipped | Two-component Sersic vs. single Sersic, mass/light PA misalignment, Bayes-factor model comparison |
 | 5 | [quad_time_delay/](quad_time_delay/) | Point-source quasar, four images, time delays | ◐ in-progress | Point-source likelihood (`AnalysisPoint`), time-delay cosmography, H₀ recovery |
 | 6 | [mge_to_physical/](mge_to_physical/) | Stars + dark matter decomposition (MGE light → lmp.Sersic + NFW) | ◐ in-progress | f_DM(<θ_E), M/L recovery, three-search chain mirroring `mass_stellar_dark/chaining.py` |
-| 7 | [agel_real_target/](agel_real_target/) | A real AGEL survey lens on HST data | ◯ stub | Everything together on actual HST data |
+| 7 | [compound_lens_zoo/](compound_lens_zoo/) | Five compound mocks (mock_2–mock_6, lenstronomy origin) — same prior set, varying z, γ′, cosmology | ◐ in-progress | Methodology robustness; cosmology mis-specification effects on recovered (θ_E, γ′) |
+| 8 | [agel_real_target/](agel_real_target/) | A real AGEL survey lens on HST data | ◯ stub | Everything together on actual HST data |
 
 ## Running an Example
 

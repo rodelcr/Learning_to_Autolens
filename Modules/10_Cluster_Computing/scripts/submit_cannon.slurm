@@ -97,6 +97,10 @@ if [[ -n "${EXAMPLE:-}" ]]; then
             DATASET_ROOT="${REPO_ROOT}/Examples/mge_to_physical/mocks"
             FIT_SCRIPT="${REPO_ROOT}/Modules/10_Cluster_Computing/scripts/fit_example_mge_to_physical.py"
             ;;
+        compound_lens_zoo)
+            DATASET_ROOT="${REPO_ROOT}/Examples/compound_lens_zoo/mocks"
+            FIT_SCRIPT="${REPO_ROOT}/Modules/10_Cluster_Computing/scripts/fit_example_compound_lens_zoo.py"
+            ;;
         *) echo "unknown EXAMPLE=${EXAMPLE}"; exit 2 ;;
     esac
 else
