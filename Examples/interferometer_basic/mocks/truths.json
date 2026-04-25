@@ -1,0 +1,39 @@
+{
+  "redshifts": {
+    "lens": 0.5,
+    "source": 1.0
+  },
+  "lens": {
+    "mass": "Isothermal",
+    "centre": [
+      0.0,
+      0.0
+    ],
+    "einstein_radius": 1.6,
+    "ell_comps_from_axis_ratio": [
+      0.9,
+      45.0
+    ],
+    "shear": {
+      "gamma_1": 0.05,
+      "gamma_2": 0.05
+    }
+  },
+  "source": {
+    "kind": "SersicCore",
+    "centre": [
+      0.0,
+      0.0
+    ],
+    "ell_comps_from_axis_ratio": [
+      0.8,
+      60.0
+    ],
+    "intensity": 0.3,
+    "effective_radius": 1.0,
+    "sersic_index": 2.5
+  },
+  "uv_array": "SMA (Submillimeter Array, low-res)",
+  "exposure_time_s": 300.0,
+  "noise_sigma": 1000.0
+}
