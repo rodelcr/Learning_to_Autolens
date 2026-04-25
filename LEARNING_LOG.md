@@ -250,6 +250,49 @@ redundant; let the posterior tell you.
 
 ---
 
+## 2026-04-24 — group_scale doesn't converge with reasonable priors
+
+After v3 (n_live=400 + tightened satellite priors) ran for **5h19m**
+without compression — log_Z stuck at -3,035 with f_live=1.0 — I
+cancelled. v1 (n_live=200, wider priors) also stalled after 1h54m.
+
+Tried priors:
+- Satellite intensities: LogUniformPrior(0.1, 2.0) (truth ~0.3-0.5)
+- Satellite R_e: TruncGaussian(0.25, 0.10)
+- Satellite n: TruncGaussian(2.0, 0.6)
+- BGG mass + light + shear: tightly truth-seeded
+- Source: tightly truth-seeded
+
+Total: 30+ free parameters with truth-seeded priors. Should converge
+in 1-2h at n_live=400. Didn't.
+
+**Probable cause** — the bgg_shear_only model is *fundamentally* unable
+to fit data with 4 mass-perturbing galaxies at the same z. The
+likelihood landscape near the truth has steep valleys precisely where
+satellite mass perturbations show up in the arc; Nautilus's adaptive
+ellipse-bound proposals get rejected because almost any move
+perpendicular to the truth's near-zero satellite-mass direction goes
+to a much-worse-fit region.
+
+What might actually work:
+1. Drop the bgg_shear_only variant entirely — only run
+   bgg_plus_satellites. The 3 satellite einstein_radii have
+   `UniformPrior(0, 1)` so they CAN collapse to 0 (Pattern E),
+   recovering the bgg_shear_only outcome if data supports it.
+2. Or use a SLaM-style 2-stage chain: first fit BGG only with mask
+   excluding satellite regions, then add satellite masses with priors
+   tightly seeded from photometric estimates.
+
+**Decision.** Cancel group_scale for now and move on. The 4-of-6
+shipped state of Examples/ is plenty for the curriculum to be
+useful, and the failure-to-converge is itself a real lesson that
+deserves its own pedagogical write-up if anyone resumes the work.
+
+The mock data is already on disk; the driver is committed; the
+notebook skeleton is committed. Future session can pick this up.
+
+---
+
 ## 2026-04-24 — EPL beats v4 *and* PIX on this mock; pedagogical model-comparison
 
 Three-way comparison committed:

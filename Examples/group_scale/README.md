@@ -1,8 +1,10 @@
-# Example (stub): Group-Scale Lens
+# Example: Group-Scale Lens
 
 ## Status
 
-◯ **Planned** — no notebook yet.
+◐ **In progress** — mock generated, driver and notebook scaffolding committed, **but Cannon fits do not yet converge**. Three attempts (v1: n_live=200 wide priors, v2: satellite-light-only fix, v3: n_live=400 + tightened priors) all stalled in burn-in over 5+ hours each. The bgg_shear_only model appears fundamentally unable to fit data with 4 mass-perturbing galaxies at the same z — see `LEARNING_LOG.md` ("group_scale doesn't converge with reasonable priors") for the diagnostic and proposed next steps.
+
+To resume: try (a) running only `--part=bgg_plus_satellites` and let the satellite einstein_radii collapse to zero per Pattern E if data supports it, or (b) a 2-stage SLaM-style chain that fits BGG-with-satellite-mask first then adds satellites with photometric priors.
 
 ## Problem
 
