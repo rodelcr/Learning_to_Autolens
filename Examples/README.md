@@ -28,7 +28,8 @@ Examples/<name>/
 | 5 | [quad_time_delay/](quad_time_delay/) | Point-source quasar, four images, time delays | ◐ in-progress | Point-source likelihood (`AnalysisPoint`), time-delay cosmography, H₀ recovery |
 | 6 | [mge_to_physical/](mge_to_physical/) | Stars + dark matter decomposition (MGE light → lmp.Sersic + NFW) | ◐ in-progress | f_DM(<θ_E), M/L recovery, three-search chain mirroring `mass_stellar_dark/chaining.py` |
 | 7 | [compound_lens_zoo/](compound_lens_zoo/) | Five compound mocks (mock_2–mock_6, lenstronomy origin) — same prior set, varying z, γ′, cosmology | ◐ in-progress | Methodology robustness; cosmology mis-specification effects on recovered (θ_E, γ′) |
-| 8 | [agel_real_target/](agel_real_target/) | A real AGEL survey lens on HST data | ◯ stub | Everything together on actual HST data |
+| 8 | [bayesian_model_comparison/](bayesian_model_comparison/) | *Pedagogy* — log-evidence + Bayes-factor methodology with double-checked references | ◐ in-progress | Jeffreys & Kass-Raftery scales (and the factor-of-2 trap), Occam's razor, when log_Z misleads |
+| 9 | [agel_real_target/](agel_real_target/) | A real AGEL survey lens on HST data | ◯ stub | Everything together on actual HST data |
 
 ## Running an Example
 
