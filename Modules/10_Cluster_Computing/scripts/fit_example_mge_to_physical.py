@@ -262,10 +262,185 @@ def build_search_3_stars_dark(dataset, output_root: Path, result_2=None,
     return result
 
 
+def _build_secondary_deflector():
+    """Fixed-centre secondary EPL at z=0.8, theta_E free (truth=0.11").
+
+    Truth params from Examples/mge_to_physical/mocks/truths.json:
+      kwargs_lens[2] = EPL at center_x=-0.05, center_y=0.02 (lenstronomy
+                        x,y convention) -> autolens centre=(0.02, -0.05)
+      theta_E_truth=0.11, gamma_truth=2.0, e1_truth=0.2, e2_truth=-0.12
+    Centre + ellipticity + slope held FIXED at truth (no priors); only
+    theta_E is free with Uniform(0, 0.4) — Pattern E says it might
+    collapse to 0 if the data don't need it, otherwise it'll find the
+    truth around 0.11.
+    """
+    import autofit as af
+    import autolens as al
+
+    secondary = af.Model(al.mp.PowerLaw)
+    secondary.centre.centre_0 = 0.02
+    secondary.centre.centre_1 = -0.05
+    secondary.einstein_radius = af.UniformPrior(lower_limit=0.0, upper_limit=0.4)
+    secondary.slope = 2.0
+    secondary.ell_comps.ell_comps_0 = 0.2
+    secondary.ell_comps.ell_comps_1 = -0.12
+    return af.Model(al.Galaxy, redshift=0.8, mass=secondary)
+
+
+def _build_two_source_galaxy():
+    """Source at z=1.7 with TWO Sersic components.
+
+    Truth has two Sersic sources (truths.kwargs_source):
+      0: center=(-0.05, 0.02), R_e=0.19, n=2.3
+      1: center=( 0.30, 0.22), R_e=0.15, n=1.5
+    autolens (y, x) convention: (0.02, -0.05) and (0.22, 0.30)
+    Both fit with wide-but-truth-anchored priors.
+    """
+    import autofit as af
+    import autolens as al
+
+    def _sersic_at(prior_centre):
+        b = af.Model(al.lp.SersicCore)
+        b.centre.centre_0 = af.GaussianPrior(mean=prior_centre[0], sigma=0.2)
+        b.centre.centre_1 = af.GaussianPrior(mean=prior_centre[1], sigma=0.2)
+        b.ell_comps.ell_comps_0 = af.TruncatedGaussianPrior(
+            mean=0.0, sigma=0.3, lower_limit=-1.0, upper_limit=1.0)
+        b.ell_comps.ell_comps_1 = af.TruncatedGaussianPrior(
+            mean=0.0, sigma=0.3, lower_limit=-1.0, upper_limit=1.0)
+        b.intensity = af.LogUniformPrior(lower_limit=1e-3, upper_limit=1e3)
+        b.effective_radius = af.UniformPrior(lower_limit=0.05, upper_limit=0.5)
+        b.sersic_index = af.UniformPrior(lower_limit=0.5, upper_limit=4.0)
+        return b
+
+    src_bulge = _sersic_at((0.02, -0.05))   # truth Source 0
+    src_disk  = _sersic_at((0.22,  0.30))   # truth Source 1
+    return af.Model(al.Galaxy, redshift=1.7, bulge=src_bulge, disk=src_disk)
+
+
+def build_search_2_v2_stars_only(dataset, output_root: Path, result_1=None,
+                                 n_live: int = 200):
+    """Search 2 v2 — stars-only + secondary deflector + TWO sources.
+
+    Same as Search 2 but:
+      - Adds fixed-centre EPL secondary at z=0.8 with theta_E free.
+      - Source has TWO Sersic components (matches truth structure).
+    Goal: bring the canonical chi²/N from ~3 down to ~1 by removing the
+    model misspecification documented in mge_to_physical/README.md
+    §Caveats.
+    """
+    import autofit as af
+    import autolens as al
+
+    print("\n[MGE/Search 2 v2] +secondary deflector at z=0.8 +two sources.",
+          flush=True)
+
+    bulge = af.Model(al.lmp.Sersic)
+    if result_1 is not None:
+        bulge.take_attributes(source=result_1.model)
+
+    shear = af.Model(al.mp.ExternalShear)
+    shear.gamma_1 = af.GaussianPrior(mean=0.0, sigma=0.05)
+    shear.gamma_2 = af.GaussianPrior(mean=0.0, sigma=0.05)
+
+    lens = af.Model(al.Galaxy, redshift=0.5, bulge=bulge, shear=shear)
+    lens_2 = _build_secondary_deflector()
+    source = _build_two_source_galaxy()
+
+    model = af.Collection(galaxies=af.Collection(
+        lens=lens, lens_2=lens_2, source=source,
+    ))
+    print(f"Search 2 v2 priors: {model.prior_count}", flush=True)
+
+    analysis = al.AnalysisImaging(dataset=dataset, use_jax=False)
+
+    search = af.Nautilus(
+        path_prefix=output_root,
+        name="search_2_v2_stars_only",
+        unique_tag="lmp_sersic_2src_secondary_no_dark",
+        n_live=n_live,
+        n_batch=50,
+        iterations_per_update=10000,
+        number_of_cores=int(os.environ.get("SLURM_CPUS_PER_TASK", "1")),
+    )
+
+    t0 = time.time()
+    result = search.fit(model=model, analysis=analysis)
+    print(f"[MGE/Search 2 v2] done in {(time.time()-t0)/60:.1f} min",
+          flush=True)
+    _force_visualize(analysis, result, tag="search_2_v2")
+    print(result.info, flush=True)
+    return result
+
+
+def build_search_3_v2_stars_dark(dataset, output_root: Path, result_2=None,
+                                 n_live: int = 250):
+    """Search 3 v2 — stars + NFW dark + secondary deflector + TWO sources."""
+    import autofit as af
+    import autolens as al
+
+    print("\n[MGE/Search 3 v2] Stars+NFW + secondary deflector + two sources.",
+          flush=True)
+
+    bulge = af.Model(al.lmp.Sersic)
+    dark = af.Model(al.mp.NFW)
+    bulge.centre = dark.centre
+
+    if result_2 is not None:
+        bulge.take_attributes(source=result_2.model)
+
+    dark.kappa_s = af.LogUniformPrior(lower_limit=1e-4, upper_limit=10.0)
+    dark.scale_radius = af.UniformPrior(lower_limit=0.5, upper_limit=30.0)
+    dark.ell_comps.ell_comps_0 = af.TruncatedGaussianPrior(
+        mean=0.0, sigma=0.3, lower_limit=-1.0, upper_limit=1.0)
+    dark.ell_comps.ell_comps_1 = af.TruncatedGaussianPrior(
+        mean=0.0, sigma=0.3, lower_limit=-1.0, upper_limit=1.0)
+
+    if result_2 is not None:
+        shear = result_2.model.galaxies.lens.shear
+        source = result_2.model.galaxies.source
+        lens_2 = result_2.model.galaxies.lens_2
+    else:
+        shear = af.Model(al.mp.ExternalShear)
+        shear.gamma_1 = af.GaussianPrior(mean=0.0, sigma=0.05)
+        shear.gamma_2 = af.GaussianPrior(mean=0.0, sigma=0.05)
+        source = _build_two_source_galaxy()
+        lens_2 = _build_secondary_deflector()
+
+    lens = af.Model(al.Galaxy, redshift=0.5,
+                    bulge=bulge, dark=dark, shear=shear)
+
+    model = af.Collection(galaxies=af.Collection(
+        lens=lens, lens_2=lens_2, source=source,
+    ))
+    print(f"Search 3 v2 priors: {model.prior_count}", flush=True)
+
+    analysis = al.AnalysisImaging(dataset=dataset, use_jax=False)
+
+    search = af.Nautilus(
+        path_prefix=output_root,
+        name="search_3_v2_stars_dark",
+        unique_tag="lmp_sersic_2src_secondary_plus_nfw",
+        n_live=n_live,
+        n_batch=50,
+        iterations_per_update=10000,
+        number_of_cores=int(os.environ.get("SLURM_CPUS_PER_TASK", "1")),
+    )
+
+    t0 = time.time()
+    result = search.fit(model=model, analysis=analysis)
+    print(f"[MGE/Search 3 v2] done in {(time.time()-t0)/60:.1f} min",
+          flush=True)
+    _force_visualize(analysis, result, tag="search_3_v2")
+    print(result.info, flush=True)
+    return result
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--part",
-                   choices=("light", "stars_only", "stars_dark", "all"),
+                   choices=("light", "stars_only", "stars_dark",
+                            "stars_only_v2", "stars_dark_v2",
+                            "all", "all_v2"),
                    default="all")
     p.add_argument("--output-root", type=Path,
                    default=Path("./output").resolve())
@@ -298,8 +473,8 @@ def main():
           f"{dataset.mask.pixels_in_mask} masked pixels",
           flush=True)
 
-    result_1 = result_2 = None
-    if args.part in ("light", "all"):
+    result_1 = result_2 = result_2_v2 = None
+    if args.part in ("light", "all", "all_v2"):
         result_1 = build_search_1_light(
             dataset, args.output_root, mask_radius=args.mask_radius,
             n_live=args.n_live_light,
@@ -315,6 +490,18 @@ def main():
         build_search_3_stars_dark(
             dataset, args.output_root, result_2=result_2,
             n_live=args.n_live_stars_dark,
+        )
+
+    if args.part in ("stars_only_v2", "all_v2"):
+        result_2_v2 = build_search_2_v2_stars_only(
+            dataset, args.output_root, result_1=result_1,
+            n_live=200,
+        )
+
+    if args.part in ("stars_dark_v2", "all_v2"):
+        build_search_3_v2_stars_dark(
+            dataset, args.output_root, result_2=result_2_v2,
+            n_live=250,
         )
 
     print(f"\nTotal wall time: {(time.time()-t_start)/3600:.2f} h", flush=True)
