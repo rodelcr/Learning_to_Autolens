@@ -1,0 +1,10 @@
+{
+  "search_name": "agel013322_direct",
+  "source_dir": "output/agel013322_sersic_powerlaw_shear_sersiccore/agel013322_direct/42114d239c34346821ffa106778e9721",
+  "max_log_likelihood": 20123.140759277663,
+  "log_evidence": 20040.37518603658,
+  "chi_squared_total": 2765.9719604966735,
+  "chi_squared_per_pixel": 0.3014354795658973,
+  "n_unmasked_pixels": 9176,
+  "max_abs_normalized_residual": 32.40757768376555
+}

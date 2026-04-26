@@ -1,10 +1,10 @@
 {
   "search_name": "mock_5",
-  "source_dir": "output/powerlaw_shear_sersic_unified/mock_5/b1ff62ff7ac60ceb11bfb338863f9dcd",
-  "max_log_likelihood": 26879.40714283837,
-  "log_evidence": 26769.66924286787,
-  "chi_squared_total": 17907.600001519637,
-  "chi_squared_per_pixel": 1.9515693114123405,
+  "source_dir": "output/mock_5_powerlaw_shear_sersic_unified/mock_5/e41eed35ca0004ee5225e6853cf38ed9",
+  "max_log_likelihood": 26878.986138794542,
+  "log_evidence": 26769.6391634204,
+  "chi_squared_total": 17908.442009607286,
+  "chi_squared_per_pixel": 1.9516610734096869,
   "n_unmasked_pixels": 9176,
-  "max_abs_normalized_residual": 10.953394746336494
+  "max_abs_normalized_residual": 10.949269668318182
 }
