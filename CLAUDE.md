@@ -56,8 +56,10 @@ Learning_to_Autolens/
 | 10 | Cluster Computing | push/pull/submit on Cannon, Nautilus checkpointing, slurm provenance | — |
 | 11 | Physical Mass Models | Six-panel physical-bar audit, f_DM, γ′ recovery | C&K Ch.4-6, Auger+10 |
 | 12 | Time-Delay Cosmography & MSD | Fermat potential, mass-sheet degeneracy derivation, H0 from time delays, TDCOSMO chain | Refsdal 1964, S92 Ch.5+11, Wong+20, Birrer+20, Treu & Marshall 2016 |
+| 13 | TDCOSMO with Kinematics | Anisotropic Jeans, σ_v aperture projection, internal vs external MST, λ_int | B&T 2008 §4, Mamon & Łokas 2005, Birrer+20 (TDCOSMO IV), Schneider & Sluse 2013 |
+| 14 | Compound (Multi-Plane) Lensing | Recursive multi-plane lens equation, distance ratios β_jk, multi-plane Fermat cross-terms | S92 Ch.9, Blandford & Narayan 1986, Schneider 2019, McCully+ 2014, Keeton 2001 |
 
-**Key:** C&K = Congdon & Keeton (2018), N&B = Narayan & Bartelmann (1997), S92 = Schneider Ehlers Falco (1992)
+**Key:** C&K = Congdon & Keeton (2018), N&B = Narayan & Bartelmann (1997), S92 = Schneider Ehlers Falco (1992), B&T = Binney & Tremaine (2008)
 
 ## Key Conventions
 
