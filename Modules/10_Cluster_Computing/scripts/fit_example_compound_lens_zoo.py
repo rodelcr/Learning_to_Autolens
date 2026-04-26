@@ -140,10 +140,18 @@ def build_fit(dataset, output_root: Path, mock_index: int, truths: dict,
 
     analysis = al.AnalysisImaging(dataset=dataset, use_jax=False)
 
+    # NOTE: unique_tag MUST include mock_index. If unique_tag is shared
+    # across mocks, two mocks with identical (z_l, z_s) collide on the
+    # PyAutofit-generated hash (which derives from model+search settings;
+    # the dataset is NOT part of the hash). Mock_2 and mock_5 share
+    # (z_l=0.3, z_s=1.7), so under the prior shared unique_tag, mock_5's
+    # job silently resumed mock_2's checkpoint and fit mock_5's data
+    # using mock_2's accumulated samples — incoherent. Fix: bake the
+    # mock_index into the unique_tag.
     search = af.Nautilus(
         path_prefix=output_root,
         name=f"mock_{mock_index}",
-        unique_tag="powerlaw_shear_sersic_unified",
+        unique_tag=f"mock_{mock_index}_powerlaw_shear_sersic_unified",
         n_live=n_live,
         n_batch=50,
         iterations_per_update=15000,
