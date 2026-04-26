@@ -551,6 +551,56 @@ cost is comparable to a 30-D mass fit.
 
 ---
 
+## 2026-04-26 — Two debt items from yesterday's Cannon round
+
+### Bayes factor +288 from a 10σ-residual fit ≠ "data demand dark matter"
+
+P3 `mge_to_physical` Search 3 (stars + NFW dark) beat Search 2
+(stars-only) by Δlog_Z = +288 — a number that on the Trotta scale
+means *decisive* evidence for dark matter. The temptation to write
+"the data demand a dark-matter halo" is enormous.
+
+**The reality, after opening `results/search_3_stars_dark/fit_subplot.png`:**
+Both Search 2 and Search 3 leave ~10σ coherent ring residuals in the
+arc. The fit is grossly misspecified relative to the lenstronomy mock_1
+truth — it omits (a) the secondary deflector at z=0.8 with truth
+θ_E=0.11″, and (b) the second `SERSIC_ELLIPSE` source component. The
+Bayes factor is pickout-based: between two wrong models, +288 picks the
+less-wrong one (NFW absorbs more of the unmodelled flux than stars-only
+can), but it doesn't validate the underlying *physical* claim about
+dark matter.
+
+**The corollary that matters.** The numbers-without-pictures rule from
+the `/autolens-fit-diagnostics` skill applies *equally* to Bayes factors.
+A decisive Δlog_Z without a clean residual map is just as much a failed
+fit as a low chi²/pixel without a clean residual map. P5
+`bayesian_model_comparison/`'s §5.4 "model misspecification" caveat
+exists exactly for this situation; the +288 row in its worked-examples
+table now has an explicit ⚠️ marker pointing back to this case.
+
+### `unique_tag` must include the discriminator when fitting a parametric mock family
+
+P4 `compound_lens_zoo` ran 5 mocks (mock_2..mock_6) with a unified prior
+set — same model, different image FITS per mock. The driver used
+`unique_tag="powerlaw_shear_sersic_unified"` (constant across mocks)
+and `name=f"mock_{N}"` (variable per mock).
+
+**The bug.** Mock_2 and mock_5 have identical (z_l, z_s) = (0.3, 1.7).
+Since the PyAutofit hash derives from model + search settings (priors,
+unique_tag, redshifts, ...) — *not from the dataset* — mock_5's job
+silently resumed mock_2's checkpoint and accumulated mock_5's
+likelihood evaluations on top of mock_2's accumulated samples. The
+resulting "mock_5" posterior is incoherent.
+
+**The fix.** Bake the discriminator (here, mock_index) into
+`unique_tag`. The driver now uses `unique_tag=f"mock_{mock_index}_..."`.
+General principle: when fitting a *family* of related mocks/datasets
+with the same model, every per-fit identifier must enter the hash.
+Driver-level `name=` is necessary but not sufficient — `unique_tag`
+matters for the actual hash collision check.
+
+---
+
 ## Open questions to investigate later
 
 - What is autolens's default policy on `centre_0` sign convention changes

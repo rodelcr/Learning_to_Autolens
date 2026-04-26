@@ -2,7 +2,7 @@
 
 ## Status
 
-◐ **In progress** — mock adapted from lenstronomy, driver + notebook scaffolded, Cannon results pending.
+◐ **In progress — methodology shipped, but canonical fit fails the physical bar**. The three-search chain runs end-to-end and produces a clean Bayes-factor ladder (Search 2 → Search 3 = +288 log units favouring stars+DM), but **both Search 2 and Search 3 fail the `/autolens-fit-diagnostics` physical bar** (~10σ coherent ring residuals visible in `results/search_3_stars_dark/fit_subplot.png`). The fit is mis-specified relative to the truth: it omits (a) the secondary deflector at z=0.8 (truth `θ_E=0.11"`) and (b) the second source component (truth has TWO Sersic sources offset by 0.4″). The +288 Bayes factor is *real as a number* but, per `bayesian_model_comparison/`, **a Bayes factor between two misspecified models picks the less-wrong one without validating either**. See §"Caveats" below.
 
 ## What this example is for
 
@@ -69,6 +69,16 @@ Parts: `light` (Search 1, MGE light only), `stars_only` (Search 2, MGE mass-foll
 3. **MGE vs Sersic light prior**. Replace the MGE bulge in Search 1 with a single `al.lp.Sersic`. Compute Δlog_Z. The Bayes factor should favour MGE for this cuspy-light mock by ~50–200 log units (the lens light *is* multi-Sersic-like in truth).
 4. **Power-law equivalent**. Run a parallel PowerLaw fit (mass not decomposed) on the same dataset, recover γ′, and check it matches the truth value γ′=2.15 to within 1σ. Compare its log_Z against (stars+DM) — when does decomposition earn its extra parameters?
 5. **Concentration prior sensitivity**. Re-fit Search 3 with `al.mp.NFWMCRLudlowSph` (concentration tied to mass via the Ludlow+16 mass–concentration relation) instead of free `c`. Does f_DM(<θ_E) change? This is the prior-information vs. data-driven question for cluster lensing.
+
+## Caveats — what to fix before this is publication-grade
+
+The canonical Cannon fit (Searches 1–3) recovers a clean Bayes-factor ladder, but the fit's residual map shows ~10σ coherent ring structure. Three concrete improvements would fix this:
+
+1. **Add the second source.** Truth has two `SERSIC_ELLIPSE` sources at (-0.05, 0.02)″ and (0.3, 0.22)″ — both unmodelled in the canonical fit. Adding a second `SersicCore` source with a centre prior near (0.3, 0.22)″ should drop the residuals dramatically.
+2. **Add the secondary deflector** at z=0.8 (truth `θ_E=0.11″`, centre (-0.05, 0.02)″) as a fixed-centre `extra_galaxies` perturber. Per Pattern E (`compound_lens` story), a small enough secondary often gets absorbed into shear, but `θ_E=0.11″` is *just at the boundary* — for this mock it likely needs explicit modelling.
+3. **Tighten the lens-light mask** if the MGE light fit is leaking flux into the arcs. Search 1's `chi²/N=3.23` already suggests the MGE light alone is leaving ~3σ residuals before any source is fit.
+
+Until these are addressed, the recovered f_DM and M/L from Search 3 should be treated as *methodology demonstration* rather than physical inference. The Bayes-factor ladder still holds as a teaching example for `bayesian_model_comparison/` (it's exactly what §5.4 — *model misspecification* — warns about).
 
 ## References
 
