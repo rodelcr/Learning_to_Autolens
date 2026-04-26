@@ -109,6 +109,10 @@ if [[ -n "${EXAMPLE:-}" ]]; then
             DATASET_ROOT="${REPO_ROOT}/Examples/subhalo_sensitivity/mocks"
             FIT_SCRIPT="${REPO_ROOT}/Modules/10_Cluster_Computing/scripts/fit_example_subhalo_sensitivity.py"
             ;;
+        agel_real_target)
+            DATASET_ROOT="${REPO_ROOT}/Examples/agel_real_target/data"
+            FIT_SCRIPT="${REPO_ROOT}/Modules/10_Cluster_Computing/scripts/fit_example_agel_real_target.py"
+            ;;
         *) echo "unknown EXAMPLE=${EXAMPLE}"; exit 2 ;;
     esac
 else

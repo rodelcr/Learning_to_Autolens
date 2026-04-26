@@ -1,0 +1,25 @@
+{
+  "target_name": "AGEL013322-125201A",
+  "alt_name": "DCLS0133-1252",
+  "source_fits": "/Users/rosador/Documents/AGEL/AGEL013322-125201A_HST_ACS_606/hst_17307_4b_acs_wfc_f606w_jf544b_drc.fits",
+  "instrument": "HST/ACS/WFC",
+  "filter": "F606W",
+  "exptime_s": 674.0,
+  "pixel_scale_arcsec": 0.05,
+  "lens_pixel_in_full_frame": [
+    3622,
+    882
+  ],
+  "cutout_half_size_pix": 100,
+  "cutout_shape": [
+    200,
+    200
+  ],
+  "redshifts": {
+    "lens": 0.3,
+    "source": 1.6,
+    "comment": "Approximate values from AGEL DR2 catalog; verify against the canonical Keck spectroscopic redshifts before publication."
+  },
+  "psf_model": "Gaussian sigma=0.036 arcsec (placeholder; see README Caveats)",
+  "noise_map_recipe": "1/sqrt(WHT) from drizzle inverse-variance map"
+}
