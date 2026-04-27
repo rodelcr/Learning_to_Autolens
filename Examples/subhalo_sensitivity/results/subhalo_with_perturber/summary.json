@@ -1,0 +1,10 @@
+{
+  "search_name": "subhalo_with_perturber",
+  "source_dir": "output/iso_shear_sersic_plus_nfw/subhalo_with_perturber/41e994a83b0ad54676b147cd2c9bce19",
+  "max_log_likelihood": 22660.166342130295,
+  "log_evidence": 22585.81787992508,
+  "chi_squared_total": 10148.115178919306,
+  "chi_squared_per_pixel": 1.1059410613469165,
+  "n_unmasked_pixels": 9176,
+  "max_abs_normalized_residual": 6.321791379202091
+}

@@ -1,0 +1,10 @@
+{
+  "search_name": "search_3_v2_stars_dark",
+  "source_dir": "output/lmp_sersic_2src_secondary_plus_nfw/search_3_v2_stars_dark/45b4b3d8e4acfc16f3003a1526a8b488",
+  "max_log_likelihood": 28590.623176561952,
+  "log_evidence": 28454.651749721146,
+  "chi_squared_total": 17017.2695482451,
+  "chi_squared_per_pixel": 1.8545411451880014,
+  "n_unmasked_pixels": 9176,
+  "max_abs_normalized_residual": 9.709621716000836
+}

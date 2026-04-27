@@ -1,0 +1,10 @@
+{
+  "search_name": "subhalo_smooth",
+  "source_dir": "output/iso_shear_sersic_no_perturber/subhalo_smooth/f31fbdb34ce3faab5b585591503fb041",
+  "max_log_likelihood": 22659.937822682696,
+  "log_evidence": 22587.416510228166,
+  "chi_squared_total": 10148.57221781451,
+  "chi_squared_per_pixel": 1.105990869421808,
+  "n_unmasked_pixels": 9176,
+  "max_abs_normalized_residual": 6.3217822532880525
+}
