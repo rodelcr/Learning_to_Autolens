@@ -101,6 +101,10 @@ if [[ -n "${EXAMPLE:-}" ]]; then
             DATASET_ROOT="${REPO_ROOT}/Examples/compound_lens_zoo/mocks"
             FIT_SCRIPT="${REPO_ROOT}/Modules/10_Cluster_Computing/scripts/fit_example_compound_lens_zoo.py"
             ;;
+        compound_lens_zoo_climb)
+            DATASET_ROOT="${REPO_ROOT}/Examples/compound_lens_zoo/mocks"
+            FIT_SCRIPT="${REPO_ROOT}/Modules/10_Cluster_Computing/scripts/fit_example_compound_lens_zoo_climb.py"
+            ;;
         interferometer_basic)
             DATASET_ROOT="${REPO_ROOT}/Examples/interferometer_basic/mocks"
             FIT_SCRIPT="${REPO_ROOT}/Modules/10_Cluster_Computing/scripts/fit_example_interferometer_basic.py"

@@ -207,8 +207,14 @@ def export_one(search_dir: Path, dest: Path, repo_root: Path | None = None, forc
     # Multi-plane fits produce per-plane fit_1.png / fit_2.png instead of the
     # single-plane fit.png — prefer fit.png, fall back to fit_1.png.
     fit_png_dst = dest / "fit_subplot.png"
-    for candidate in ("fit.png", "fit_1.png"):
-        fit_png_src = search_dir / "image" / candidate
+    # Multi-plane fits emit fit_<plane_index>.png — there's no fit.png. Try
+    # fit.png first (single-plane), then fit_1.png, then walk fit_N.png for
+    # increasing N (the highest-N is usually the source-plane subplot which
+    # is the one with the residual map).
+    candidates = ["fit.png", "fit_1.png"]
+    candidates += sorted((search_dir / "image").glob("fit_[2-9]*.png"))
+    for candidate in candidates:
+        fit_png_src = (search_dir / "image" / candidate) if isinstance(candidate, str) else candidate
         if fit_png_src.exists():
             shutil.copy2(fit_png_src, fit_png_dst)
             break

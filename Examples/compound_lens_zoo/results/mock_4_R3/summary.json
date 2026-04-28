@@ -1,0 +1,10 @@
+{
+  "search_name": "mock_4_R3",
+  "source_dir": "output/mock_4_R3_powerlaw_iso_shear_multiplane/mock_4_R3/986abb95b43fa24090b3d96434b41201",
+  "max_log_likelihood": 29162.87892314281,
+  "log_evidence": 29025.946514970743,
+  "chi_squared_total": 13479.819021622428,
+  "chi_squared_per_pixel": 1.4690299718420257,
+  "n_unmasked_pixels": 9176,
+  "max_abs_normalized_residual": 9.105690637558775
+}
