@@ -2,9 +2,14 @@
 
 ## Status
 
-◐ **In progress** — mock generated, driver and notebook scaffolding committed, **but Cannon fits do not yet converge**. Three attempts (v1: n_live=200 wide priors, v2: satellite-light-only fix, v3: n_live=400 + tightened priors) all stalled in burn-in over 5+ hours each. The bgg_shear_only model appears fundamentally unable to fit data with 4 mass-perturbing galaxies at the same z — see `LEARNING_LOG.md` ("group_scale doesn't converge with reasonable priors") for the diagnostic and proposed next steps.
+◐ **In progress** — mock generated, driver and notebook scaffolding committed, **but freely-fit Cannon attempts do not converge**. Three attempts (v1: n_live=200 wide priors, v2: satellite-light-only fix, v3: n_live=400 + tightened priors) all stalled in burn-in over 5+ hours each — see `LEARNING_LOG.md` 2026-04-24 ("group_scale doesn't converge with reasonable priors") for the diagnostic.
 
-To resume: try (a) running only `--part=bgg_plus_satellites` and let the satellite einstein_radii collapse to zero per Pattern E if data supports it, or (b) a 2-stage SLaM-style chain that fits BGG-with-satellite-mask first then adds satellites with photometric priors.
+**2026-04-29 — truth-anchored validation submitted.** A new `--part=truth_anchored` was added to `fit_example_group_scale.py` (Cannon job 9204948). All priors are tight Gaussians on `mock_truth.json` values: 4 lens galaxies + source. If this converges cleanly, the freely-fit failures are search-space-exploration issues (not model representability), and the resume path is a SLaM-style staged chain that walks the search there. If it stalls too, the problem is structural — the model architecture or PSF/exposure can't represent this group system.
+
+Resume options after the truth_anchored result lands:
+- (a) If truth_anchored PASS: build a 2-stage SLaM chain — fit BGG-with-satellite-mask first, then add satellites with photometric priors derived from stage 1.
+- (b) If truth_anchored FAIL: investigate input PSF / noise model / extended-source assumption. May need a different mock generation.
+- (c) Original fallback: run only `--part=bgg_plus_satellites` and let satellite einstein_radii collapse to zero per Pattern E if data supports it.
 
 ## Problem
 

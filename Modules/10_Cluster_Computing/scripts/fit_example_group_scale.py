@@ -4,7 +4,7 @@ A BGG (brightest group galaxy) + three satellites at the SAME redshift
 (z=0.4) deflecting one source at z=1.8. All galaxies share the lens
 plane — al.Tracer sums their deflection fields (no multi-plane).
 
-Two fit parts for the pedagogical comparison:
+Three fit parts for the pedagogical comparison:
 
 Part 1: bgg_shear_only — BGG Sersic + Isothermal + ExternalShear + source.
          Satellite mass is ignored (absorbed into shear). ~15 params.
@@ -14,11 +14,24 @@ Part 2: bgg_plus_satellites — Same BGG model + 3 satellites with
          truth) and FREE einstein_radius per satellite. Each satellite's
          light is also modelled as a Sersic. ~25 params.
 
-Compare log_Z. If Part 2 >> Part 1, satellites are resolvable. If
-comparable, shear is doing the work and the survey pipeline can skip
-satellite masses.
+Part 3: truth_anchored — Same architecture as bgg_plus_satellites but
+         ALL priors set as tight Gaussians centred on the truth values
+         from mocks/mock_truth.json. Tests whether PyAutoLens's model
+         space *can* fit this group-scale system when constrained near
+         truth — establishes a chi^2 / log_Z ceiling for the freely-fit
+         variants. If truth_anchored converges cleanly while v1-v3
+         freely-fit attempts stalled in burn-in (LEARNING_LOG.md
+         2026-04-24), the bottleneck is search-space exploration, not
+         model-space representability.
+
+Compare log_Z across all three. If Part 2 >> Part 1, satellites are
+resolvable. If comparable, shear is doing the work. If Part 3 >> Part 2,
+the freely-fit search misses the global optimum near truth — chart a
+SLaM-style staged chain to walk the chain there.
 
 Usage (Cannon):
+    sbatch --export=ALL,EXAMPLE=group_scale,FIT_EXTRA_ARGS=--part=truth_anchored \
+        submit_cannon.slurm
     sbatch --export=ALL,EXAMPLE=group_scale,FIT_EXTRA_ARGS=--part=all \
         submit_cannon.slurm
 """
@@ -241,9 +254,118 @@ def build_bgg_plus_satellites(dataset, output_root: Path, n_live: int = 200):
     return result
 
 
+def _load_mock_truth(dataset_root: Path) -> dict:
+    """Load mock_truth.json from the dataset_root."""
+    import json
+    return json.loads((dataset_root / "mock_truth.json").read_text())
+
+
+def build_truth_anchored(dataset, output_root: Path, dataset_root: Path,
+                         n_live: int = 200):
+    """All-truth-anchored fit: BGG + 3 satellites + source, all priors as
+    tight Gaussians centred on mock_truth.json values. Tests whether
+    PyAutoLens's model space *can* fit this group-scale system."""
+    import autofit as af
+    import autolens as al
+
+    truth = _load_mock_truth(dataset_root)
+
+    bgg_t = truth["bgg"]
+    src_t = truth["source"]["bulge"]
+    sats_t = truth["satellites"]
+    z_l = truth["redshifts"]["lens"]
+    z_s = truth["redshifts"]["source"]
+
+    # ---- BGG: Sersic light + Isothermal mass, tight on truth ----
+    b = af.Model(al.lp.Sersic)
+    b.centre.centre_0 = af.GaussianPrior(mean=bgg_t["bulge"]["centre"][0], sigma=0.05)
+    b.centre.centre_1 = af.GaussianPrior(mean=bgg_t["bulge"]["centre"][1], sigma=0.05)
+    b.intensity        = af.LogUniformPrior(lower_limit=1e-2, upper_limit=1e2)
+    b.effective_radius = af.GaussianPrior(mean=bgg_t["bulge"]["effective_radius"], sigma=0.1)
+    b.sersic_index     = af.GaussianPrior(mean=bgg_t["bulge"]["sersic_index"], sigma=0.5)
+    b.ell_comps.ell_comps_0 = af.TruncatedGaussianPrior(
+        mean=bgg_t["bulge"]["ell_comps"][0], sigma=0.05, lower_limit=-1.0, upper_limit=1.0)
+    b.ell_comps.ell_comps_1 = af.TruncatedGaussianPrior(
+        mean=bgg_t["bulge"]["ell_comps"][1], sigma=0.05, lower_limit=-1.0, upper_limit=1.0)
+
+    m = af.Model(al.mp.Isothermal)
+    m.centre.centre_0  = b.centre.centre_0
+    m.centre.centre_1  = b.centre.centre_1
+    m.einstein_radius  = af.GaussianPrior(mean=bgg_t["mass"]["einstein_radius"], sigma=0.05)
+    m.ell_comps.ell_comps_0 = af.TruncatedGaussianPrior(
+        mean=bgg_t["mass"]["ell_comps"][0], sigma=0.05, lower_limit=-1.0, upper_limit=1.0)
+    m.ell_comps.ell_comps_1 = af.TruncatedGaussianPrior(
+        mean=bgg_t["mass"]["ell_comps"][1], sigma=0.05, lower_limit=-1.0, upper_limit=1.0)
+
+    bgg = af.Model(al.Galaxy, redshift=z_l, bulge=b, mass=m)
+    galaxies_dict = {"bgg": bgg}
+
+    # ---- Satellites: tight on truth (centre fixed, mass + light tight) ----
+    for i, sat in enumerate(sats_t):
+        cy, cx = sat["centre"]
+        sb = af.Model(al.lp.Sersic)
+        sb.centre.centre_0 = cy  # fixed at truth
+        sb.centre.centre_1 = cx
+        sb.intensity        = af.LogUniformPrior(lower_limit=1e-2, upper_limit=1e2)
+        sb.effective_radius = af.GaussianPrior(
+            mean=sat["effective_radius"], sigma=0.05)
+        sb.sersic_index     = af.GaussianPrior(
+            mean=sat["sersic_index"], sigma=0.4)
+        sb.ell_comps.ell_comps_0 = af.TruncatedGaussianPrior(
+            mean=0.0, sigma=0.1, lower_limit=-1.0, upper_limit=1.0)
+        sb.ell_comps.ell_comps_1 = af.TruncatedGaussianPrior(
+            mean=0.0, sigma=0.1, lower_limit=-1.0, upper_limit=1.0)
+
+        sm = af.Model(al.mp.IsothermalSph)
+        sm.centre.centre_0 = cy
+        sm.centre.centre_1 = cx
+        sm.einstein_radius = af.GaussianPrior(
+            mean=sat["einstein_radius"], sigma=0.05)
+
+        galaxies_dict[f"satellite_{i+1}"] = af.Model(
+            al.Galaxy, redshift=z_l, bulge=sb, mass=sm)
+
+    # ---- Source: tight on truth ----
+    src = af.Model(al.lp.SersicCore)
+    src.centre.centre_0 = af.GaussianPrior(mean=src_t["centre"][0], sigma=0.05)
+    src.centre.centre_1 = af.GaussianPrior(mean=src_t["centre"][1], sigma=0.05)
+    src.intensity        = af.LogUniformPrior(lower_limit=1e-2, upper_limit=1e2)
+    src.effective_radius = af.GaussianPrior(mean=src_t["effective_radius"], sigma=0.02)
+    src.sersic_index     = af.GaussianPrior(mean=src_t["sersic_index"], sigma=0.3)
+    src.ell_comps.ell_comps_0 = af.TruncatedGaussianPrior(
+        mean=src_t["ell_comps"][0], sigma=0.05, lower_limit=-1.0, upper_limit=1.0)
+    src.ell_comps.ell_comps_1 = af.TruncatedGaussianPrior(
+        mean=src_t["ell_comps"][1], sigma=0.05, lower_limit=-1.0, upper_limit=1.0)
+    galaxies_dict["source"] = af.Model(al.Galaxy, redshift=z_s, bulge=src)
+
+    model = af.Collection(galaxies=af.Collection(**galaxies_dict))
+    print(f"[GROUP/truth_anchored] total free parameters: "
+          f"{model.total_free_parameters}", flush=True)
+
+    analysis = al.AnalysisImaging(dataset=dataset, use_jax=False)
+    search = af.Nautilus(
+        path_prefix           = output_root / "group_scale",
+        name                  = "truth_anchored_fit",
+        unique_tag            = "mock_1",
+        n_live                = n_live,
+        n_batch               = 50,
+        iterations_per_update = 30000,
+        number_of_cores       = int(os.environ.get("SLURM_CPUS_PER_TASK", "1")),
+    )
+    print("[GROUP/truth_anchored] Nautilus starting...", flush=True)
+    t0 = time.time()
+    result = search.fit(model=model, analysis=analysis)
+    print(f"[GROUP/truth_anchored] done in {(time.time()-t0)/60:.1f} min", flush=True)
+    _force_visualize(analysis, result, tag="truth_anchored")
+    print(result.info, flush=True)
+    return result
+
+
 def main():
     p = argparse.ArgumentParser()
-    p.add_argument("--part", choices=("bgg_shear_only", "bgg_plus_satellites", "all"),
+    p.add_argument("--part",
+                   choices=("bgg_shear_only", "bgg_plus_satellites",
+                            "truth_anchored", "all"),
                    default="all")
     p.add_argument("--repo-root",    type=Path, required=True)
     p.add_argument("--dataset-root", type=Path, required=True)
@@ -258,6 +380,11 @@ def main():
         build_bgg_shear_only(dataset, args.output_root, n_live=args.n_live)
     if args.part in ("bgg_plus_satellites", "all"):
         build_bgg_plus_satellites(dataset, args.output_root, n_live=args.n_live)
+    if args.part == "truth_anchored":
+        # Not in 'all' — has different architecture (no shear) so isn't
+        # directly comparable; run separately as a validation diagnostic.
+        build_truth_anchored(dataset, args.output_root, args.dataset_root,
+                             n_live=args.n_live)
 
 
 if __name__ == "__main__":

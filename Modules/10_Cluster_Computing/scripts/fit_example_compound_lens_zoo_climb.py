@@ -5,10 +5,11 @@ ladder beyond R2 (the canonical zoo fit). Implements R3 (multi-plane), R2_2src
 analysis in Examples/compound_lens_zoo/02_compound_lens_ladder.ipynb.
 
 Pedagogical anchor:
-    R2  (canonical zoo)         — fit_example_compound_lens_zoo.py
-    R3  (multi-plane)           — THIS SCRIPT, --rung R3
-    R2_2src (1-plane + 2src)    — THIS SCRIPT, --rung R2_2src
-    R5  (multi-plane + 2src)    — THIS SCRIPT, --rung R5
+    R2  (canonical zoo)              — fit_example_compound_lens_zoo.py
+    R3  (multi-plane)                — THIS SCRIPT, --rung R3
+    R2_2src (1-plane + 2src)         — THIS SCRIPT, --rung R2_2src
+    R5  (multi-plane + 2src)         — THIS SCRIPT, --rung R5
+    R5_truth (truth-anchored R5)     — THIS SCRIPT, --rung R5_truth
 
 R3 model:
     PowerLaw primary (slope free) at z_l1
@@ -38,6 +39,17 @@ The R5 rung is the post-climb diagnosis (notebook §11) for mocks 3 and 4:
 mock_3 R3 hit Pattern E (lens_2.theta_E -> 0) and mock_4 R3 hit Pattern A
 (prior rails). Both diagnoses point to the dominant residual being the
 missing 2nd source, not the secondary deflector. R5 frees both at once.
+
+R5_truth model:
+    Same architecture as R5 but with ALL priors set as tight Gaussians
+    centred on the lenstronomy truth values (mass, light, sources). Tests
+    whether PyAutoLens's R5 model space *can* represent the truth lens
+    system when the chain is constrained near it. If R5_truth converges to
+    good chi^2 with clean residuals, the freely-fit R5 failures (Pattern E
+    on mock_3, Pattern A on mock_4) are local-optimum issues, NOT
+    fundamental model-space limitations. Sigma chosen with ~3 sigma room
+    so the chain can absorb autolens-vs-lenstronomy convention drift on
+    ell_comps / centre / shear axes (project_fit_failure_patterns Pattern B).
 
 Usage:
     python fit_example_compound_lens_zoo_climb.py --rung R5 --mock 3 \\
@@ -338,6 +350,178 @@ def build_R5_model(truths: dict):
 
 
 # =============================================================================
+# R5_truth: same architecture as R5, all priors TIGHTLY anchored on truth
+# =============================================================================
+def _truth_sources(truths: dict) -> list:
+    """Return up to two source kwargs from the lenstronomy truths."""
+    src_kwargs_list = truths.get("kwargs_source", [])
+    out = []
+    for kw in src_kwargs_list[:2]:
+        out.append(kw)
+    while len(out) < 2:
+        out.append({})
+    return out
+
+
+def _truth_lens_light(truths: dict) -> dict:
+    """Return the primary (Sersic) lens light kwargs from lenstronomy truths."""
+    ll_list = truths.get("kwargs_lens_light", [])
+    return ll_list[0] if ll_list else {}
+
+
+def _truth_primary(truths: dict) -> dict:
+    """First EPL = primary deflector."""
+    epls = [(i, kw) for i, (m, kw)
+            in enumerate(zip(truths["lens_model_list"], truths["kwargs_lens"]))
+            if m == "EPL"]
+    if not epls:
+        raise ValueError("No primary EPL in truths")
+    return epls[0][1]
+
+
+def _truth_shear(truths: dict) -> tuple[float, float]:
+    """Return (gamma_1, gamma_2) Cartesian from lenstronomy SHEAR_GAMMA_PSI.
+
+    lenstronomy convention: gamma_1 = gamma_ext * cos(2 psi),
+                            gamma_2 = gamma_ext * sin(2 psi).
+    Returned in the same convention; the truth-anchored R5 uses TGaussian
+    priors around these values with sigma large enough to absorb any
+    autolens 2026.4 sign convention drift (see project_fit_failure_patterns
+    Pattern B).
+    """
+    import math
+    for m, kw in zip(truths["lens_model_list"], truths["kwargs_lens"]):
+        if m in ("SHEAR_GAMMA_PSI", "SHEAR"):
+            if m == "SHEAR_GAMMA_PSI":
+                gx = kw.get("gamma_ext", 0.0)
+                psi = kw.get("psi_ext", 0.0)
+                return (gx * math.cos(2 * psi), gx * math.sin(2 * psi))
+            else:
+                return (kw.get("gamma1", 0.0), kw.get("gamma2", 0.0))
+    return (0.0, 0.0)
+
+
+def build_R5_truth_model(truths: dict):
+    """R5_truth: same architecture as R5 with tight truth-anchored priors.
+
+    Validation question: can PyAutoLens's R5 model space *represent* the
+    truth lens system? If yes (good chi^2, clean residuals when chain is
+    constrained near truth), then the freely-fit R5 failures (Pattern E
+    on mock_3, Pattern A on mock_4) are local-optimum issues, not
+    fundamental model-space limitations.
+
+    All priors are TruncatedGaussian(mean=truth, sigma=tight) with the
+    sigma chosen to (a) anchor the chain near truth and (b) leave enough
+    room (~3 sigma) for autolens-vs-lenstronomy sign / convention drift
+    on ell_comps / centre / shear axes.
+    """
+    import autofit as af
+    import autolens as al
+
+    z_l1 = truths["redshifts"]["lens_primary"]
+    z_l2 = truths["redshifts"]["lens_secondary"]
+    z_s  = truths["redshifts"]["source"]
+
+    primary = _truth_primary(truths)
+    secondary = _find_secondary_truth(truths)
+    lens_light = _truth_lens_light(truths)
+    sources = _truth_sources(truths)
+    shear_g1, shear_g2 = _truth_shear(truths)
+
+    # ---- Primary lens light (Sersic) — tight on truth ---------------------
+    bulge = af.Model(al.lp.Sersic)
+    bulge.centre.centre_0 = af.GaussianPrior(
+        mean=lens_light.get("center_x", 0.0), sigma=0.05)
+    bulge.centre.centre_1 = af.GaussianPrior(
+        mean=lens_light.get("center_y", 0.0), sigma=0.05)
+    bulge.intensity        = af.LogUniformPrior(lower_limit=1e-6, upper_limit=1e6)
+    bulge.effective_radius = af.GaussianPrior(
+        mean=lens_light.get("R_sersic", 1.0), sigma=0.3)
+    bulge.sersic_index     = af.GaussianPrior(
+        mean=lens_light.get("n_sersic", 4.0), sigma=0.5)
+    bulge.ell_comps.ell_comps_0 = af.TruncatedGaussianPrior(
+        mean=lens_light.get("e1", 0.0), sigma=0.1,
+        lower_limit=-1.0, upper_limit=1.0)
+    bulge.ell_comps.ell_comps_1 = af.TruncatedGaussianPrior(
+        mean=lens_light.get("e2", 0.0), sigma=0.1,
+        lower_limit=-1.0, upper_limit=1.0)
+
+    # ---- Primary lens mass (PowerLaw) — tight on truth -------------------
+    mass = af.Model(al.mp.PowerLaw)
+    mass.centre.centre_0 = af.GaussianPrior(
+        mean=primary.get("center_x", 0.0), sigma=0.05)
+    mass.centre.centre_1 = af.GaussianPrior(
+        mean=primary.get("center_y", 0.0), sigma=0.05)
+    mass.einstein_radius = af.GaussianPrior(
+        mean=primary.get("theta_E", 1.0), sigma=0.1)
+    mass.slope           = af.TruncatedGaussianPrior(
+        mean=primary.get("gamma", 2.0), sigma=0.1,
+        lower_limit=1.5, upper_limit=2.7)
+    mass.ell_comps.ell_comps_0 = af.TruncatedGaussianPrior(
+        mean=primary.get("e1", 0.0), sigma=0.1,
+        lower_limit=-1.0, upper_limit=1.0)
+    mass.ell_comps.ell_comps_1 = af.TruncatedGaussianPrior(
+        mean=primary.get("e2", 0.0), sigma=0.1,
+        lower_limit=-1.0, upper_limit=1.0)
+
+    # ---- ExternalShear — tight on Cartesian truth ------------------------
+    shear = af.Model(al.mp.ExternalShear)
+    shear.gamma_1 = af.GaussianPrior(mean=shear_g1, sigma=0.05)
+    shear.gamma_2 = af.GaussianPrior(mean=shear_g2, sigma=0.05)
+
+    lens_1 = af.Model(al.Galaxy, redshift=z_l1, bulge=bulge, mass=mass, shear=shear)
+
+    # ---- Secondary deflector (PowerLaw, slope free) — tight on truth -----
+    # Use PowerLaw (not Isothermal) so the slope can match mock_4's truth=2.1.
+    mass_2 = af.Model(al.mp.PowerLaw)
+    mass_2.centre.centre_0 = af.GaussianPrior(
+        mean=secondary.get("center_x", 0.0), sigma=0.05)
+    mass_2.centre.centre_1 = af.GaussianPrior(
+        mean=secondary.get("center_y", 0.0), sigma=0.05)
+    mass_2.einstein_radius = af.GaussianPrior(
+        mean=secondary.get("theta_E", 0.1), sigma=0.05)
+    mass_2.slope           = af.TruncatedGaussianPrior(
+        mean=secondary.get("gamma", 2.0), sigma=0.1,
+        lower_limit=1.5, upper_limit=2.7)
+    mass_2.ell_comps.ell_comps_0 = af.TruncatedGaussianPrior(
+        mean=secondary.get("e1", 0.0), sigma=0.1,
+        lower_limit=-1.0, upper_limit=1.0)
+    mass_2.ell_comps.ell_comps_1 = af.TruncatedGaussianPrior(
+        mean=secondary.get("e2", 0.0), sigma=0.1,
+        lower_limit=-1.0, upper_limit=1.0)
+    lens_2 = af.Model(al.Galaxy, redshift=z_l2, mass=mass_2)
+
+    # ---- Two source components — tight on truth --------------------------
+    def _src_truth(seed: dict):
+        s = af.Model(al.lp.SersicCore)
+        s.centre.centre_0 = af.GaussianPrior(
+            mean=seed.get("center_x", 0.0), sigma=0.05)
+        s.centre.centre_1 = af.GaussianPrior(
+            mean=seed.get("center_y", 0.0), sigma=0.05)
+        # Source intensity normalization differs (lenstronomy amp vs autolens
+        # intensity), so leave wide LogUniform.
+        s.intensity        = af.LogUniformPrior(lower_limit=1e-3, upper_limit=1e3)
+        s.effective_radius = af.GaussianPrior(
+            mean=seed.get("R_sersic", 0.2), sigma=0.05)
+        s.sersic_index     = af.GaussianPrior(
+            mean=seed.get("n_sersic", 1.0), sigma=0.3)
+        s.ell_comps.ell_comps_0 = af.TruncatedGaussianPrior(
+            mean=seed.get("e1", 0.0), sigma=0.1,
+            lower_limit=-1.0, upper_limit=1.0)
+        s.ell_comps.ell_comps_1 = af.TruncatedGaussianPrior(
+            mean=seed.get("e2", 0.0), sigma=0.1,
+            lower_limit=-1.0, upper_limit=1.0)
+        return s
+
+    src_a = _src_truth(sources[0])
+    src_b = _src_truth(sources[1])
+    source = af.Model(al.Galaxy, redshift=z_s, bulge=src_a, disk=src_b)
+
+    return af.Collection(galaxies=af.Collection(
+        lens_1=lens_1, lens_2=lens_2, source=source))
+
+
+# =============================================================================
 # Driver
 # =============================================================================
 def build_fit(dataset, output_root: Path, mock_index: int, truths: dict,
@@ -360,6 +544,9 @@ def build_fit(dataset, output_root: Path, mock_index: int, truths: dict,
     elif rung == "R5":
         model = build_R5_model(truths)
         unique_tag = f"mock_{mock_index}_R5_powerlaw_iso_shear_multiplane_2srcs"
+    elif rung == "R5_truth":
+        model = build_R5_truth_model(truths)
+        unique_tag = f"mock_{mock_index}_R5_truth_anchored"
     else:
         raise ValueError(f"unknown rung: {rung!r}")
 
@@ -386,7 +573,8 @@ def build_fit(dataset, output_root: Path, mock_index: int, truths: dict,
 
 def main():
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument("--rung", choices=["R3", "R2_2src", "R5"], required=True)
+    p.add_argument("--rung", choices=["R3", "R2_2src", "R5", "R5_truth"],
+                   required=True)
     p.add_argument("--mock", type=str, default="all",
                    help="2, 3, 4, 5, 6, or 'all' (filtered per --rung default)")
     p.add_argument("--output-root", type=Path,
@@ -401,11 +589,12 @@ def main():
     args.output_root.mkdir(parents=True, exist_ok=True)
 
     # Defaults per rung:
-    #   R3      -> mocks 3, 4 (multi-plane signal mocks)
-    #   R2_2src -> mock 6     (single-deflector + 2-source mock)
-    #   R5      -> mocks 3, 4 (multi-plane + 2-source — post-climb diagnosis)
+    #   R3       -> mocks 3, 4 (multi-plane signal mocks)
+    #   R2_2src  -> mock 6     (single-deflector + 2-source mock)
+    #   R5       -> mocks 3, 4 (multi-plane + 2-source — post-climb diagnosis)
+    #   R5_truth -> mocks 3, 4 (truth-anchored validation of R5 model space)
     if args.mock == "all":
-        if args.rung in ("R3", "R5"):
+        if args.rung in ("R3", "R5", "R5_truth"):
             mocks_to_fit = [3, 4]
         else:
             mocks_to_fit = [6]
