@@ -523,6 +523,86 @@ def build_R5_truth_model(truths: dict):
 
 
 # =============================================================================
+# R5_truth_iso: same as R5_truth but Iso (gamma=2 fixed) on both lenses.
+# Used for the JAX-GPU end-to-end test, since the autolens 2026.4.13.6
+# PowerLaw JAX path is broken (omega() bug). Iso-only avoids that.
+# =============================================================================
+def build_R5_truth_iso_model(truths: dict):
+    """R5_truth with Isothermal (gamma=2 fixed) primary + secondary, so the
+    JAX-GPU likelihood path works. Loses recovery of the primary slope —
+    truth gamma is 2.5 (mock_3) or 1.9 (mock_4) so this fixed slope is
+    a small bias for benchmarking purposes only."""
+    import autofit as af
+    import autolens as al
+
+    z_l1 = truths["redshifts"]["lens_primary"]
+    z_l2 = truths["redshifts"]["lens_secondary"]
+    z_s  = truths["redshifts"]["source"]
+
+    primary = _truth_primary(truths)
+    secondary = _find_secondary_truth(truths)
+    lens_light = _truth_lens_light(truths)
+    sources = _truth_sources(truths)
+    shear_g1, shear_g2 = _truth_shear(truths)
+
+    bulge = af.Model(al.lp.Sersic)
+    bulge.centre.centre_0 = af.GaussianPrior(mean=lens_light.get("center_x", 0.0), sigma=0.05)
+    bulge.centre.centre_1 = af.GaussianPrior(mean=lens_light.get("center_y", 0.0), sigma=0.05)
+    bulge.intensity        = af.LogUniformPrior(lower_limit=1e-6, upper_limit=1e6)
+    bulge.effective_radius = af.GaussianPrior(mean=lens_light.get("R_sersic", 1.0), sigma=0.3)
+    bulge.sersic_index     = af.GaussianPrior(mean=lens_light.get("n_sersic", 4.0), sigma=0.5)
+    bulge.ell_comps.ell_comps_0 = af.TruncatedGaussianPrior(
+        mean=lens_light.get("e1", 0.0), sigma=0.1, lower_limit=-1.0, upper_limit=1.0)
+    bulge.ell_comps.ell_comps_1 = af.TruncatedGaussianPrior(
+        mean=lens_light.get("e2", 0.0), sigma=0.1, lower_limit=-1.0, upper_limit=1.0)
+
+    mass = af.Model(al.mp.Isothermal)  # NOT PowerLaw (JAX bug); gamma=2 fixed
+    mass.centre.centre_0 = af.GaussianPrior(mean=primary.get("center_x", 0.0), sigma=0.05)
+    mass.centre.centre_1 = af.GaussianPrior(mean=primary.get("center_y", 0.0), sigma=0.05)
+    mass.einstein_radius = af.GaussianPrior(mean=primary.get("theta_E", 1.0), sigma=0.1)
+    mass.ell_comps.ell_comps_0 = af.TruncatedGaussianPrior(
+        mean=primary.get("e1", 0.0), sigma=0.1, lower_limit=-1.0, upper_limit=1.0)
+    mass.ell_comps.ell_comps_1 = af.TruncatedGaussianPrior(
+        mean=primary.get("e2", 0.0), sigma=0.1, lower_limit=-1.0, upper_limit=1.0)
+
+    shear = af.Model(al.mp.ExternalShear)
+    shear.gamma_1 = af.GaussianPrior(mean=shear_g1, sigma=0.05)
+    shear.gamma_2 = af.GaussianPrior(mean=shear_g2, sigma=0.05)
+
+    lens_1 = af.Model(al.Galaxy, redshift=z_l1, bulge=bulge, mass=mass, shear=shear)
+
+    mass_2 = af.Model(al.mp.Isothermal)
+    mass_2.centre.centre_0 = af.GaussianPrior(mean=secondary.get("center_x", 0.0), sigma=0.05)
+    mass_2.centre.centre_1 = af.GaussianPrior(mean=secondary.get("center_y", 0.0), sigma=0.05)
+    mass_2.einstein_radius = af.GaussianPrior(mean=secondary.get("theta_E", 0.1), sigma=0.05)
+    mass_2.ell_comps.ell_comps_0 = af.TruncatedGaussianPrior(
+        mean=secondary.get("e1", 0.0), sigma=0.1, lower_limit=-1.0, upper_limit=1.0)
+    mass_2.ell_comps.ell_comps_1 = af.TruncatedGaussianPrior(
+        mean=secondary.get("e2", 0.0), sigma=0.1, lower_limit=-1.0, upper_limit=1.0)
+
+    lens_2 = af.Model(al.Galaxy, redshift=z_l2, mass=mass_2)
+
+    def _src(seed):
+        s = af.Model(al.lp.SersicCore)
+        s.centre.centre_0 = af.GaussianPrior(mean=seed.get("center_x", 0.0), sigma=0.05)
+        s.centre.centre_1 = af.GaussianPrior(mean=seed.get("center_y", 0.0), sigma=0.05)
+        s.intensity        = af.LogUniformPrior(lower_limit=1e-3, upper_limit=1e3)
+        s.effective_radius = af.GaussianPrior(mean=seed.get("R_sersic", 0.2), sigma=0.05)
+        s.sersic_index     = af.GaussianPrior(mean=seed.get("n_sersic", 1.0), sigma=0.3)
+        s.ell_comps.ell_comps_0 = af.TruncatedGaussianPrior(
+            mean=seed.get("e1", 0.0), sigma=0.1, lower_limit=-1.0, upper_limit=1.0)
+        s.ell_comps.ell_comps_1 = af.TruncatedGaussianPrior(
+            mean=seed.get("e2", 0.0), sigma=0.1, lower_limit=-1.0, upper_limit=1.0)
+        return s
+
+    source = af.Model(al.Galaxy, redshift=z_s,
+                      bulge=_src(sources[0]), disk=_src(sources[1]))
+
+    return af.Collection(galaxies=af.Collection(
+        lens_1=lens_1, lens_2=lens_2, source=source))
+
+
+# =============================================================================
 # R5_staged: 2-stage chain (R2_2src -> R5 with prior passing)
 # =============================================================================
 def build_R5_staged_chain(dataset, output_root: Path, mock_index: int,
@@ -603,7 +683,7 @@ def build_R5_staged_chain(dataset, output_root: Path, mock_index: int,
 # Driver
 # =============================================================================
 def build_fit(dataset, output_root: Path, mock_index: int, truths: dict,
-              rung: str, n_live: int = 250):
+              rung: str, n_live: int = 250, use_jax: bool = False):
     import autofit as af
     import autolens as al
 
@@ -625,6 +705,10 @@ def build_fit(dataset, output_root: Path, mock_index: int, truths: dict,
     elif rung == "R5_truth":
         model = build_R5_truth_model(truths)
         unique_tag = f"mock_{mock_index}_R5_truth_anchored"
+    elif rung == "R5_truth_iso":
+        model = build_R5_truth_iso_model(truths)
+        unique_tag = (f"mock_{mock_index}_R5_truth_iso"
+                      + ("_jax" if use_jax else ""))
     elif rung == "R5_staged":
         # Special case — runs two Nautilus searches with prior passing,
         # bypassing the single-search build_fit return.
@@ -633,11 +717,11 @@ def build_fit(dataset, output_root: Path, mock_index: int, truths: dict,
     else:
         raise ValueError(f"unknown rung: {rung!r}")
 
-    analysis = al.AnalysisImaging(dataset=dataset, use_jax=False)
+    analysis = al.AnalysisImaging(dataset=dataset, use_jax=use_jax)
 
     search = af.Nautilus(
         path_prefix=output_root,
-        name=f"mock_{mock_index}_{rung}",
+        name=f"mock_{mock_index}_{rung}{'_jax' if use_jax else ''}",
         unique_tag=unique_tag,
         n_live=n_live,
         n_batch=50,
@@ -657,8 +741,11 @@ def build_fit(dataset, output_root: Path, mock_index: int, truths: dict,
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--rung",
-                   choices=["R3", "R2_2src", "R5", "R5_truth", "R5_staged"],
+                   choices=["R3", "R2_2src", "R5", "R5_truth",
+                            "R5_truth_iso", "R5_staged"],
                    required=True)
+    p.add_argument("--use-jax", action="store_true",
+                   help="Pass use_jax=True to AnalysisImaging (JAX-GPU path)")
     p.add_argument("--mock", type=str, default="all",
                    help="2, 3, 4, 5, 6, or 'all' (filtered per --rung default)")
     p.add_argument("--output-root", type=Path,
@@ -700,7 +787,7 @@ def main():
         print(f"\nLoaded mock_{n}: shape={dataset.shape_native}, "
               f"pixels_in_mask={dataset.mask.pixels_in_mask}", flush=True)
         build_fit(dataset, args.output_root, mock_index=n, truths=truths,
-                  rung=args.rung, n_live=args.n_live)
+                  rung=args.rung, n_live=args.n_live, use_jax=args.use_jax)
 
     print(f"\nTotal wall time: {(time.time()-t_start)/3600:.2f} h", flush=True)
 
