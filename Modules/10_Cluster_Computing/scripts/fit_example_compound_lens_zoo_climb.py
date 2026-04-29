@@ -563,7 +563,7 @@ def build_R5_staged_chain(dataset, output_root: Path, mock_index: int,
     t0 = time.time()
     s1_result = s1_search.fit(model=s1_model, analysis=analysis)
     print(f"[STAGED/mock_{mock_index}] Stage 1 done in "
-          f"{(time.time()-t0)/60:.1f} min, log_Z={s1_result.log_evidence:.2f}",
+          f"{(time.time()-t0)/60:.1f} min, log_Z={s1_result.samples.log_evidence:.2f}",
           flush=True)
     _force_visualize(analysis, s1_result, tag=f"mock_{mock_index}_staged_stage1")
 
@@ -592,7 +592,7 @@ def build_R5_staged_chain(dataset, output_root: Path, mock_index: int,
     t0 = time.time()
     s2_result = s2_search.fit(model=s2_model, analysis=analysis)
     print(f"[STAGED/mock_{mock_index}] Stage 2 done in "
-          f"{(time.time()-t0)/60:.1f} min, log_Z={s2_result.log_evidence:.2f}",
+          f"{(time.time()-t0)/60:.1f} min, log_Z={s2_result.samples.log_evidence:.2f}",
           flush=True)
     _force_visualize(analysis, s2_result, tag=f"mock_{mock_index}_staged_stage2")
     print(s2_result.info, flush=True)

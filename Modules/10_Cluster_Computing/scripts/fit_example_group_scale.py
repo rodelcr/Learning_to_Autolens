@@ -322,7 +322,7 @@ def build_staged_satellites(dataset_root: Path, output_root: Path,
     s1_analysis = al.AnalysisImaging(dataset=dataset_s1, use_jax=False)
     s1_result = s1_search.fit(model=s1_model, analysis=s1_analysis)
     print(f"[GROUP/staged] Stage 1 done in {(time.time()-t0)/60:.1f} min, "
-          f"log_Z={s1_result.log_evidence:.2f}", flush=True)
+          f"log_Z={s1_result.samples.log_evidence:.2f}", flush=True)
     _force_visualize(s1_analysis, s1_result, tag="staged_stage1")
 
     # ---- Stage 2: full mask, BGG/source from Stage 1, free satellites ----
@@ -377,7 +377,7 @@ def build_staged_satellites(dataset_root: Path, output_root: Path,
     s2_analysis = al.AnalysisImaging(dataset=dataset_s2, use_jax=False)
     s2_result = s2_search.fit(model=s2_model, analysis=s2_analysis)
     print(f"[GROUP/staged] Stage 2 done in {(time.time()-t0)/60:.1f} min, "
-          f"log_Z={s2_result.log_evidence:.2f}", flush=True)
+          f"log_Z={s2_result.samples.log_evidence:.2f}", flush=True)
     _force_visualize(s2_analysis, s2_result, tag="staged_stage2")
     print(s2_result.info, flush=True)
     return s2_result
