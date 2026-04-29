@@ -1,0 +1,10 @@
+{
+  "search_name": "mock_3_R5_staged_stage1_R2_2src",
+  "source_dir": "output/mock_3_R5_staged/mock_3_R5_staged_stage1_R2_2src/e22a01283ffb0fbe6b6e16a2835c8c46",
+  "max_log_likelihood": 31788.054044607386,
+  "log_evidence": 31655.237775701862,
+  "chi_squared_total": 10418.754342701273,
+  "chi_squared_per_pixel": 1.1354353032586393,
+  "n_unmasked_pixels": 9176,
+  "max_abs_normalized_residual": 7.064038836255338
+}
