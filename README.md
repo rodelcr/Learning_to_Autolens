@@ -2,11 +2,11 @@
 
 **Strong Gravitational Lens Modeling with PyAutoLens — A Step-by-Step Tutorial Suite**
 
-A 10-module tutorial series teaching computational strong lens modeling from first principles through publication-ready results, with a dedicated cluster-computing module (Mod 10) showing how to run the heavy searches on Harvard FASRC Cannon. Each module pairs detailed **Jupyter notebooks** (with thorough physics commentary) with **LaTeX theory notes** and optional **Wolfram Mathematica** scripts for symbolic verification.
+A 14-module tutorial series teaching computational strong lens modeling from first principles through publication-ready results, with a dedicated cluster-computing module (Mod 10) showing how to run the heavy searches on Harvard FASRC Cannon, and a parallel **`Examples/`** practice gym of 10 lens architectures (compound multi-plane, double-source-plane, group-scale, quad time delays, real AGEL HST data, etc.). Each module pairs detailed **Jupyter notebooks** (with thorough physics commentary) with **LaTeX theory notes** and optional **Wolfram Mathematica** scripts for symbolic verification.
 
 This project is a companion to [Learning to Lens](https://github.com/rodelcr/Learning_to_Lens) (GR & lensing theory in Mathematica), but is fully self-contained — all necessary theory is developed inline with references to the primary literature.
 
-> **Alpha build (v0.92)** — April 2026. Modules 01–10 complete; Cannon cluster results for Mods 04, 05, and 09 are included under each module's `results/` directory. Feedback welcome at rodrigo.cordova_rosado@cfa.harvard.edu.
+> **Alpha build (v0.95)** — April 2026. Modules 01–14 complete (incl. time-delay cosmography + MSD + multi-plane); Cannon cluster results for Mods 04, 05, 09 plus all 10 Examples are committed as small artifacts under each subdirectory's `results/` tree. Feedback welcome at rodrigo.cordova_rosado@cfa.harvard.edu.
 
 ---
 

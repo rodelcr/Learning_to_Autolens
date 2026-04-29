@@ -23,7 +23,7 @@ Examples/<name>/
 |---|---|---|---|---|
 | 1 | **[compound_lens/](compound_lens/)** | Two deflectors at different z, one source | ✓ shipped | Multi-plane `al.Tracer`, staged chaining across lens bodies, when to simplify to an effective deflector |
 | 2 | **[double_source_plane/](double_source_plane/)** | One lens, two sources at different z | ✓ shipped | Cosmological distance ratios, joint multi-source posterior, β cosmography |
-| 3 | [group_scale/](group_scale/) | BGG + satellites + extended envelope (same z) | ◐ in-progress | Cluster-lite multi-component mass; 3 Cannon attempts stalled in burn-in (see `group_scale/README.md`) |
+| 3 | [group_scale/](group_scale/) | BGG + satellites + extended envelope (same z) | ◐ in-progress | Cluster-lite multi-component mass; freely-fit attempts stall but `truth_anchored` PASSED (χ²/N=1.025, max\|res\|=4.50σ) — diagnostic confirms search-space exploration is the bottleneck, not model representability (see `group_scale/01_group_scale_fit.ipynb` §3.1) |
 | 4 | **[disky_spiral_lens/](disky_spiral_lens/)** | Non-elliptical lens morphology | ✓ shipped | Two-component Sersic vs. single Sersic, mass/light PA misalignment, Bayes-factor model comparison |
 | 5 | [quad_time_delay/](quad_time_delay/) | Point-source quasar, four images, time delays | ◐ in-progress | Point-source likelihood (`AnalysisPoint`), time-delay cosmography, H₀ recovery |
 | 6 | [mge_to_physical/](mge_to_physical/) | Stars + dark matter decomposition (MGE light → lmp.Sersic + NFW) | ◐ in-progress | f_DM(<θ_E), M/L recovery, three-search chain mirroring `mass_stellar_dark/chaining.py` |
