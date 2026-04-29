@@ -10,6 +10,7 @@ Pedagogical anchor:
     R2_2src (1-plane + 2src)         — THIS SCRIPT, --rung R2_2src
     R5  (multi-plane + 2src)         — THIS SCRIPT, --rung R5
     R5_truth (truth-anchored R5)     — THIS SCRIPT, --rung R5_truth
+    R5_staged (R2_2src -> R5 chain)  — THIS SCRIPT, --rung R5_staged
 
 R3 model:
     PowerLaw primary (slope free) at z_l1
@@ -522,6 +523,83 @@ def build_R5_truth_model(truths: dict):
 
 
 # =============================================================================
+# R5_staged: 2-stage chain (R2_2src -> R5 with prior passing)
+# =============================================================================
+def build_R5_staged_chain(dataset, output_root: Path, mock_index: int,
+                          truths: dict, n_live: int = 250):
+    """Two-stage SLaM-style chain on the same dataset:
+
+    Stage 1: R2_2src (single-plane PowerLaw + shear + 2 SersicCore sources)
+             — gets a strong posterior on primary lens + sources before
+             multi-plane geometry is introduced.
+
+    Stage 2: R5 (multi-plane + 2 sources). Primary lens, shear, lens light,
+             and BOTH source components are passed from Stage 1 as priors
+             centred on the posterior. Secondary lens (z_l2) parameters are
+             the only ones with the original wide priors.
+
+    Tests whether walking the chain through R2_2src first (which we know
+    converges cleanly for mock_6) lands the secondary in the truth basin
+    rather than the Pattern E (mock_3) / Pattern A (mock_4) freely-fit
+    optima.
+    """
+    import autofit as af
+    import autolens as al
+
+    print(f"\n[STAGED/mock_{mock_index}] starting 2-stage chain", flush=True)
+
+    analysis = al.AnalysisImaging(dataset=dataset, use_jax=False)
+
+    # ---- Stage 1: R2_2src ----
+    print(f"[STAGED/mock_{mock_index}] Stage 1: R2_2src", flush=True)
+    s1_model = build_R2_2src_model(truths)
+    s1_search = af.Nautilus(
+        path_prefix=output_root,
+        name=f"mock_{mock_index}_R5_staged_stage1_R2_2src",
+        unique_tag=f"mock_{mock_index}_R5_staged",
+        n_live=n_live, n_batch=50, iterations_per_update=15000,
+        number_of_cores=int(os.environ.get("SLURM_CPUS_PER_TASK", "1")),
+    )
+    t0 = time.time()
+    s1_result = s1_search.fit(model=s1_model, analysis=analysis)
+    print(f"[STAGED/mock_{mock_index}] Stage 1 done in "
+          f"{(time.time()-t0)/60:.1f} min, log_Z={s1_result.log_evidence:.2f}",
+          flush=True)
+    _force_visualize(analysis, s1_result, tag=f"mock_{mock_index}_staged_stage1")
+
+    # ---- Stage 2: R5 with priors from Stage 1 ----
+    print(f"[STAGED/mock_{mock_index}] Stage 2: R5 with prior passing", flush=True)
+    s2_model = build_R5_model(truths)
+
+    # Pass primary lens posterior (mass + shear + bulge) — R2_2src uses key
+    # `lens`, R5 uses key `lens_1`. Both have PowerLaw mass + Sersic light
+    # + ExternalShear, so the per-component priors are directly portable.
+    s2_model.galaxies.lens_1.mass  = s1_result.model.galaxies.lens.mass
+    s2_model.galaxies.lens_1.shear = s1_result.model.galaxies.lens.shear
+    s2_model.galaxies.lens_1.bulge = s1_result.model.galaxies.lens.bulge
+    # Both source components
+    s2_model.galaxies.source.bulge = s1_result.model.galaxies.source.bulge
+    s2_model.galaxies.source.disk  = s1_result.model.galaxies.source.disk
+    # lens_2 keeps its original wide priors (no Stage 1 counterpart)
+
+    s2_search = af.Nautilus(
+        path_prefix=output_root,
+        name=f"mock_{mock_index}_R5_staged_stage2_R5",
+        unique_tag=f"mock_{mock_index}_R5_staged",
+        n_live=n_live, n_batch=50, iterations_per_update=15000,
+        number_of_cores=int(os.environ.get("SLURM_CPUS_PER_TASK", "1")),
+    )
+    t0 = time.time()
+    s2_result = s2_search.fit(model=s2_model, analysis=analysis)
+    print(f"[STAGED/mock_{mock_index}] Stage 2 done in "
+          f"{(time.time()-t0)/60:.1f} min, log_Z={s2_result.log_evidence:.2f}",
+          flush=True)
+    _force_visualize(analysis, s2_result, tag=f"mock_{mock_index}_staged_stage2")
+    print(s2_result.info, flush=True)
+    return s2_result
+
+
+# =============================================================================
 # Driver
 # =============================================================================
 def build_fit(dataset, output_root: Path, mock_index: int, truths: dict,
@@ -547,6 +625,11 @@ def build_fit(dataset, output_root: Path, mock_index: int, truths: dict,
     elif rung == "R5_truth":
         model = build_R5_truth_model(truths)
         unique_tag = f"mock_{mock_index}_R5_truth_anchored"
+    elif rung == "R5_staged":
+        # Special case — runs two Nautilus searches with prior passing,
+        # bypassing the single-search build_fit return.
+        return build_R5_staged_chain(dataset, output_root, mock_index, truths,
+                                     n_live=n_live)
     else:
         raise ValueError(f"unknown rung: {rung!r}")
 
@@ -573,7 +656,8 @@ def build_fit(dataset, output_root: Path, mock_index: int, truths: dict,
 
 def main():
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument("--rung", choices=["R3", "R2_2src", "R5", "R5_truth"],
+    p.add_argument("--rung",
+                   choices=["R3", "R2_2src", "R5", "R5_truth", "R5_staged"],
                    required=True)
     p.add_argument("--mock", type=str, default="all",
                    help="2, 3, 4, 5, 6, or 'all' (filtered per --rung default)")
@@ -589,12 +673,13 @@ def main():
     args.output_root.mkdir(parents=True, exist_ok=True)
 
     # Defaults per rung:
-    #   R3       -> mocks 3, 4 (multi-plane signal mocks)
-    #   R2_2src  -> mock 6     (single-deflector + 2-source mock)
-    #   R5       -> mocks 3, 4 (multi-plane + 2-source — post-climb diagnosis)
-    #   R5_truth -> mocks 3, 4 (truth-anchored validation of R5 model space)
+    #   R3        -> mocks 3, 4 (multi-plane signal mocks)
+    #   R2_2src   -> mock 6     (single-deflector + 2-source mock)
+    #   R5        -> mocks 3, 4 (multi-plane + 2-source — post-climb diagnosis)
+    #   R5_truth  -> mocks 3, 4 (truth-anchored validation of R5 model space)
+    #   R5_staged -> mocks 3, 4 (2-stage chain: R2_2src -> R5 with prior pass)
     if args.mock == "all":
-        if args.rung in ("R3", "R5", "R5_truth"):
+        if args.rung in ("R3", "R5", "R5_truth", "R5_staged"):
             mocks_to_fit = [3, 4]
         else:
             mocks_to_fit = [6]

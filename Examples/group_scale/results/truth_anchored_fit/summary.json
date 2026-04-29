@@ -1,0 +1,10 @@
+{
+  "search_name": "truth_anchored_fit",
+  "source_dir": "output/group_scale/mock_1/truth_anchored_fit/fe298550dda944ec2a46596dbabff637",
+  "max_log_likelihood": 44862.612376959616,
+  "log_evidence": 44699.803044237895,
+  "chi_squared_total": 15765.774496889137,
+  "chi_squared_per_pixel": 1.0250828671579413,
+  "n_unmasked_pixels": 15380,
+  "max_abs_normalized_residual": 4.497190378318686
+}

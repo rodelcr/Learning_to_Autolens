@@ -1,0 +1,92 @@
+Total Free Parameters = 35
+
+model                                                                           Collection (N=35)
+    galaxies                                                                    Collection (N=35)
+        bgg                                                                     Galaxy (N=10)
+            bulge                                                               Sersic (N=7)
+            mass                                                                Isothermal (N=5)
+        satellite_1 - satellite_3                                               Galaxy (N=6)
+            bulge                                                               Sersic (N=5)
+            mass                                                                IsothermalSph (N=1)
+        source                                                                  Galaxy (N=7)
+            bulge                                                               SersicCore (N=7)
+
+galaxies
+    bgg
+        redshift                                                                0.4
+        bulge - mass
+            centre
+                centre_0                                                        GaussianPrior [7], mean = 0, sigma = 0.05
+                centre_1                                                        GaussianPrior [8], mean = 0, sigma = 0.05
+        bulge
+            ell_comps
+                ell_comps_0                                                     TruncatedGaussianPrior [12], mean = 0.08, sigma = 0.05, lower_limit = -1.0, upper_limit = 1.0
+                ell_comps_1                                                     TruncatedGaussianPrior [13], mean = -0.02, sigma = 0.05, lower_limit = -1.0, upper_limit = 1.0
+            intensity                                                           LogUniformPrior [9], lower_limit = 0.01, upper_limit = 100.0
+            effective_radius                                                    GaussianPrior [10], mean = 0.9, sigma = 0.1
+            sersic_index                                                        GaussianPrior [11], mean = 4.0, sigma = 0.5
+        mass
+            ell_comps
+                ell_comps_0                                                     TruncatedGaussianPrior [20], mean = 0.08, sigma = 0.05, lower_limit = -1.0, upper_limit = 1.0
+                ell_comps_1                                                     TruncatedGaussianPrior [21], mean = -0.02, sigma = 0.05, lower_limit = -1.0, upper_limit = 1.0
+            einstein_radius                                                     GaussianPrior [19], mean = 1.5, sigma = 0.05
+    satellite_1
+        redshift                                                                0.4
+        bulge - mass
+            centre
+                centre_0                                                        1.8
+                centre_1                                                        0.7
+        bulge
+            ell_comps
+                ell_comps_0                                                     TruncatedGaussianPrior [32], mean = 0.0, sigma = 0.1, lower_limit = -1.0, upper_limit = 1.0
+                ell_comps_1                                                     TruncatedGaussianPrior [33], mean = 0.0, sigma = 0.1, lower_limit = -1.0, upper_limit = 1.0
+            intensity                                                           LogUniformPrior [29], lower_limit = 0.01, upper_limit = 100.0
+            effective_radius                                                    GaussianPrior [30], mean = 0.25, sigma = 0.05
+            sersic_index                                                        GaussianPrior [31], mean = 2.0, sigma = 0.4
+        mass
+            einstein_radius                                                     GaussianPrior [37], mean = 0.35, sigma = 0.05
+    satellite_2
+        redshift                                                                0.4
+        bulge - mass
+            centre
+                centre_0                                                        -1.5
+                centre_1                                                        -1.2
+        bulge
+            ell_comps
+                ell_comps_0                                                     TruncatedGaussianPrior [48], mean = 0.0, sigma = 0.1, lower_limit = -1.0, upper_limit = 1.0
+                ell_comps_1                                                     TruncatedGaussianPrior [49], mean = 0.0, sigma = 0.1, lower_limit = -1.0, upper_limit = 1.0
+            intensity                                                           LogUniformPrior [45], lower_limit = 0.01, upper_limit = 100.0
+            effective_radius                                                    GaussianPrior [46], mean = 0.3, sigma = 0.05
+            sersic_index                                                        GaussianPrior [47], mean = 1.8, sigma = 0.4
+        mass
+            einstein_radius                                                     GaussianPrior [53], mean = 0.45, sigma = 0.05
+    satellite_3
+        redshift                                                                0.4
+        bulge - mass
+            centre
+                centre_0                                                        0.5
+                centre_1                                                        -2.0
+        bulge
+            ell_comps
+                ell_comps_0                                                     TruncatedGaussianPrior [64], mean = 0.0, sigma = 0.1, lower_limit = -1.0, upper_limit = 1.0
+                ell_comps_1                                                     TruncatedGaussianPrior [65], mean = 0.0, sigma = 0.1, lower_limit = -1.0, upper_limit = 1.0
+            intensity                                                           LogUniformPrior [61], lower_limit = 0.01, upper_limit = 100.0
+            effective_radius                                                    GaussianPrior [62], mean = 0.2, sigma = 0.05
+            sersic_index                                                        GaussianPrior [63], mean = 2.5, sigma = 0.4
+        mass
+            einstein_radius                                                     GaussianPrior [69], mean = 0.25, sigma = 0.05
+    source
+        redshift                                                                1.8
+        bulge
+            centre
+                centre_0                                                        GaussianPrior [77], mean = 0.12, sigma = 0.05
+                centre_1                                                        GaussianPrior [78], mean = 0.08, sigma = 0.05
+            ell_comps
+                ell_comps_0                                                     TruncatedGaussianPrior [82], mean = -0.08, sigma = 0.05, lower_limit = -1.0, upper_limit = 1.0
+                ell_comps_1                                                     TruncatedGaussianPrior [83], mean = 0.15, sigma = 0.05, lower_limit = -1.0, upper_limit = 1.0
+            effective_radius                                                    GaussianPrior [80], mean = 0.08, sigma = 0.02
+            sersic_index                                                        GaussianPrior [81], mean = 1.4, sigma = 0.3
+            radius_break                                                        0.025
+            intensity                                                           LogUniformPrior [79], lower_limit = 0.01, upper_limit = 100.0
+            gamma                                                               0.25
+            alpha                                                               3.0

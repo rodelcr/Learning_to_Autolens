@@ -260,6 +260,129 @@ def _load_mock_truth(dataset_root: Path) -> dict:
     return json.loads((dataset_root / "mock_truth.json").read_text())
 
 
+# =============================================================================
+# Staged-chain helper: BGG + source only, no shear, no satellites
+# =============================================================================
+def _bgg_only_galaxy_model():
+    """BGG (Sersic + Isothermal) at z=0.4, no shear. For Stage 1 of the
+    staged-satellites chain, where satellite regions are masked out."""
+    import autofit as af
+    import autolens as al
+    bulge, mass = _bgg_model()
+    return af.Model(al.Galaxy, redshift=0.4, bulge=bulge, mass=mass)
+
+
+def build_staged_satellites(dataset_root: Path, output_root: Path,
+                            n_live: int = 200):
+    """Two-stage SLaM-style chain for the group-scale system.
+
+    Stage 1: BGG + source ONLY, with a tight mask (radius=1.7") that
+             excludes the three satellite regions (closest satellite is at
+             r=1.92"). Fast — ~14 params, no satellite light to confuse
+             chi^2. Gets a strong posterior on BGG mass / light + source.
+
+    Stage 2: Full mask (radius=3.5"). BGG + source priors centred on Stage 1
+             posterior. 3 satellites with FIXED centres, FREE Sersic light
+             + IsothermalSph mass. The new free parameters are limited to
+             the 3 satellite light + mass blocks (~19 params), which is the
+             scale Nautilus handles cleanly.
+
+    Tests whether the freely-fit failure (LEARNING_LOG 2026-04-24) was
+    really a search-exploration problem in the joint 30+ param landscape.
+    If Stage 1 -> Stage 2 converges cleanly, yes — the resume path is
+    this staged chain. If Stage 2 still stalls, the problem is the joint
+    BGG+satellite degeneracy structure, not the search.
+    """
+    import autofit as af
+    import autolens as al
+    import time
+
+    print("[GROUP/staged] starting 2-stage chain", flush=True)
+
+    # ---- Stage 1: BGG + source, mask=1.7" ----
+    dataset_s1 = load_dataset(dataset_root, mask_radius=1.7)
+    print(f"[GROUP/staged] Stage 1 dataset: "
+          f"pixels_in_mask={dataset_s1.mask.pixels_in_mask}", flush=True)
+
+    bgg = _bgg_only_galaxy_model()
+    src = _source_model()
+    s1_model = af.Collection(galaxies=af.Collection(bgg=bgg, source=src))
+    print(f"[GROUP/staged] Stage 1 free params: "
+          f"{s1_model.total_free_parameters}", flush=True)
+
+    s1_search = af.Nautilus(
+        path_prefix=output_root / "group_scale",
+        name="staged_satellites_stage1_bgg_source",
+        unique_tag="mock_1_staged",
+        n_live=n_live, n_batch=50, iterations_per_update=30000,
+        number_of_cores=int(os.environ.get("SLURM_CPUS_PER_TASK", "1")),
+    )
+    print("[GROUP/staged] Stage 1 Nautilus starting...", flush=True)
+    t0 = time.time()
+    s1_analysis = al.AnalysisImaging(dataset=dataset_s1, use_jax=False)
+    s1_result = s1_search.fit(model=s1_model, analysis=s1_analysis)
+    print(f"[GROUP/staged] Stage 1 done in {(time.time()-t0)/60:.1f} min, "
+          f"log_Z={s1_result.log_evidence:.2f}", flush=True)
+    _force_visualize(s1_analysis, s1_result, tag="staged_stage1")
+
+    # ---- Stage 2: full mask, BGG/source from Stage 1, free satellites ----
+    dataset_s2 = load_dataset(dataset_root, mask_radius=3.5)
+    print(f"[GROUP/staged] Stage 2 dataset: "
+          f"pixels_in_mask={dataset_s2.mask.pixels_in_mask}", flush=True)
+
+    # BGG and source: priors centred on Stage 1 posterior
+    galaxies_dict = {
+        "bgg": s1_result.model.galaxies.bgg,
+    }
+
+    # Satellites: FIXED centres at photometric positions, FREE light + mass
+    # Same priors as build_bgg_plus_satellites for direct comparability.
+    for i, (y, x) in enumerate(_SAT_POS):
+        sat_bulge = af.Model(al.lp.Sersic)
+        sat_bulge.centre.centre_0 = y
+        sat_bulge.centre.centre_1 = x
+        sat_bulge.ell_comps.ell_comps_0 = af.TruncatedGaussianPrior(
+            mean=0.0, sigma=0.3, lower_limit=-1.0, upper_limit=1.0)
+        sat_bulge.ell_comps.ell_comps_1 = af.TruncatedGaussianPrior(
+            mean=0.0, sigma=0.3, lower_limit=-1.0, upper_limit=1.0)
+        sat_bulge.intensity = af.LogUniformPrior(lower_limit=0.1, upper_limit=2.0)
+        sat_bulge.effective_radius = af.TruncatedGaussianPrior(
+            mean=0.25, sigma=0.10, lower_limit=0.05, upper_limit=0.6)
+        sat_bulge.sersic_index = af.TruncatedGaussianPrior(
+            mean=2.0, sigma=0.6, lower_limit=0.8, upper_limit=4.0)
+
+        sat_mass = af.Model(al.mp.IsothermalSph)
+        sat_mass.centre.centre_0 = y
+        sat_mass.centre.centre_1 = x
+        sat_mass.einstein_radius = af.UniformPrior(lower_limit=0.0, upper_limit=1.0)
+
+        galaxies_dict[f"satellite_{i+1}"] = af.Model(
+            al.Galaxy, redshift=0.4, bulge=sat_bulge, mass=sat_mass)
+
+    galaxies_dict["source"] = s1_result.model.galaxies.source
+
+    s2_model = af.Collection(galaxies=af.Collection(**galaxies_dict))
+    print(f"[GROUP/staged] Stage 2 free params: "
+          f"{s2_model.total_free_parameters}", flush=True)
+
+    s2_search = af.Nautilus(
+        path_prefix=output_root / "group_scale",
+        name="staged_satellites_stage2_full",
+        unique_tag="mock_1_staged",
+        n_live=n_live, n_batch=50, iterations_per_update=30000,
+        number_of_cores=int(os.environ.get("SLURM_CPUS_PER_TASK", "1")),
+    )
+    print("[GROUP/staged] Stage 2 Nautilus starting...", flush=True)
+    t0 = time.time()
+    s2_analysis = al.AnalysisImaging(dataset=dataset_s2, use_jax=False)
+    s2_result = s2_search.fit(model=s2_model, analysis=s2_analysis)
+    print(f"[GROUP/staged] Stage 2 done in {(time.time()-t0)/60:.1f} min, "
+          f"log_Z={s2_result.log_evidence:.2f}", flush=True)
+    _force_visualize(s2_analysis, s2_result, tag="staged_stage2")
+    print(s2_result.info, flush=True)
+    return s2_result
+
+
 def build_truth_anchored(dataset, output_root: Path, dataset_root: Path,
                          n_live: int = 200):
     """All-truth-anchored fit: BGG + 3 satellites + source, all priors as
@@ -365,7 +488,7 @@ def main():
     p = argparse.ArgumentParser()
     p.add_argument("--part",
                    choices=("bgg_shear_only", "bgg_plus_satellites",
-                            "truth_anchored", "all"),
+                            "truth_anchored", "staged_satellites", "all"),
                    default="all")
     p.add_argument("--repo-root",    type=Path, required=True)
     p.add_argument("--dataset-root", type=Path, required=True)
@@ -385,6 +508,10 @@ def main():
         # directly comparable; run separately as a validation diagnostic.
         build_truth_anchored(dataset, args.output_root, args.dataset_root,
                              n_live=args.n_live)
+    if args.part == "staged_satellites":
+        # 2-stage chain: builds its own datasets at different mask radii.
+        build_staged_satellites(args.dataset_root, args.output_root,
+                                n_live=args.n_live)
 
 
 if __name__ == "__main__":
