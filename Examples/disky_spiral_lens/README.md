@@ -1,30 +1,28 @@
-# Example (stub): Disky / Spiral Lens
+# Example: Disky / Spiral Lens
 
 ## Status
 
-◯ **Planned** — no notebook yet.
+✓ **Shipped.** `01_disky_spiral_fit.ipynb` walks through both the single-Sérsic and the bulge+disk multi-component fits with committed Cannon results in `results/single_sersic_fit/` and `results/bulge_disk_fit/`. Audited under `/autolens-fit-diagnostics`.
 
 ## Problem
 
-Most strong-lens pipelines assume an elliptical galaxy (Sérsic with ellipticity parameters, or MGE). But **spiral and disky galaxies** have non-elliptical morphology — bars, isophotal twists, m=4 boxiness — that a single elliptical profile can't capture. This example shows **how MGE-linear-light (Module 09)** lets you sidestep the elliptical assumption entirely, and what the image-plane residuals look like when you force a Sérsic on a disk.
+Real lens galaxies often have **two light components at different position angles** — a high-Sersic-index bulge and a lower-n disk that's more flattened and rotated relative to the bulge. A single-Sersic light profile is mathematically a single ellipse in surface brightness; it cannot represent two orientations simultaneously. This example shows what that looks like in practice and demonstrates Bayes-factor model comparison between a single-Sersic vs bulge+disk light model.
 
 ## Data source
 
-- Simulate: generate a disk-like light profile with `al.lp.ExponentialCore` + isophotal twist, add a Sersic+Isothermal mass.
-- Real-world: AGEL has at least one spiral lens on record (DESJ0206; see `20250910-keerthi-Keck-AGELDR2-main/` or the AGEL DR2 catalog).
-- `Spiral_2_spectra_fitting/` and `202509_DESJ02026/` in the sibling AGEL workspace have real DESJ0206 data we could reuse.
+Simulated mock under `mocks/`: lens at $z=0.45$ with bulge (PA≈0°, *n*=4, *R_e*=0.45″) + disk (PA≈35°, *n*=1, *R_e*=1.0″), Isothermal+shear mass aligned with the bulge PA, compact Sersic source at $z=1.6$. Generation script in `mocks/generate_mock.py`.
 
-## Method hint
+## Method (as implemented in `01_disky_spiral_fit.ipynb`)
 
-- **Track A (anti-example):** fit with Sérsic lens light + Isothermal mass. Expect residuals showing the disk structure that Sérsic can't capture — coherent m=4 cross residual, PA misalignment.
-- **Track B (MGE light):** swap Sérsic lens light for `al.lp.Basis` with ~30 Gaussians linearised in intensity, as in Module 09. Mass stays Isothermal. The light residual should drop dramatically; the *mass* model — driven by the arc — should change by ≲1%.
-- The pedagogical point: MGE light is decoupled from the mass fit. You can fit a faithful light model *without* changing your mass model's ellipticity.
+- **Variant 1 (single-Sersic light):** standard Module 03 model. Lens has one Sersic light component. Expect **catastrophic FAIL** at the lens centre — a 4-lobed red/blue residual cross at >40σ, the azimuthal *difference* between the two truth components (bulge PA ≈ 0° and disk PA ≈ 35°).
+- **Variant 2 (bulge + disk):** add a second `Sersic` light component with independent `ell_comps`. The two components rotate independently and the residual collapses to noise — clean PASS at max\|res\| ≈ 4.2σ.
+- The Bayes factor between the two is decisive (ΔlogZ several hundred), demonstrating that bulge+disk is required for this morphology.
 
 ## Exercises
 
-1. Compare the mass PA recovered with Sérsic light vs MGE light. Does the mass think the galaxy is rotated differently depending on which light model it's paired with? (This is the same mass/light-PA consistency check from Module 11 §1.)
-2. Does the MGE light fit have the same Einstein radius as the Sérsic fit, to within the Section-1 5% stability bar?
-3. Apply Module 11's six-diagnostic audit to both. Track A should fail on panel 5 (Lens Light Subtracted has disk structure). Track B should pass.
+1. **PA-difference threshold scan**: regenerate the mock (`mocks/generate_mock.py`) with smaller PA differences — say 10° instead of 35°. At what PA difference does the Bayes factor drop below $e^{10}$? Below that threshold a single Sersic is a sufficient approximation.
+2. **Mass PA stability**: does the recovered mass PA differ between Variant 1 and Variant 2? (This is the mass/light-PA consistency check from Module 11 §1.)
+3. **Compare to MGE-light** (Module 09): swap the bulge+disk Sersic pair for an MGE basis (`al.lp.Basis` with ~30 Gaussians) and verify the residual is at least as clean. MGE is the *non-parametric* generalisation of bulge+disk that handles arbitrarily complex morphologies.
 
 ## References
 
@@ -33,6 +31,7 @@ Most strong-lens pipelines assume an elliptical galaxy (Sérsic with ellipticity
 - `autolens_workspace_latest/scripts/howtolens/chapter_2_lens_modeling/tutorial_4_light_model.py`.
 - `Modules/09_MGE_Linear_Light_Profiles/` — the in-repo canonical MGE-light reference.
 
-## To build this out
+## Possible extensions
 
-Same template as `Examples/compound_lens/`.
+- **MGE variant** as a third notebook (`02_disky_mge.ipynb`) — would generalise this lesson from "two-component bulge+disk handles two orientations" to "MGE handles arbitrary morphology."
+- **Real-data variant** using DESJ0206 (a known AGEL spiral lens). Data in the sibling AGEL workspace at `Spiral_2_spectra_fitting/` and `202509_DESJ02026/`.
