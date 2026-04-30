@@ -34,6 +34,7 @@ The optional **`00_climb_to_*.ipynb`** notebook is a *bridge* for students who f
 | 8 | [bayesian_model_comparison/](bayesian_model_comparison/) | *Pedagogy* — log-evidence + Bayes-factor methodology with double-checked references | ◐ in-progress | Jeffreys & Kass-Raftery scales (and the factor-of-2 trap), Occam's razor, when log_Z misleads |
 | 9 | [interferometer_basic/](interferometer_basic/) | Galaxy-scale lens on uv-plane (SMA) visibility data | ◐ in-progress | `al.AnalysisInterferometer` API, visibility-plane χ², dirty-image vs sky-plane reasoning |
 | 10 | [agel_real_target/](agel_real_target/) | **Real** AGEL HST data — AGEL013322-125201A (DCLS0133-1252), ACS WFC F606W cutout | ◐ in-progress | What changes on real data: drizzle-correlated noise, placeholder vs empirical PSF, lens-light wing leakage, redshift marginalisation |
+| 11 | [cluster_scale/](cluster_scale/) | BCG + ~20 cluster members + DM halo + multiple sources at different z | ◯ planned | Architectural union of group_scale (multi-deflector @ same z) + double_source_plane (multi-source @ different z); Faber-Jackson scaling for member galaxies; multi-source $\beta_{ij}$ cosmography |
 
 **Status legend.** ✓ shipped: at least one converged Cannon result committed and audited. ◐ in-progress: notebook + driver exist, results not yet finalised. 🪜 climb: a `00_climb_to_*.ipynb` bridge notebook is available, teaching the iterative-masking + position-likelihood techniques in the context of this architecture.
 

@@ -998,3 +998,119 @@ cluster-only until/unless the user wants to add the same
   not mean the SCIENCE in every cell is right — it just means the code
   runs. The visual-residual check is the right next step.
 
+---
+
+## 2026-04-29 — Day cycle: R5 climb close-out + truth-anchored validation + GPU investigation + scaffolding
+
+### Morning / afternoon: cluster work
+
+R5 multi-plane + 2-source fits for compound mocks 3, 4 (commit `d573143`).
+**Headline:** R5 wins the Bayes factor on both mocks but recovers neither
+secondary truth — Pattern E persists on mock_3
+($\theta_{E,2}=0.005''$ vs truth $0.12''$); Pattern A persists on mock_4
+($\theta_{E,2}=0.885''$ vs truth $0.08''$).
+
+In response, three **truth-anchored validation** Cannon jobs submitted
+(commit `18161f0`): R5_truth on compound mocks 3, 4; truth_anchored on
+group_scale. The group_scale variant returned a decisive PASS in 1h 05m
+(log_Z=44699.80, χ²/N=1.025, max|res|=4.50σ) — the model space CAN fit
+the system; freely-fit failures were search-space exploration, not
+representability (commit `fcd3fa2`).
+
+**Staged-chain wave 2** submitted (commit `fcd3fa2`): R5_staged on
+mocks 3, 4; staged_satellites on group_scale. mock_3 staged returned
+in 2h 16m (commit `1339526`) and lands in the **identical basin** as
+the freely-fit R5 (ΔlogZ +0.16, secondary $\theta_E=0.005''$ in BOTH
+fits). **Walking the chain via R2_2src does NOT rescue mock_3 from
+Pattern E** — the secondary at $z_2=1.2$, truth $\theta_{E,2}=0.12''$
+is genuinely sub-detectable at this PSF/exposure. group_staged
+job 9212864 was cancelled (Stage 1 mask=1.7" too tight).
+
+### GPU investigation
+
+Initial conclusion ("JAX-GPU is 5.5× slower") was based on the **wrong
+metric** — single-call latency, not the vmap'd batch path Nautilus
+uses by default. Per-call probe with `jax.block_until_ready()` (commits
+`f0e2673`, `a370a24`) revealed:
+
+| Backend | Per-call | vs numpy single |
+|---|---|---|
+| numpy serial | 95.6 ms | 1.0× |
+| numpy 32-core mp | ~3 ms | ~32× |
+| JAX-GPU `Fitness._vmap` batch=256 | **0.11 ms** | **~900×** |
+
+Batched ~28× faster than the numpy production path. **End-to-end
+head-to-head** (jobs 9252945 numpy vs 9252946 JAX-GPU on R5_truth_iso
+mock_3): at 1 min CPU was 4× ahead (JIT warm-up); at 12 min GPU was
+12% ahead; at 4 h CPU is 10% ahead again (JIT recompiles at each
+bound-network transition). **The 800× per-call vmap win does NOT
+carry through to a real Nautilus fit at our 9k-pixel scale.** Bottom
+line: JAX-GPU offers ~10–20% wall-time improvement over numpy 32-core
+for our problem size — not worth the operational complexity.
+
+**Bug filed mentally for upstream:** autolens 2026.4.13.6's PowerLaw
+mass profile JAX path crashes — `omega()` in
+`autogalaxy/profiles/mass/total/jax_utils.py:41` passes
+`functools.partial` to `jax.lax.scan`. Probe falls back to Iso mass
+via `PROBE_USE_POWERLAW=0` (default).
+
+### Notebook polish for student handoff (commit `a24338c`)
+
+- `01_group_scale_fit.ipynb` §3.1 added: truth_anchored verdict +
+  diagnostic narrative.
+- `02_compound_lens_ladder.ipynb` §13: 5-rung table for mocks 3, 4
+  (R2 / R3 / R5 / R5_truth / R5_staged) with safe-load `_safe_load_13`
+  cells that auto-populate when results land.
+- All 41 notebooks parse clean, zero error cells.
+
+### Memories added / updated
+
+- `feedback_bayes_factor_vs_truth.md` (NEW): richer ladder rungs can
+  win ΔlogZ by absorbing residual structure into non-physical
+  parameters; check rails + caustic + truth before passing.
+- `feedback_truth_anchored_validation.md` (NEW): when freely-fit
+  fails, build a tight-prior truth-anchored variant BEFORE adding
+  model complexity to distinguish search-space vs model-space failures.
+- `project_multigpu_jax_idea.md` (UPDATED): corrected from "GPU is
+  4× slower" to the corrected understanding: per-call vmap'd batch
+  is ~28× faster than numpy 32-core, but end-to-end Nautilus fit at
+  our scale shows only ~12% speedup because batch state-management
+  overhead dominates.
+
+### Evening: laptop scaffolding (Cannon login.rc unreachable)
+
+Built four `00_climb_to_*.ipynb` student-handoff bridge notebooks
+(commit `bcb164e`) — each bridges from Module 09 (single-deflector)
+to a multi-object architecture. Common template + two reusable
+techniques demonstrated in context: **iterative masking** + **position
+likelihoods**.
+
+| Notebook | Architecture | Featured techniques |
+|---|---|---|
+| `compound_lens/00` | 2 deflectors @ different z (minimal) | Multi-plane Tracer as a 1-line upgrade |
+| `compound_lens_zoo/00` | 2 deflectors @ different z (production) | Iterative masking, PositionsLH, extra_galaxies, Pattern E |
+| `double_source_plane/00` | 1 lens, 2 sources @ different z | Cosmological β_12 derivation, joint multi-source fit |
+| `group_scale/00` | BGG + 3 satellites @ same z | Photometric centroid anchoring, BGG ↔ satellite degeneracy |
+
+All four execute clean in `<60s` with `PYAUTOFIT_TEST_MODE=1`.
+`Examples/README.md` updated with 🪜 markers + new "Climb scaffolding"
+section listing all four.
+
+**Pre-staged for Cannon recovery (commit `159fd09`):**
+`fit_example_group_scale.py` `build_staged_satellites` Stage 1 mask
+fixed from 1.7" to 1.85" — still excludes all 3 satellites (closest at
+r=1.92") but captures 95% of BGG integrated light (R_e=0.9", n=4).
+Re-fire-ready as `--part=staged_satellites`.
+
+### What's left for the next session
+
+1. Audit the 5 in-flight Cannon jobs (`truth_m3_R5`, `truth_m4_R5`,
+   `staged_m4`, `iso_m3_cpu`, `iso_m3_gpu`) once login.rc returns.
+2. Re-fire `staged_satellites` with the new 1.85" mask.
+3. Append §14 to ladder notebook with GPU end-to-end speedup result.
+4. Long-carryover: free-cosmology rung for mocks 2/5, agel_real_target
+   PSF, real-DM at higher M.
+
+Detailed checklist in `Modules/10_Cluster_Computing/HANDOFF_2026_04_29.md`
+§13.
+
