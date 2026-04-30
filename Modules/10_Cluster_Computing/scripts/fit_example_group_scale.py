@@ -273,13 +273,22 @@ def _bgg_only_galaxy_model():
 
 
 def build_staged_satellites(dataset_root: Path, output_root: Path,
-                            n_live: int = 200):
+                            n_live: int = 200,
+                            stage1_mask_radius: float = 1.85):
     """Two-stage SLaM-style chain for the group-scale system.
 
-    Stage 1: BGG + source ONLY, with a tight mask (radius=1.7") that
-             excludes the three satellite regions (closest satellite is at
-             r=1.92"). Fast — ~14 params, no satellite light to confuse
-             chi^2. Gets a strong posterior on BGG mass / light + source.
+    Stage 1: BGG + source ONLY, with a tight mask (default radius=1.85") that
+             excludes the three satellite regions (closest satellites at
+             r=1.92") while still capturing ~2.05 R_e of BGG light envelope.
+             ~14 params, no satellite light to confuse chi^2. Gets a strong
+             posterior on BGG mass / light + source.
+
+             NOTE: 2026-04-29 — the prior attempt with mask=1.7" was
+             cancelled because that radius truncated the BGG bulge light
+             (R_e=0.9", n=4 de Vaucouleurs profile) at 1.9 R_e and the
+             Stage 1 fit could not constrain the BGG envelope. Bumped to
+             1.85" — still excludes all 3 satellites (closest 1.92") but
+             includes 95% of the integrated BGG light.
 
     Stage 2: Full mask (radius=3.5"). BGG + source priors centred on Stage 1
              posterior. 3 satellites with FIXED centres, FREE Sersic light
@@ -300,7 +309,7 @@ def build_staged_satellites(dataset_root: Path, output_root: Path,
     print("[GROUP/staged] starting 2-stage chain", flush=True)
 
     # ---- Stage 1: BGG + source, mask=1.7" ----
-    dataset_s1 = load_dataset(dataset_root, mask_radius=1.7)
+    dataset_s1 = load_dataset(dataset_root, mask_radius=stage1_mask_radius)
     print(f"[GROUP/staged] Stage 1 dataset: "
           f"pixels_in_mask={dataset_s1.mask.pixels_in_mask}", flush=True)
 
