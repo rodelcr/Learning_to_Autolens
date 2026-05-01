@@ -1,0 +1,178 @@
+{
+  "pixel_scales": 0.05,
+  "shape": [
+    200,
+    200
+  ],
+  "redshifts": {
+    "lens": 0.4,
+    "source_1": 1.5,
+    "source_2": 2.8
+  },
+  "bcg": {
+    "centre": [
+      0.0,
+      0.0
+    ],
+    "einstein_radius": 4.0,
+    "intensity": 1.5,
+    "effective_radius": 2.0,
+    "sersic_index": 4.0,
+    "mass": "IsothermalSph"
+  },
+  "members": [
+    {
+      "centre": [
+        2.5,
+        1.5
+      ],
+      "luminosity": 0.7,
+      "einstein_radius": 0.5019960159204453,
+      "intensity": 0.27999999999999997,
+      "effective_radius": 0.33466401061363027,
+      "sersic_index": 3.0,
+      "mass": "IsothermalSph"
+    },
+    {
+      "centre": [
+        -1.8,
+        2.4
+      ],
+      "luminosity": 0.5,
+      "einstein_radius": 0.4242640687119285,
+      "intensity": 0.2,
+      "effective_radius": 0.28284271247461906,
+      "sersic_index": 3.0,
+      "mass": "IsothermalSph"
+    },
+    {
+      "centre": [
+        0.5,
+        -3.0
+      ],
+      "luminosity": 0.4,
+      "einstein_radius": 0.3794733192202055,
+      "intensity": 0.16000000000000003,
+      "effective_radius": 0.2529822128134704,
+      "sersic_index": 3.0,
+      "mass": "IsothermalSph"
+    },
+    {
+      "centre": [
+        -3.0,
+        -1.0
+      ],
+      "luminosity": 0.6,
+      "einstein_radius": 0.46475800154489,
+      "intensity": 0.24,
+      "effective_radius": 0.3098386676965934,
+      "sersic_index": 3.0,
+      "mass": "IsothermalSph"
+    },
+    {
+      "centre": [
+        3.5,
+        -2.0
+      ],
+      "luminosity": 0.3,
+      "einstein_radius": 0.3286335345030996,
+      "intensity": 0.12,
+      "effective_radius": 0.21908902300206645,
+      "sersic_index": 3.0,
+      "mass": "IsothermalSph"
+    },
+    {
+      "centre": [
+        -2.5,
+        3.5
+      ],
+      "luminosity": 0.55,
+      "einstein_radius": 0.44497190922573976,
+      "intensity": 0.22000000000000003,
+      "effective_radius": 0.29664793948382656,
+      "sersic_index": 3.0,
+      "mass": "IsothermalSph"
+    },
+    {
+      "centre": [
+        4.5,
+        0.5
+      ],
+      "luminosity": 0.45,
+      "einstein_radius": 0.40249223594996214,
+      "intensity": 0.18000000000000002,
+      "effective_radius": 0.2683281572999748,
+      "sersic_index": 3.0,
+      "mass": "IsothermalSph"
+    },
+    {
+      "centre": [
+        -0.5,
+        -4.5
+      ],
+      "luminosity": 0.35,
+      "einstein_radius": 0.35496478698597694,
+      "intensity": 0.13999999999999999,
+      "effective_radius": 0.23664319132398465,
+      "sersic_index": 3.0,
+      "mass": "IsothermalSph"
+    },
+    {
+      "centre": [
+        1.0,
+        4.0
+      ],
+      "luminosity": 0.5,
+      "einstein_radius": 0.4242640687119285,
+      "intensity": 0.2,
+      "effective_radius": 0.28284271247461906,
+      "sersic_index": 3.0,
+      "mass": "IsothermalSph"
+    },
+    {
+      "centre": [
+        -4.0,
+        0.0
+      ],
+      "luminosity": 0.4,
+      "einstein_radius": 0.3794733192202055,
+      "intensity": 0.16000000000000003,
+      "effective_radius": 0.2529822128134704,
+      "sersic_index": 3.0,
+      "mass": "IsothermalSph"
+    }
+  ],
+  "fj_relation": {
+    "theta_E_star": 0.6,
+    "luminosity_star": 1.0,
+    "exponent": 0.5,
+    "note": "theta_E_i = theta_E_star * (L_i / L_star)^0.5"
+  },
+  "source_1": {
+    "centre": [
+      0.5,
+      0.2
+    ],
+    "axis_ratio": 0.7,
+    "angle_deg": 45.0,
+    "intensity": 4.0,
+    "effective_radius": 0.1,
+    "sersic_index": 1.5
+  },
+  "source_2": {
+    "centre": [
+      -0.3,
+      0.4
+    ],
+    "axis_ratio": 0.85,
+    "angle_deg": 120.0,
+    "intensity": 3.0,
+    "effective_radius": 0.08,
+    "sersic_index": 1.3
+  },
+  "simulator": {
+    "exposure_time_s": 2000.0,
+    "psf_sigma_arcsec": 0.05,
+    "background_sky": 0.05
+  }
+}

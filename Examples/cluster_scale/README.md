@@ -2,7 +2,14 @@
 
 ## Status
 
-◯ **Planned (stub)** — no notebook yet. The natural architectural extension of [`../group_scale/`](../group_scale/): more deflectors (typically O(20–100) cluster members), an extended cluster-scale dark-matter halo, and often **multiple lensed sources at different redshifts** that constrain the mass distribution as a function of radius (multi-plane sources, not multi-plane lenses).
+◐ **Scaffolded.** Synthetic mock + minimal direct-fit notebook in place; no Cannon results yet. The natural architectural extension of [`../group_scale/`](../group_scale/): more deflectors (this scaffold uses 10 cluster members, real-world clusters have 20–100), and **multiple lensed sources at different redshifts** that constrain the mass distribution at multiple radii.
+
+- ✓ `mocks/generate_mock.py` — synthetic 1 BCG + 10 members + 2 sources at z=(1.5, 2.8)
+- ✓ `mocks/mock_image.fits` + `mock_truth.json` — committed mock data
+- ✓ `01_cluster_scale_fit.ipynb` — minimal direct-fit notebook with FJ scaling-relation API demonstrated
+- ◯ Cannon driver `Modules/10_Cluster_Computing/scripts/fit_example_cluster_scale.py` — TODO
+- ◯ `02_multi_source_cosmography.ipynb` — TODO (β_12 cosmography over 2-source ratio)
+- ◯ `03_substructure_sensitivity.ipynb` — TODO (Vegetti+ 2010 / Despali+ 2018 methodology)
 
 ## Problem
 
