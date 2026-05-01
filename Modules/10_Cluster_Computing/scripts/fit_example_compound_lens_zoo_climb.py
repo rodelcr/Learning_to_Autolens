@@ -691,6 +691,54 @@ def build_R5_freecosmo_model(truths: dict):
 
 
 # =============================================================================
+# R5_truth_freecosmo: TIGHT priors on lens model + free Om0/w0
+# =============================================================================
+def build_R5_truth_freecosmo_model(truths: dict):
+    """R5_truth (truth-anchored tight-Gaussian priors on EVERY lens/light/
+    source parameter) PLUS a FlatwCDM cosmology with Om0 and w0 as free
+    parameters.
+
+    This is the *correct* cosmography setup. The R5_freecosmo rung had wide
+    lens priors AND free cosmology — when the chain found mis-specified
+    cosmology, it absorbed the resulting residual structure into freely-fit
+    lens parameters (cosmology was the second-cheapest knob, not the
+    cheapest). Result: cosmology was driven by lens-model-misfit, not by
+    the actual cosmological signal.
+
+    With tight lens priors, the only knob the chain has to adjust is
+    cosmology. If the data carries cosmological information (e.g. via the
+    D_12/D_1s cross-term in the multi-plane ray-tracing), the cosmology
+    posterior will narrow below the prior. If it doesn't (single-source
+    compound lenses are too weakly cosmology-sensitive at our scale), the
+    posterior matches the prior — consistent with the freecosmo finding
+    but now with proper methodology behind it.
+
+    H0 fixed at truth (70). Om0/w0 priors:
+      - Om0: GaussianPrior(mean=0.30, sigma=0.10)
+      - w0:  GaussianPrior(mean=-1.0, sigma=0.20)
+
+    Total free parameters: 35 (R5_truth) + 2 (cosmology) = 37 free params.
+    """
+    import autofit as af
+
+    # Start with the truth-anchored R5 model (tight Gaussians on everything).
+    model = build_R5_truth_model(truths)
+
+    # Build the cosmology Model.
+    FlatwCDMWrap = make_FlatwCDMWrap_class()
+    cosmology = af.Model(FlatwCDMWrap)
+    cosmology.H0 = 70.0
+    cosmology.Om0 = af.GaussianPrior(mean=0.30, sigma=0.10)
+    cosmology.w0  = af.GaussianPrior(mean=-1.0, sigma=0.20)
+    cosmology.Tcmb0 = 2.7255
+    cosmology.Neff  = 3.046
+    cosmology.m_nu  = 0.0
+    cosmology.Ob0   = 0.04897
+
+    return af.Collection(galaxies=model.galaxies, cosmology=cosmology)
+
+
+# =============================================================================
 # R5_staged: 2-stage chain (R2_2src -> R5 with prior passing)
 # =============================================================================
 def build_R5_staged_chain(dataset, output_root: Path, mock_index: int,
@@ -800,6 +848,9 @@ def build_fit(dataset, output_root: Path, mock_index: int, truths: dict,
     elif rung == "R5_freecosmo":
         model = build_R5_freecosmo_model(truths)
         unique_tag = f"mock_{mock_index}_R5_freecosmo"
+    elif rung == "R5_truth_freecosmo":
+        model = build_R5_truth_freecosmo_model(truths)
+        unique_tag = f"mock_{mock_index}_R5_truth_freecosmo"
     elif rung == "R5_staged":
         # Special case — runs two Nautilus searches with prior passing,
         # bypassing the single-search build_fit return.
@@ -833,7 +884,8 @@ def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--rung",
                    choices=["R3", "R2_2src", "R5", "R5_truth",
-                            "R5_truth_iso", "R5_staged", "R5_freecosmo"],
+                            "R5_truth_iso", "R5_staged", "R5_freecosmo",
+                            "R5_truth_freecosmo"],
                    required=True)
     p.add_argument("--use-jax", action="store_true",
                    help="Pass use_jax=True to AnalysisImaging (JAX-GPU path)")
@@ -862,6 +914,8 @@ def main():
             mocks_to_fit = [3, 4]
         elif args.rung == "R5_freecosmo":
             mocks_to_fit = [2, 5]
+        elif args.rung == "R5_truth_freecosmo":
+            mocks_to_fit = [2, 3, 5]  # 3 = null test; 2, 5 = mis-specification
         else:
             mocks_to_fit = [6]
     else:
