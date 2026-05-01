@@ -154,9 +154,123 @@ def build_direct_fit(dataset, output_root: Path, n_live: int = 200):
     return result
 
 
+def build_beta_freecosmo_fit(dataset, output_root: Path, dataset_root: Path,
+                             n_live: int = 200):
+    """β-cosmography fit on the DSPL system.
+
+    Tight Gaussian priors on every lens / source / light parameter (truth-
+    anchored), plus FlatwCDMWrap with Om0 + w0 free. H0 fixed at 70.
+
+    Per 2026-05-01 methodology lesson: free-cosmography requires NARROW
+    priors on the lens model so the chain has only cosmology as a free
+    knob. With wide lens priors, cosmology absorbs lens-model misfit.
+
+    The β-cosmography measurement comes from the data driving the ratio
+    of Einstein radii at z_s1 and z_s2 (tied to angular-diameter ratios
+    via the cosmology). Single-source compound lenses cannot do this
+    because there's only one Einstein radius.
+
+    Reads truth values from {dataset_root}/mock_truth.json.
+    """
+    import autofit as af
+    import autolens as al
+    import time
+    import json
+
+    truth = json.loads((dataset_root / "mock_truth.json").read_text())
+    z_l = truth["redshifts"]["lens"]
+    z_s1 = truth["redshifts"]["source_1"]
+    z_s2 = truth["redshifts"]["source_2"]
+    lens_truth = truth["lens"]
+    src1_truth = truth["source_1"]
+    src2_truth = truth["source_2"]
+
+    # ---- Lens (tight Gaussian on truth) ----
+    bulge = af.Model(al.lp.Sersic)
+    bulge.centre.centre_0 = af.GaussianPrior(mean=lens_truth["bulge"]["centre"][0], sigma=0.05)
+    bulge.centre.centre_1 = af.GaussianPrior(mean=lens_truth["bulge"]["centre"][1], sigma=0.05)
+    bulge.intensity        = af.LogUniformPrior(lower_limit=1e-3, upper_limit=10.0)
+    bulge.effective_radius = af.GaussianPrior(mean=lens_truth["bulge"]["effective_radius"], sigma=0.1)
+    bulge.sersic_index     = af.GaussianPrior(mean=lens_truth["bulge"]["sersic_index"], sigma=0.3)
+    bulge.ell_comps.ell_comps_0 = af.GaussianPrior(mean=lens_truth["bulge"]["ell_comps"][0], sigma=0.05)
+    bulge.ell_comps.ell_comps_1 = af.GaussianPrior(mean=lens_truth["bulge"]["ell_comps"][1], sigma=0.05)
+
+    mass = af.Model(al.mp.Isothermal)
+    mass.centre.centre_0 = af.GaussianPrior(mean=lens_truth["mass"]["centre"][0], sigma=0.05)
+    mass.centre.centre_1 = af.GaussianPrior(mean=lens_truth["mass"]["centre"][1], sigma=0.05)
+    mass.einstein_radius = af.GaussianPrior(mean=lens_truth["mass"]["einstein_radius"], sigma=0.05)
+    mass.ell_comps.ell_comps_0 = af.GaussianPrior(mean=lens_truth["mass"]["ell_comps"][0], sigma=0.05)
+    mass.ell_comps.ell_comps_1 = af.GaussianPrior(mean=lens_truth["mass"]["ell_comps"][1], sigma=0.05)
+
+    shear = af.Model(al.mp.ExternalShear)
+    shear.gamma_1 = af.GaussianPrior(mean=lens_truth["shear"]["gamma_1"], sigma=0.02)
+    shear.gamma_2 = af.GaussianPrior(mean=lens_truth["shear"]["gamma_2"], sigma=0.02)
+
+    lens = af.Model(al.Galaxy, redshift=z_l, bulge=bulge, mass=mass, shear=shear)
+
+    # ---- Sources (tight on truth) ----
+    def _src(z, t):
+        s = af.Model(al.lp.SersicCore)
+        s.centre.centre_0 = af.GaussianPrior(mean=t["bulge"]["centre"][0], sigma=0.05)
+        s.centre.centre_1 = af.GaussianPrior(mean=t["bulge"]["centre"][1], sigma=0.05)
+        s.intensity        = af.LogUniformPrior(lower_limit=1e-3, upper_limit=10.0)
+        s.effective_radius = af.GaussianPrior(mean=t["bulge"]["effective_radius"], sigma=0.02)
+        s.sersic_index     = af.GaussianPrior(mean=t["bulge"]["sersic_index"], sigma=0.3)
+        s.ell_comps.ell_comps_0 = af.GaussianPrior(mean=t["bulge"]["ell_comps"][0], sigma=0.1)
+        s.ell_comps.ell_comps_1 = af.GaussianPrior(mean=t["bulge"]["ell_comps"][1], sigma=0.1)
+        return af.Model(al.Galaxy, redshift=z, bulge=s)
+
+    source_1 = _src(z_s1, src1_truth)
+    source_2 = _src(z_s2, src2_truth)
+
+    # ---- Cosmology (FlatwCDMWrap, Om0 + w0 free) ----
+    # Reuse the FlatwCDMWrap from the climb driver.
+    import importlib.util
+    here = Path(__file__).parent
+    spec = importlib.util.spec_from_file_location(
+        "climb_drv", here / "fit_example_compound_lens_zoo_climb.py")
+    climb_drv = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(climb_drv)
+    FlatwCDMWrap = climb_drv.make_FlatwCDMWrap_class()
+
+    cosmology = af.Model(FlatwCDMWrap)
+    cosmology.H0 = 70.0
+    cosmology.Om0 = af.GaussianPrior(mean=0.30, sigma=0.10)
+    cosmology.w0  = af.GaussianPrior(mean=-1.0, sigma=0.20)
+    cosmology.Tcmb0 = 2.7255
+    cosmology.Neff  = 3.046
+    cosmology.m_nu  = 0.0
+    cosmology.Ob0   = 0.04897
+
+    model = af.Collection(
+        galaxies=af.Collection(lens=lens, source_1=source_1, source_2=source_2),
+        cosmology=cosmology,
+    )
+    print(f"[DSPL/beta_freecosmo] {model.total_free_parameters} free params "
+          f"(lens={lens.prior_count}, src1={source_1.prior_count}, "
+          f"src2={source_2.prior_count}, cosmo={cosmology.prior_count})", flush=True)
+
+    analysis = al.AnalysisImaging(dataset=dataset, use_jax=False)
+    search = af.Nautilus(
+        path_prefix=output_root / "double_source_plane",
+        name="beta_freecosmo",
+        unique_tag="mock_1",
+        n_live=n_live, n_batch=50, iterations_per_update=30000,
+        number_of_cores=int(os.environ.get("SLURM_CPUS_PER_TASK", "1")),
+    )
+    print("[DSPL/beta_freecosmo] Nautilus starting...", flush=True)
+    t0 = time.time()
+    result = search.fit(model=model, analysis=analysis)
+    print(f"[DSPL/beta_freecosmo] done in {(time.time()-t0)/60:.1f} min, "
+          f"log_Z={result.samples.log_evidence:.2f}", flush=True)
+    _force_visualize(analysis, result, tag="beta_freecosmo")
+    print(result.info, flush=True)
+    return result
+
+
 def main():
     p = argparse.ArgumentParser()
-    p.add_argument("--part",         choices=("direct",), default="direct")
+    p.add_argument("--part",         choices=("direct", "beta_freecosmo"), default="direct")
     p.add_argument("--repo-root",    type=Path, required=True)
     p.add_argument("--dataset-root", type=Path, required=True)
     p.add_argument("--output-root",  type=Path, required=True)
@@ -168,6 +282,9 @@ def main():
 
     if args.part == "direct":
         build_direct_fit(dataset, args.output_root, n_live=args.n_live)
+    elif args.part == "beta_freecosmo":
+        build_beta_freecosmo_fit(dataset, args.output_root, args.dataset_root,
+                                 n_live=args.n_live)
 
 
 if __name__ == "__main__":
