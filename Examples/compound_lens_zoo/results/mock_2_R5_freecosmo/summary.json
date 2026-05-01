@@ -1,0 +1,10 @@
+{
+  "search_name": "mock_2_R5_freecosmo",
+  "source_dir": "output/mock_2_R5_freecosmo/mock_2_R5_freecosmo/8eada79560441b547e505f8adb90b25e",
+  "max_log_likelihood": 27035.596918378054,
+  "log_evidence": 26834.472345913193,
+  "chi_squared_total": 16084.483602170947,
+  "chi_squared_per_pixel": 1.7528861815792227,
+  "n_unmasked_pixels": 9176,
+  "max_abs_normalized_residual": 15.118400097668813
+}
