@@ -73,6 +73,41 @@ import time
 from pathlib import Path
 
 
+def make_FlatwCDMWrap_class():
+    """Subclass al.cosmo.FlatLambdaCDM with w0 as a constructor parameter.
+
+    PyAutoLens's FlatLambdaCDM already uses self.w0 internally for E(z) and
+    the angular-diameter-distance integrand (it sets self.w0 = -1.0
+    unconditionally in __init__, "Make ΛCDM a special case of wCDM"). So a
+    subclass that just lets w0 be passed in turns it into a working
+    FlatwCDM with no other code changes.
+
+    Returns a class because the import has to happen lazily inside the
+    driver (the Cannon module won't have autolens importable until the
+    conda env is loaded).
+    """
+    import autolens as al
+
+    class FlatwCDMWrap(al.cosmo.FlatLambdaCDM):
+        def __init__(
+            self,
+            H0: float = 70.0,
+            Om0: float = 0.30,
+            w0: float = -1.0,
+            Tcmb0: float = 2.7255,
+            Neff: float = 3.046,
+            m_nu: float = 0.0,
+            Ob0: float = 0.04897,
+        ):
+            super().__init__(
+                H0=H0, Om0=Om0, Tcmb0=Tcmb0, Neff=Neff, m_nu=m_nu, Ob0=Ob0
+            )
+            # Override the parent's hard-coded w0 = -1.0 with the user value.
+            self.w0 = w0
+
+    return FlatwCDMWrap
+
+
 def _force_visualize(analysis, result, tag: str = ""):
     try:
         analysis.visualize(
@@ -603,6 +638,59 @@ def build_R5_truth_iso_model(truths: dict):
 
 
 # =============================================================================
+# R5_freecosmo: R5 architecture + Om0 + w0 free as cosmology priors
+# =============================================================================
+def build_R5_freecosmo_model(truths: dict):
+    """R5 architecture (multi-plane PowerLaw + Iso secondary + 2 sources +
+    ExternalShear + Sersic lens light) PLUS a FlatwCDM cosmology with Om0
+    and w0 as free parameters.
+
+    Pedagogical anchor: mocks 2 (Om=0.25, w=-0.9) and 5 (Om=0.35, w=-1.2)
+    were generated with non-standard cosmologies. Fitting them with a fixed
+    LCDM cosmology (the default Planck15) introduces a known bias on
+    angular-diameter distances, which the lens model absorbs into θ_E and
+    the source-plane geometry. Freeing Om0 and w0 lets the chain recover
+    the truth cosmology, in principle.
+
+    H0 is HELD FIXED at 70 (truth value for these mocks) because H0 is
+    degenerate with the absolute lens mass scale in single-source-plane
+    fits. For DSPL or compound systems with two source planes, H0 *can*
+    be constrained by the ratio of Einstein radii — see
+    Examples/double_source_plane/00_climb_to_dspl.ipynb for that
+    methodology.
+
+    Free cosmology priors (mock-truth-aware):
+      - Om0: GaussianPrior(mean=0.30, sigma=0.10)  — covers 0.25, 0.30, 0.35
+      - w0:  GaussianPrior(mean=-1.0, sigma=0.20) — covers -0.9, -1.0, -1.2
+      - H0:  fixed at 70 (truth)
+
+    The R5 mass + light + source priors are unchanged from build_R5_model
+    (wide priors, freely-fit). Total free parameters: 26 (R5) + 2 (cosmo)
+    = 28 free parameters.
+    """
+    import autofit as af
+
+    # Start with the standard R5 model.
+    model = build_R5_model(truths)
+
+    # Build the cosmology Model, fix H0, free Om0 + w0.
+    FlatwCDMWrap = make_FlatwCDMWrap_class()
+    cosmology = af.Model(FlatwCDMWrap)
+    cosmology.H0 = 70.0  # fixed at truth
+    cosmology.Om0 = af.GaussianPrior(mean=0.30, sigma=0.10)
+    cosmology.w0  = af.GaussianPrior(mean=-1.0, sigma=0.20)
+    # Fix the rest at autolens defaults (these don't affect lensing distances
+    # within the redshift / accuracy regime we care about).
+    cosmology.Tcmb0 = 2.7255
+    cosmology.Neff  = 3.046
+    cosmology.m_nu  = 0.0
+    cosmology.Ob0   = 0.04897
+
+    # Reattach as Collection with cosmology component.
+    return af.Collection(galaxies=model.galaxies, cosmology=cosmology)
+
+
+# =============================================================================
 # R5_staged: 2-stage chain (R2_2src -> R5 with prior passing)
 # =============================================================================
 def build_R5_staged_chain(dataset, output_root: Path, mock_index: int,
@@ -709,6 +797,9 @@ def build_fit(dataset, output_root: Path, mock_index: int, truths: dict,
         model = build_R5_truth_iso_model(truths)
         unique_tag = (f"mock_{mock_index}_R5_truth_iso"
                       + ("_jax" if use_jax else ""))
+    elif rung == "R5_freecosmo":
+        model = build_R5_freecosmo_model(truths)
+        unique_tag = f"mock_{mock_index}_R5_freecosmo"
     elif rung == "R5_staged":
         # Special case — runs two Nautilus searches with prior passing,
         # bypassing the single-search build_fit return.
@@ -742,7 +833,7 @@ def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--rung",
                    choices=["R3", "R2_2src", "R5", "R5_truth",
-                            "R5_truth_iso", "R5_staged"],
+                            "R5_truth_iso", "R5_staged", "R5_freecosmo"],
                    required=True)
     p.add_argument("--use-jax", action="store_true",
                    help="Pass use_jax=True to AnalysisImaging (JAX-GPU path)")
@@ -761,13 +852,16 @@ def main():
 
     # Defaults per rung:
     #   R3        -> mocks 3, 4 (multi-plane signal mocks)
-    #   R2_2src   -> mock 6     (single-deflector + 2-source mock)
-    #   R5        -> mocks 3, 4 (multi-plane + 2-source — post-climb diagnosis)
-    #   R5_truth  -> mocks 3, 4 (truth-anchored validation of R5 model space)
-    #   R5_staged -> mocks 3, 4 (2-stage chain: R2_2src -> R5 with prior pass)
+    #   R2_2src      -> mock 6     (single-deflector + 2-source mock)
+    #   R5           -> mocks 3, 4 (multi-plane + 2-source — post-climb diagnosis)
+    #   R5_truth     -> mocks 3, 4 (truth-anchored validation of R5 model space)
+    #   R5_staged    -> mocks 3, 4 (2-stage chain: R2_2src -> R5 with prior pass)
+    #   R5_freecosmo -> mocks 2, 5 (non-standard cosmology mocks); 3 = null test
     if args.mock == "all":
         if args.rung in ("R3", "R5", "R5_truth", "R5_staged"):
             mocks_to_fit = [3, 4]
+        elif args.rung == "R5_freecosmo":
+            mocks_to_fit = [2, 5]
         else:
             mocks_to_fit = [6]
     else:
