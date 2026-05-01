@@ -2,7 +2,9 @@
 
 ## Status
 
-◐ **In progress (scaffold)** — real HST cutout + noise map + placeholder PSF in place; driver + notebook scaffolded; Cannon results pending; PSF and lens-light treatment have known limitations documented in §Caveats.
+◐ **In progress (scaffold)** — real HST cutout + noise map + **empirical PSF** (median-stacked from 14 bright isolated stars in the same drizzled frame) in place; driver + notebook scaffolded; Cannon results pending; mask + lens-light treatment caveats documented in §Caveats.
+
+**2026-05-01 update.** The placeholder Gaussian PSF (σ = 0.036″) was replaced with an empirical PSF built by `data/build_empirical_psf.py` (FWHM ≈ 0.113″ — broader than the diffraction limit because of drizzle resampling + real instrumental wings). The Gaussian backup remains at `data/psf_gaussian_placeholder.fits` for comparison.
 
 ## What this example is for
 
@@ -18,7 +20,8 @@ Cutout extracted by `data/extract_cutout.py` from the full HST/ACS frame (5848 �
 |---|---|
 | `data/image.fits` | 200×200 px @ 0.05″/px, units electrons/s |
 | `data/noise_map.fits` | `1 / sqrt(WHT)` from the drizzled inverse-variance map; masked pixels (WHT=0) get σ = 10⁶ |
-| `data/psf.fits` | **Placeholder** — Gaussian σ = 0.036″ (the F606W diffraction limit). See §Caveats. |
+| `data/psf.fits` | **Empirical PSF** — 51×51 px median-stack of 14 bright isolated stars from the same drizzled frame, sigma-clipped, sub-pixel re-centred, normalised. FWHM ≈ 0.113″. Built by `data/build_empirical_psf.py`. |
+| `data/psf_gaussian_placeholder.fits` | Backup of the original Gaussian placeholder (σ = 0.036″) for comparison. |
 | `data/metadata.json` | provenance + redshifts + recipe documentation |
 | `data/extract_cutout.py` | the extraction script (re-runnable from the original full-frame source) |
 
@@ -50,19 +53,18 @@ Wall time: ~1–2 h on 32 cores for the direct fit. The faint lens light + sub-a
 
 Each item below is a *real* difference between this example and the synthetic ones. Awareness of these is the point of the capstone.
 
-### 1. PSF — placeholder vs. publication-grade
+### 1. PSF — empirical (current) vs. publication-grade
 
-The `data/psf.fits` is a **simple Gaussian** with σ = 0.036″ — an analytic approximation of the F606W diffraction limit. Real ACS/WFC PSFs have:
+**As of 2026-05-01**, `data/psf.fits` is an **empirical PSF** built from 14 bright isolated stars in the same drizzled frame (FWHM ≈ 0.113″). This captures real instrumental wings + drizzle resampling effects that a pure-Gaussian misses. The build is reproducible via `data/build_empirical_psf.py`.
 
-- **Sub-pixel core structure** that matters at sub-arc levels.
-- **Position dependence** across the WFC field of view.
-- **Time variation** (HST orbital thermal cycle).
+**Remaining limitations** for publication-grade work:
+- **Position dependence** — our stack averages PSFs from 14 different positions across the WFC field. The lens position has a slightly different PSF than the spatially-averaged stack. Solution: TinyTim-model the PSF at the exact lens (x, y, MJD).
+- **Drizzle-induced PSF broadening** — drizzle resamples the native WFC PSF onto a finer grid, broadening it. Both the empirical stack and the actual lens-position PSF share this effect, so it cancels in our analysis IF the lens-position PSF is well-approximated by the spatially-averaged stack.
+- **Time variation** — HST orbital thermal cycles cause slight focus drifts. The empirical stack is averaged over the visit, the lens is observed at one phase. Negligible for ACS/WFC at this exposure depth.
 
-For publication-grade work, replace with either:
-- A **TinyTim**-modelled PSF for the lens's exact (x, y, MJD).
-- An **empirical PSF** stacked from bright stars in the same drizzled frame.
+The original Gaussian placeholder (`data/psf_gaussian_placeholder.fits`) remains for comparison; rerunning the fit with both PSFs is a useful exercise to bracket the PSF systematic.
 
-`autolens_workspace_latest/scripts/imaging/data_preparation/` has the recipes.
+`autolens_workspace_latest/scripts/imaging/data_preparation/` has additional recipes for TinyTim integration.
 
 ### 2. Noise map — drizzle correlations
 

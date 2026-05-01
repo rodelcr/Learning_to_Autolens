@@ -20,6 +20,8 @@
     "source": 1.6,
     "comment": "Approximate values from AGEL DR2 catalog; verify against the canonical Keck spectroscopic redshifts before publication."
   },
-  "psf_model": "Gaussian sigma=0.036 arcsec (placeholder; see README Caveats)",
-  "noise_map_recipe": "1/sqrt(WHT) from drizzle inverse-variance map"
+  "psf_model": "Empirical: median-stacked sigma-clipped from 14 bright isolated point sources in same drizzled frame; built by `data/build_empirical_psf.py`. FWHM ~ 0.113\".",
+  "noise_map_recipe": "1/sqrt(WHT) from drizzle inverse-variance map",
+  "psf_n_stars_stacked": 14,
+  "psf_fwhm_arcsec_empirical": 0.11283791670955126
 }
