@@ -2,14 +2,12 @@
 
 ## Status
 
-◐ **In progress** — mock generated, driver and notebook scaffolding committed, **but freely-fit Cannon attempts do not converge**. Three attempts (v1: n_live=200 wide priors, v2: satellite-light-only fix, v3: n_live=400 + tightened priors) all stalled in burn-in over 5+ hours each — see `LEARNING_LOG.md` 2026-04-24 ("group_scale doesn't converge with reasonable priors") for the diagnostic.
+◐ **In progress** — three approaches investigated:
 
-**2026-04-29 — truth-anchored validation submitted.** A new `--part=truth_anchored` was added to `fit_example_group_scale.py` (Cannon job 9204948). All priors are tight Gaussians on `mock_truth.json` values: 4 lens galaxies + source. If this converges cleanly, the freely-fit failures are search-space-exploration issues (not model representability), and the resume path is a SLaM-style staged chain that walks the search there. If it stalls too, the problem is structural — the model architecture or PSF/exposure can't represent this group system.
-
-Resume options after the truth_anchored result lands:
-- (a) If truth_anchored PASS: build a 2-stage SLaM chain — fit BGG-with-satellite-mask first, then add satellites with photometric priors derived from stage 1.
-- (b) If truth_anchored FAIL: investigate input PSF / noise model / extended-source assumption. May need a different mock generation.
-- (c) Original fallback: run only `--part=bgg_plus_satellites` and let satellite einstein_radii collapse to zero per Pattern E if data supports it.
+1. **Freely-fit (v1, v2, v3): FAIL.** Three attempts (LEARNING_LOG 2026-04-24) at varying `n_live` and prior tightness all stalled in burn-in for 5+ hours. The 30+ free-parameter joint landscape is too large for Nautilus to explore in useful wall time.
+2. **Truth-anchored (`--part=truth_anchored`, 2026-04-29 job 9204948): PASS** in 1h 05m — log_Z=44699.80, χ²/N=1.025, max\|res\|=4.50σ, clean white-noise residuals. Confirms the model space *can* fit this system. The freely-fit problem is search-space exploration, not model representability.
+3. **Iterative-mask staged satellites (`--part=staged_satellites`, 2026-04-29 mask=1.7" cancelled, 2026-04-30 mask=1.85" v2): cancelled at 18.5h** with f_live=1.0 still. The 17-param BGG+source Stage 1 didn't compress. The mask widening didn't fix the search-space stall.
+4. **SLaM pipeline (`--part=slam` via `fit_example_group_scale_slam.py`, 2026-05-01): in flight.** Three-stage SLaM ported from `autolens_workspace_latest/scripts/group/slam.py`: source_lp_0 (light only, all MGE bulges) → source_lp_1 (mass + parametric source, light fixed) → mass_total (final PowerLaw refinement). MGE replaces Sersic for every galaxy (saves ~16 nonlinear params), and the staged decomposition fits one component at a time. This is the canonical group-scale SLaM approach.
 
 ## Problem
 

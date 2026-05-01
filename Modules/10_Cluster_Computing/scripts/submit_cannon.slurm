@@ -89,6 +89,10 @@ if [[ -n "${EXAMPLE:-}" ]]; then
             DATASET_ROOT="${REPO_ROOT}/Examples/group_scale/mocks"
             FIT_SCRIPT="${REPO_ROOT}/Modules/10_Cluster_Computing/scripts/fit_example_group_scale.py"
             ;;
+        group_scale_slam)
+            DATASET_ROOT="${REPO_ROOT}/Examples/group_scale/mocks"
+            FIT_SCRIPT="${REPO_ROOT}/Modules/10_Cluster_Computing/scripts/fit_example_group_scale_slam.py"
+            ;;
         quad_time_delay)
             DATASET_ROOT="${REPO_ROOT}/Examples/quad_time_delay/mocks"
             FIT_SCRIPT="${REPO_ROOT}/Modules/10_Cluster_Computing/scripts/fit_example_quad_time_delay.py"
