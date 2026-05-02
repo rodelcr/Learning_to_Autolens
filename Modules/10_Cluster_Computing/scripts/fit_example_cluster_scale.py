@@ -134,9 +134,114 @@ def build_direct_fit(dataset, output_root: Path, truth: dict,
     return result
 
 
+def build_truth_anchored(dataset, output_root: Path, truth: dict,
+                         n_live: int = 200, n_batch: int = 50):
+    """Truth-anchored variant: every BCG/satellite/source param tightly
+    constrained on its truth value.
+
+    Per the 2026-04-29 protocol established for compound and group_scale:
+    when freely-fit fails (cluster `direct_fit` job 9675524 hit χ²/N=22.6,
+    theta_E_star railed to 0.10, BCG mass ballooned to 5.95"), build a
+    tight-prior variant to test whether the model space CAN reach the
+    truth basin. If yes, the freely-fit failure is search-space exploration
+    (resolve via prior anchoring or staged chain). If no, the model space
+    is misspecified.
+
+    For cluster_scale specifically, the wide-prior failure was the BCG
+    vs theta_E_star degeneracy collapse. Truth-anchoring fixes the BCG
+    mass at truth±0.05 and theta_E_star at truth±0.05 — the FJ scaling
+    becomes a single free knob (the amplitude) but constrained to its
+    truth, breaking the degeneracy.
+    """
+    import autofit as af
+    import autolens as al
+    import numpy as np
+
+    z_l  = truth["redshifts"]["lens"]
+    z_s1 = truth["redshifts"]["source_1"]
+    z_s2 = truth["redshifts"]["source_2"]
+    bcg_truth = truth["bcg"]
+    fj_truth = truth["fj_relation"]
+
+    # ---- BCG: tight Gaussians on truth ----
+    bcg_bulge = af.Model(al.lp.SersicSph)
+    bcg_bulge.centre = (0.0, 0.0)
+    bcg_bulge.intensity        = af.LogUniformPrior(lower_limit=1e-2, upper_limit=10.0)
+    bcg_bulge.effective_radius = af.GaussianPrior(
+        mean=bcg_truth["effective_radius"], sigma=0.1)
+    bcg_bulge.sersic_index     = af.GaussianPrior(
+        mean=bcg_truth["sersic_index"], sigma=0.3)
+
+    bcg_mass = af.Model(al.mp.IsothermalSph)
+    bcg_mass.centre = (0.0, 0.0)
+    bcg_mass.einstein_radius = af.GaussianPrior(
+        mean=bcg_truth["einstein_radius"], sigma=0.05)
+
+    bcg = af.Model(al.Galaxy, redshift=z_l, bulge=bcg_bulge, mass=bcg_mass)
+
+    # ---- FJ scaling: theta_E_star tight Gaussian on truth ----
+    theta_E_star = af.GaussianPrior(
+        mean=fj_truth["theta_E_star"], sigma=0.05)
+    L_star = fj_truth["luminosity_star"]
+    members_dict = {}
+    for i, m in enumerate(truth["members"]):
+        cy, cx = m["centre"]
+        L_i = m["luminosity"]
+        member_mass = af.Model(al.mp.IsothermalSph)
+        member_mass.centre = (cy, cx)
+        member_mass.einstein_radius = theta_E_star * float(np.sqrt(L_i / L_star))
+        members_dict[f"member_{i+1}"] = af.Model(
+            al.Galaxy, redshift=z_l, mass=member_mass)
+
+    # ---- Sources: tight Gaussians on truth ----
+    def _src_truth(z, t):
+        s = af.Model(al.lp.SersicCore)
+        s.centre.centre_0 = af.GaussianPrior(mean=t["centre"][0], sigma=0.05)
+        s.centre.centre_1 = af.GaussianPrior(mean=t["centre"][1], sigma=0.05)
+        s.intensity        = af.LogUniformPrior(lower_limit=1e-2, upper_limit=20.0)
+        s.effective_radius = af.GaussianPrior(
+            mean=t["effective_radius"], sigma=0.02)
+        s.sersic_index     = af.GaussianPrior(
+            mean=t["sersic_index"], sigma=0.3)
+        # Convert truth (axis_ratio, angle_deg) to ell_comps if needed.
+        # For these mocks we just use a tight zero-mean prior and let
+        # the chain refine.
+        s.ell_comps.ell_comps_0 = af.GaussianPrior(mean=0.0, sigma=0.1)
+        s.ell_comps.ell_comps_1 = af.GaussianPrior(mean=0.0, sigma=0.1)
+        return af.Model(al.Galaxy, redshift=z, bulge=s)
+
+    source_1 = _src_truth(z_s1, truth["source_1"])
+    source_2 = _src_truth(z_s2, truth["source_2"])
+
+    model = af.Collection(
+        galaxies=af.Collection(bcg=bcg, source_1=source_1, source_2=source_2),
+        extra_galaxies=af.Collection(**members_dict),
+    )
+    print(f"[CLUSTER/truth_anchored] {model.total_free_parameters} free params",
+          flush=True)
+
+    analysis = al.AnalysisImaging(dataset=dataset, use_jax=False)
+    search = af.Nautilus(
+        path_prefix=output_root / "cluster_scale",
+        name="truth_anchored",
+        unique_tag="mock_1",
+        n_live=n_live, n_batch=n_batch, iterations_per_update=15000,
+        number_of_cores=int(os.environ.get("SLURM_CPUS_PER_TASK", "1")),
+    )
+    print("[CLUSTER/truth_anchored] Nautilus starting...", flush=True)
+    t0 = time.time()
+    result = search.fit(model=model, analysis=analysis)
+    print(f"[CLUSTER/truth_anchored] done in {(time.time()-t0)/60:.1f} min, "
+          f"log_Z={result.samples.log_evidence:.2f}", flush=True)
+    _force_visualize(analysis, result, tag="truth_anchored")
+    print(result.info, flush=True)
+    return result
+
+
 def main():
     p = argparse.ArgumentParser()
-    p.add_argument("--part",         choices=("direct",), default="direct")
+    p.add_argument("--part",         choices=("direct", "truth_anchored"),
+                   default="direct")
     p.add_argument("--repo-root",    type=Path, required=True)
     p.add_argument("--dataset-root", type=Path, required=True)
     p.add_argument("--output-root",  type=Path, required=True)
@@ -151,6 +256,8 @@ def main():
 
     if args.part == "direct":
         build_direct_fit(dataset, args.output_root, truth, n_live=args.n_live)
+    elif args.part == "truth_anchored":
+        build_truth_anchored(dataset, args.output_root, truth, n_live=args.n_live)
 
 
 if __name__ == "__main__":
