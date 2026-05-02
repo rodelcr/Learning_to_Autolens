@@ -93,7 +93,17 @@ sbatch --export=ALL,MODULE=04 Modules/10_Cluster_Computing/scripts/submit_cannon
 bash Modules/10_Cluster_Computing/scripts/pull_from_cannon.sh --go       # pull lightweight artifacts
 ```
 
-The submit script bills compute to `--account=siag_lab` (fast scheduling) and writes output to Hernquist lab storage. Nautilus checkpoints in `checkpoint.hdf5` auto-resume on re-submit, so a requeued job picks up where it left off. See **Module 10** for the full layout, failure modes, and `export_results.py` artifact pattern.
+The submit script bills compute to `--account=siag_lab` (fast scheduling) and writes output to Hernquist lab storage. Nautilus checkpoints in `checkpoint.hdf5` auto-resume on re-submit, so a requeued job picks up where it left off.
+
+### Student-facing cluster docs
+
+Three documents under `Modules/10_Cluster_Computing/` cover the workflow from cold-start to daily operation:
+
+- **[`SETUP_NEW_USER.md`](Modules/10_Cluster_Computing/SETUP_NEW_USER.md)** — one-time onboarding (SSH alias + Duo, conda env, `cannon.env` setup). ~30-60 min.
+- **[`STUDENT_QUICKSTART.md`](Modules/10_Cluster_Computing/STUDENT_QUICKSTART.md)** — daily-loop cheat sheet (push → submit → pull → audit). The fastest path to your first fit.
+- **[`RECIPES.md`](Modules/10_Cluster_Computing/RECIPES.md)** — copy-pasteable `sbatch` recipes for every module + example, with realistic time budgets per recipe.
+
+See **Module 10** for the design notes (`CLUSTER_WORKFLOW_NOTES.md`), failure modes, and the `export_results.py` artifact pattern.
 
 ---
 
