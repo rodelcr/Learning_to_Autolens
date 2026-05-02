@@ -1,0 +1,10 @@
+{
+  "search_name": "direct_fit",
+  "source_dir": "output/cluster_scale/mock_1/direct_fit/e780a9202aa960128bd21e352f6e25ec",
+  "max_log_likelihood": -212281.0478940861,
+  "log_evidence": -212412.3528122452,
+  "chi_squared_total": 574618.7440050719,
+  "chi_squared_per_pixel": 22.580114115257462,
+  "n_unmasked_pixels": 25448,
+  "max_abs_normalized_residual": 78.67554007174638
+}
