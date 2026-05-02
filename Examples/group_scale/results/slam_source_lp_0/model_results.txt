@@ -1,0 +1,367 @@
+Bayesian Evidence                                                               -189161.80430305
+Maximum Log Likelihood                                                          -189068.69136328
+
+model                                                                           Collection (N=18)
+    galaxies                                                                    Collection (N=6)
+        bgg                                                                     Galaxy (N=6)
+            bulge                                                               Basis (N=6)
+                profile_list                                                    Collection (N=6)
+                    0 - 59                                                      Gaussian (N=4)
+    extra_galaxies                                                              Collection (N=12)
+        0 - 2                                                                   Galaxy (N=4)
+            bulge                                                               Basis (N=4)
+                profile_list                                                    Collection (N=4)
+                    0 - 9                                                       Gaussian (N=4)
+
+Maximum Log Likelihood Model:
+
+galaxies
+    bgg
+        bulge
+            profile_list
+                0 - 59
+                    centre
+                        centre_0                                                -0.001
+                        centre_1                                                -0.001
+                0 - 29
+                    ell_comps
+                        ell_comps_0                                             -0.087
+                        ell_comps_1                                             0.525
+                30 - 59
+                    ell_comps
+                        ell_comps_0                                             0.078
+                        ell_comps_1                                             -0.031
+extra_galaxies
+    0
+        bulge
+            profile_list
+                0 - 9
+                    centre
+                        centre_0                                                1.806
+                        centre_1                                                0.685
+                    ell_comps
+                        ell_comps_0                                             -0.200
+                        ell_comps_1                                             -0.129
+    1
+        bulge
+            profile_list
+                0 - 9
+                    centre
+                        centre_0                                                -1.494
+                        centre_1                                                -1.238
+                    ell_comps
+                        ell_comps_0                                             0.052
+                        ell_comps_1                                             0.051
+    2
+        bulge
+            profile_list
+                0 - 9
+                    centre
+                        centre_0                                                0.482
+                        centre_1                                                -2.003
+                    ell_comps
+                        ell_comps_0                                             0.045
+                        ell_comps_1                                             -0.197
+
+
+Summary (3.0 sigma limits):
+
+galaxies
+    bgg
+        bulge
+            profile_list
+                0 - 59
+                    centre
+                        centre_0                                                -0.0007 (-0.0010, -0.0005)
+                        centre_1                                                -0.0012 (-0.0015, -0.0010)
+                0 - 29
+                    ell_comps
+                        ell_comps_0                                             -0.0863 (-0.0935, -0.0791)
+                        ell_comps_1                                             0.5220 (0.5157, 0.5286)
+                30 - 59
+                    ell_comps
+                        ell_comps_0                                             0.0785 (0.0776, 0.0793)
+                        ell_comps_1                                             -0.0315 (-0.0325, -0.0303)
+extra_galaxies
+    0
+        bulge
+            profile_list
+                0 - 9
+                    centre
+                        centre_0                                                1.8056 (1.8039, 1.8073)
+                        centre_1                                                0.6853 (0.6836, 0.6869)
+                    ell_comps
+                        ell_comps_0                                             -0.2000 (-0.2000, -0.1997)
+                        ell_comps_1                                             -0.1287 (-0.1354, -0.1224)
+    1
+        bulge
+            profile_list
+                0 - 9
+                    centre
+                        centre_0                                                -1.4943 (-1.4956, -1.4930)
+                        centre_1                                                -1.2378 (-1.2394, -1.2362)
+                    ell_comps
+                        ell_comps_0                                             0.0521 (0.0468, 0.0572)
+                        ell_comps_1                                             0.0518 (0.0459, 0.0578)
+    2
+        bulge
+            profile_list
+                0 - 9
+                    centre
+                        centre_0                                                0.4811 (0.4785, 0.4836)
+                        centre_1                                                -2.0034 (-2.0047, -2.0021)
+                    ell_comps
+                        ell_comps_0                                             0.0480 (0.0283, 0.0660)
+                        ell_comps_1                                             -0.1972 (-0.2000, -0.1852)
+
+
+Summary (1.0 sigma limits):
+
+galaxies
+    bgg
+        bulge
+            profile_list
+                0 - 59
+                    centre
+                        centre_0                                                -0.0007 (-0.0008, -0.0006)
+                        centre_1                                                -0.0012 (-0.0013, -0.0011)
+                0 - 29
+                    ell_comps
+                        ell_comps_0                                             -0.0863 (-0.0887, -0.0838)
+                        ell_comps_1                                             0.5220 (0.5199, 0.5242)
+                30 - 59
+                    ell_comps
+                        ell_comps_0                                             0.0785 (0.0782, 0.0788)
+                        ell_comps_1                                             -0.0315 (-0.0319, -0.0311)
+extra_galaxies
+    0
+        bulge
+            profile_list
+                0 - 9
+                    centre
+                        centre_0                                                1.8056 (1.8050, 1.8062)
+                        centre_1                                                0.6853 (0.6848, 0.6859)
+                    ell_comps
+                        ell_comps_0                                             -0.2000 (-0.2000, -0.1999)
+                        ell_comps_1                                             -0.1287 (-0.1309, -0.1265)
+    1
+        bulge
+            profile_list
+                0 - 9
+                    centre
+                        centre_0                                                -1.4943 (-1.4948, -1.4939)
+                        centre_1                                                -1.2378 (-1.2383, -1.2373)
+                    ell_comps
+                        ell_comps_0                                             0.0521 (0.0503, 0.0538)
+                        ell_comps_1                                             0.0518 (0.0499, 0.0539)
+    2
+        bulge
+            profile_list
+                0 - 9
+                    centre
+                        centre_0                                                0.4811 (0.4803, 0.4820)
+                        centre_1                                                -2.0034 (-2.0038, -2.0029)
+                    ell_comps
+                        ell_comps_0                                             0.0480 (0.0420, 0.0543)
+                        ell_comps_1                                             -0.1972 (-0.1992, -0.1938)
+
+instances
+
+galaxies
+    bgg
+        redshift                                                                0.4
+        bulge
+            profile_list
+                0
+                    sigma                                                       0.0001
+                1
+                    sigma                                                       0.00014344717556523382
+                2
+                    sigma                                                       0.00020577092177643012
+                3
+                    sigma                                                       0.00029517257542283564
+                4
+                    sigma                                                       0.0004234167224872172
+                5
+                    sigma                                                       0.0006073793292787973
+                6
+                    sigma                                                       0.0008712684928174959
+                7
+                    sigma                                                       0.0012498100445364811
+                8
+                    sigma                                                       0.0017928172088181712
+                9
+                    sigma                                                       0.002571745649097129
+                10
+                    sigma                                                       0.0036890964963516167
+                11
+                    sigma                                                       0.005291904727892398
+                12
+                    sigma                                                       0.007591087865764717
+                13
+                    sigma                                                       0.010889201138114674
+                14
+                    sigma                                                       0.015620251474242794
+                15
+                    sigma                                                       0.02240680955598808
+                16
+                    sigma                                                       0.03214193544234581
+                17
+                    sigma                                                       0.04610669856404591
+                18
+                    sigma                                                       0.06613875683650007
+                19
+                    sigma                                                       0.09487417863591734
+                20
+                    sigma                                                       0.13609432959393788
+                21
+                    sigma                                                       0.19522347190694403
+                22
+                    sigma                                                       0.2800425564908989
+                23
+                    sigma                                                       0.4017131376668688
+                24
+                    sigma                                                       0.5762461498576033
+                25
+                    sigma                                                       0.8266088262741365
+                26
+                    sigma                                                       1.185747014263179
+                27
+                    sigma                                                       1.7009206013096188
+                28
+                    sigma                                                       2.439922561185842
+                29
+                    sigma                                                       3.5000000000000004
+                30
+                    sigma                                                       0.0001
+                31
+                    sigma                                                       0.00014344717556523382
+                32
+                    sigma                                                       0.00020577092177643012
+                33
+                    sigma                                                       0.00029517257542283564
+                34
+                    sigma                                                       0.0004234167224872172
+                35
+                    sigma                                                       0.0006073793292787973
+                36
+                    sigma                                                       0.0008712684928174959
+                37
+                    sigma                                                       0.0012498100445364811
+                38
+                    sigma                                                       0.0017928172088181712
+                39
+                    sigma                                                       0.002571745649097129
+                40
+                    sigma                                                       0.0036890964963516167
+                41
+                    sigma                                                       0.005291904727892398
+                42
+                    sigma                                                       0.007591087865764717
+                43
+                    sigma                                                       0.010889201138114674
+                44
+                    sigma                                                       0.015620251474242794
+                45
+                    sigma                                                       0.02240680955598808
+                46
+                    sigma                                                       0.03214193544234581
+                47
+                    sigma                                                       0.04610669856404591
+                48
+                    sigma                                                       0.06613875683650007
+                49
+                    sigma                                                       0.09487417863591734
+                50
+                    sigma                                                       0.13609432959393788
+                51
+                    sigma                                                       0.19522347190694403
+                52
+                    sigma                                                       0.2800425564908989
+                53
+                    sigma                                                       0.4017131376668688
+                54
+                    sigma                                                       0.5762461498576033
+                55
+                    sigma                                                       0.8266088262741365
+                56
+                    sigma                                                       1.185747014263179
+                57
+                    sigma                                                       1.7009206013096188
+                58
+                    sigma                                                       2.439922561185842
+                59
+                    sigma                                                       3.5000000000000004
+extra_galaxies
+    0
+        redshift                                                                0.4
+        bulge
+            profile_list
+                0
+                    sigma                                                       0.0001
+                1
+                    sigma                                                       0.00031981324748358355
+                2
+                    sigma                                                       0.0010228051326599584
+                3
+                    sigma                                                       0.003271066310188591
+                4
+                    sigma                                                       0.010461303393955563
+                5
+                    sigma                                                       0.033456634113319624
+                6
+                    sigma                                                       0.10699874805650803
+                7
+                    sigma                                                       0.34219617092629606
+                8
+                    sigma                                                       1.0943886870038617
+                9
+                    sigma                                                       3.5000000000000004
+    1
+        redshift                                                                0.4
+        bulge
+            profile_list
+                0
+                    sigma                                                       0.0001
+                1
+                    sigma                                                       0.00031981324748358355
+                2
+                    sigma                                                       0.0010228051326599584
+                3
+                    sigma                                                       0.003271066310188591
+                4
+                    sigma                                                       0.010461303393955563
+                5
+                    sigma                                                       0.033456634113319624
+                6
+                    sigma                                                       0.10699874805650803
+                7
+                    sigma                                                       0.34219617092629606
+                8
+                    sigma                                                       1.0943886870038617
+                9
+                    sigma                                                       3.5000000000000004
+    2
+        redshift                                                                0.4
+        bulge
+            profile_list
+                0
+                    sigma                                                       0.0001
+                1
+                    sigma                                                       0.00031981324748358355
+                2
+                    sigma                                                       0.0010228051326599584
+                3
+                    sigma                                                       0.003271066310188591
+                4
+                    sigma                                                       0.010461303393955563
+                5
+                    sigma                                                       0.033456634113319624
+                6
+                    sigma                                                       0.10699874805650803
+                7
+                    sigma                                                       0.34219617092629606
+                8
+                    sigma                                                       1.0943886870038617
+                9
+                    sigma                                                       3.5000000000000004

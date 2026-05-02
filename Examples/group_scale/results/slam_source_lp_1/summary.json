@@ -1,0 +1,10 @@
+{
+  "search_name": "source_lp_1",
+  "source_dir": "output/group_scale_slam/mock_1/source_lp_1/206fff85d58bf25f7274123b0d9a1e9f",
+  "max_log_likelihood": 7841.580817530783,
+  "log_evidence": 7745.206741115156,
+  "chi_squared_total": 89807.83761574679,
+  "chi_squared_per_pixel": 5.839261223390558,
+  "n_unmasked_pixels": 15380,
+  "max_abs_normalized_residual": 43.21396966814356
+}

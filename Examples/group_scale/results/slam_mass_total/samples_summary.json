@@ -1,0 +1,266 @@
+{
+    "type": "instance",
+    "class_path": "autofit.non_linear.samples.summary.SamplesSummary",
+    "arguments": {
+        "values_at_sigma_3": {
+            "type": "dict",
+            "arguments": {
+                "galaxies.bgg.mass.einstein_radius": {
+                    "type": "tuple",
+                    "values": [
+                        1.1783437248360489,
+                        1.1898870172508071
+                    ]
+                },
+                "galaxies.bgg.mass.slope": {
+                    "type": "tuple",
+                    "values": [
+                        1.980573244594718,
+                        1.9910874116220016
+                    ]
+                },
+                "galaxies.bgg.mass.ell_comps.ell_comps_0": {
+                    "type": "tuple",
+                    "values": [
+                        0.00992257307819641,
+                        0.01314548125373852
+                    ]
+                },
+                "galaxies.bgg.mass.ell_comps.ell_comps_1": {
+                    "type": "tuple",
+                    "values": [
+                        0.21282157757846004,
+                        0.2203331666499125
+                    ]
+                },
+                "extra_galaxies.0.mass.einstein_radius": {
+                    "type": "tuple",
+                    "values": [
+                        0.46418098576930555,
+                        0.4684401718795001
+                    ]
+                },
+                "extra_galaxies.1.mass.einstein_radius": {
+                    "type": "tuple",
+                    "values": [
+                        0.6972343104679202,
+                        0.7096451199550631
+                    ]
+                },
+                "extra_galaxies.2.mass.einstein_radius": {
+                    "type": "tuple",
+                    "values": [
+                        0.28119851447005306,
+                        0.28460383609277773
+                    ]
+                }
+            }
+        },
+        "errors_at_sigma_3": {
+            "type": "dict",
+            "arguments": {
+                "galaxies.bgg.mass.einstein_radius": {
+                    "type": "tuple",
+                    "values": [
+                        0.002954193704501451,
+                        0.008589098710256815
+                    ]
+                },
+                "galaxies.bgg.mass.slope": {
+                    "type": "tuple",
+                    "values": [
+                        0.006692024595091661,
+                        0.0038221424321920328
+                    ]
+                },
+                "galaxies.bgg.mass.ell_comps.ell_comps_0": {
+                    "type": "tuple",
+                    "values": [
+                        0.001783704766716963,
+                        0.0014392034088251474
+                    ]
+                },
+                "galaxies.bgg.mass.ell_comps.ell_comps_1": {
+                    "type": "tuple",
+                    "values": [
+                        0.00558987780198561,
+                        0.001921711269466858
+                    ]
+                },
+                "extra_galaxies.0.mass.einstein_radius": {
+                    "type": "tuple",
+                    "values": [
+                        0.003308763606986953,
+                        0.000950422503207593
+                    ]
+                },
+                "extra_galaxies.1.mass.einstein_radius": {
+                    "type": "tuple",
+                    "values": [
+                        0.00951076273163698,
+                        0.002900046755505925
+                    ]
+                },
+                "extra_galaxies.2.mass.einstein_radius": {
+                    "type": "tuple",
+                    "values": [
+                        0.0027979851098816066,
+                        0.0006073365128430597
+                    ]
+                }
+            }
+        },
+        "errors_at_sigma_1": {
+            "type": "dict",
+            "arguments": {
+                "galaxies.bgg.mass.einstein_radius": {
+                    "type": "tuple",
+                    "values": [
+                        0.0008066917170828081,
+                        0.0008857174276262203
+                    ]
+                },
+                "galaxies.bgg.mass.slope": {
+                    "type": "tuple",
+                    "values": [
+                        0.0014491068435462662,
+                        0.0012860998646109234
+                    ]
+                },
+                "galaxies.bgg.mass.ell_comps.ell_comps_0": {
+                    "type": "tuple",
+                    "values": [
+                        0.00046831919604971815,
+                        0.0005016632416237413
+                    ]
+                },
+                "galaxies.bgg.mass.ell_comps.ell_comps_1": {
+                    "type": "tuple",
+                    "values": [
+                        0.0007006508151674307,
+                        0.0006263174665914473
+                    ]
+                },
+                "extra_galaxies.0.mass.einstein_radius": {
+                    "type": "tuple",
+                    "values": [
+                        0.0003078328095569294,
+                        0.00030326861711904574
+                    ]
+                },
+                "extra_galaxies.1.mass.einstein_radius": {
+                    "type": "tuple",
+                    "values": [
+                        0.0010314059745639703,
+                        0.0009591259320306245
+                    ]
+                },
+                "extra_galaxies.2.mass.einstein_radius": {
+                    "type": "tuple",
+                    "values": [
+                        0.00021494499599500339,
+                        0.00019760611941027628
+                    ]
+                }
+            }
+        },
+        "values_at_sigma_1": {
+            "type": "dict",
+            "arguments": {
+                "galaxies.bgg.mass.einstein_radius": {
+                    "type": "tuple",
+                    "values": [
+                        1.1804912268234675,
+                        1.1821836359681765
+                    ]
+                },
+                "galaxies.bgg.mass.slope": {
+                    "type": "tuple",
+                    "values": [
+                        1.9858161623462633,
+                        1.9885513690544205
+                    ]
+                },
+                "galaxies.bgg.mass.ell_comps.ell_comps_0": {
+                    "type": "tuple",
+                    "values": [
+                        0.011237958648863655,
+                        0.012207941086537114
+                    ]
+                },
+                "galaxies.bgg.mass.ell_comps.ell_comps_1": {
+                    "type": "tuple",
+                    "values": [
+                        0.21771080456527822,
+                        0.2190377728470371
+                    ]
+                },
+                "extra_galaxies.0.mass.einstein_radius": {
+                    "type": "tuple",
+                    "values": [
+                        0.4671819165667356,
+                        0.46779301799341155
+                    ]
+                },
+                "extra_galaxies.1.mass.einstein_radius": {
+                    "type": "tuple",
+                    "values": [
+                        0.7057136672249932,
+                        0.7077041991315878
+                    ]
+                },
+                "extra_galaxies.2.mass.einstein_radius": {
+                    "type": "tuple",
+                    "values": [
+                        0.28378155458393967,
+                        0.28419410569934495
+                    ]
+                }
+            }
+        },
+        "model": null,
+        "log_evidence": 7492.753022428937,
+        "max_log_likelihood_sample": {
+            "type": "instance",
+            "class_path": "autofit.non_linear.samples.sample.Sample",
+            "arguments": {
+                "log_likelihood": 7539.995653595564,
+                "log_prior": 0.02302090535900649,
+                "weight": 6.743573381347044e-05,
+                "kwargs": {
+                    "type": "dict",
+                    "arguments": {
+                        "galaxies.bgg.mass.einstein_radius": 1.180939082770807,
+                        "galaxies.bgg.mass.slope": 1.9868180435164697,
+                        "galaxies.bgg.mass.ell_comps.ell_comps_0": 0.01153195770102587,
+                        "galaxies.bgg.mass.ell_comps.ell_comps_1": 0.21825294857511152,
+                        "extra_galaxies.0.mass.einstein_radius": 0.46757404148498183,
+                        "extra_galaxies.1.mass.einstein_radius": 0.7064457447332937,
+                        "extra_galaxies.2.mass.einstein_radius": 0.28400532069495193
+                    }
+                }
+            }
+        },
+        "median_pdf_sample": {
+            "type": "instance",
+            "class_path": "autofit.non_linear.samples.sample.Sample",
+            "arguments": {
+                "log_likelihood": 7539.995653595564,
+                "log_prior": 0.02302090535900649,
+                "weight": 6.743573381347044e-05,
+                "kwargs": {
+                    "type": "dict",
+                    "arguments": {
+                        "galaxies.bgg.mass.einstein_radius": 1.1812979185405503,
+                        "galaxies.bgg.mass.slope": 1.9872652691898096,
+                        "galaxies.bgg.mass.ell_comps.ell_comps_0": 0.011706277844913373,
+                        "galaxies.bgg.mass.ell_comps.ell_comps_1": 0.21841145538044565,
+                        "extra_galaxies.0.mass.einstein_radius": 0.4674897493762925,
+                        "extra_galaxies.1.mass.einstein_radius": 0.7067450731995572,
+                        "extra_galaxies.2.mass.einstein_radius": 0.28399649957993467
+                    }
+                }
+            }
+        }
+    }
+}

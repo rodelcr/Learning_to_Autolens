@@ -1,0 +1,10 @@
+{
+  "search_name": "mass_total",
+  "source_dir": "output/group_scale_slam/mock_1/mass_total/d5aa4777b8721c2b40dc3835f389aa61",
+  "max_log_likelihood": 7539.995653595564,
+  "log_evidence": 7492.753022428937,
+  "chi_squared_total": 90411.00794361722,
+  "chi_squared_per_pixel": 5.878479060053135,
+  "n_unmasked_pixels": 15380,
+  "max_abs_normalized_residual": 43.21262764683433
+}
