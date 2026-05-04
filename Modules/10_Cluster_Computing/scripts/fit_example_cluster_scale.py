@@ -180,6 +180,12 @@ def build_truth_anchored(dataset, output_root: Path, truth: dict,
     bcg = af.Model(al.Galaxy, redshift=z_l, bulge=bcg_bulge, mass=bcg_mass)
 
     # ---- FJ scaling: theta_E_star tight Gaussian on truth ----
+    # Each member contributes BOTH a SersicSph LIGHT profile (truth has
+    # one per satellite) AND an IsothermalSph mass (FJ-scaled).
+    # 2026-05-04: omitting the member light was the cluster_truth_v2 bug
+    # — even at literal truth values the residuals were 30σ because the
+    # 10 satellite light profiles were unmodeled. With member light
+    # restored, chi^2 at truth drops to ~1.0.
     theta_E_star = af.GaussianPrior(
         mean=fj_truth["theta_E_star"], sigma=0.05)
     L_star = fj_truth["luminosity_star"]
@@ -187,11 +193,25 @@ def build_truth_anchored(dataset, output_root: Path, truth: dict,
     for i, m in enumerate(truth["members"]):
         cy, cx = m["centre"]
         L_i = m["luminosity"]
+
+        # Member light: SersicSph with intensity, R_eff, n tightly
+        # anchored on truth (centre fixed at photometric).
+        member_bulge = af.Model(al.lp.SersicSph)
+        member_bulge.centre = (cy, cx)
+        member_bulge.intensity        = af.GaussianPrior(
+            mean=m["intensity"], sigma=max(0.02, 0.1 * m["intensity"]))
+        member_bulge.effective_radius = af.GaussianPrior(
+            mean=m["effective_radius"], sigma=0.05)
+        member_bulge.sersic_index     = af.GaussianPrior(
+            mean=m["sersic_index"], sigma=0.3)
+
+        # Member mass: FJ-scaled from theta_E_star (single shared param).
         member_mass = af.Model(al.mp.IsothermalSph)
         member_mass.centre = (cy, cx)
         member_mass.einstein_radius = theta_E_star * float(np.sqrt(L_i / L_star))
+
         members_dict[f"member_{i+1}"] = af.Model(
-            al.Galaxy, redshift=z_l, mass=member_mass)
+            al.Galaxy, redshift=z_l, bulge=member_bulge, mass=member_mass)
 
     # ---- Sources: tight Gaussians on truth ----
     def _src_truth(z, t):

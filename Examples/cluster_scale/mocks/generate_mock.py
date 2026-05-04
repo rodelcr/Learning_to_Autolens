@@ -203,6 +203,31 @@ def main():
     truth_path.write_text(json.dumps(truth, indent=2))
     print(f"Wrote {image_path.name}, {noise_path.name}, {psf_path.name}, {truth_path.name}")
 
+    # ---- Sanity check: chi^2 at the simulator's tracer must be near 1 -----
+    # Catches generator-vs-truth inconsistency BEFORE shipping the mock.
+    # 2026-05-04: cluster_truth_v2 Cannon TIMEOUT was traced to a fit
+    # driver that omitted member light — assertion below would NOT have
+    # caught that (the assertion runs on the simulator's own tracer, which
+    # has the light); but it WOULD catch a coordinate or PSF bug.
+    mask = al.Mask2D.circular(
+        shape_native=dataset.shape_native, pixel_scales=pixel_scales,
+        radius=4.5,
+    )
+    ds_masked = dataset.apply_mask(mask=mask)
+    fit = al.FitImaging(dataset=ds_masked, tracer=tracer)
+    chi2_per_pixel = fit.chi_squared / ds_masked.mask.pixels_in_mask
+    max_resid = float(np.max(np.abs(fit.normalized_residual_map.native)))
+    print(f"Generator self-consistency check:")
+    print(f"  chi^2/pixel = {chi2_per_pixel:.4f}  (expect ~1.0)")
+    print(f"  max|resid|  = {max_resid:.2f} sigma  (expect <5.0)")
+    if chi2_per_pixel > 1.5 or max_resid > 6.0:
+        raise RuntimeError(
+            f"Generator self-consistency FAILED: chi^2/N={chi2_per_pixel:.2f} "
+            f"max|res|={max_resid:.1f}σ — the simulator's tracer doesn't match "
+            f"its own output. Investigate before shipping this mock."
+        )
+    print(f"  ✓ Self-consistency OK.")
+
 
 if __name__ == "__main__":
     main()
