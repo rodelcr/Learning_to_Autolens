@@ -131,7 +131,7 @@ head -20 ${REPO_ROOT}/Modules/04_Search_Chaining_SLaM/results/source_lp\[1\]/inf
    # Re-submit; SOURCE LP runs fresh and the subsequent stages inherit its result
    sbatch --export=ALL,MODULE=04 ...
    ```
-   ⚠️  Only delete scoped stage directories. Never `rm -rf output/`
+   ⚠  Only delete scoped stage directories. Never `rm -rf output/`
    without user confirmation — that discards all finished runs.
 
 ## PYAUTOFIT_TEST_MODE

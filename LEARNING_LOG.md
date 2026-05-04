@@ -576,7 +576,7 @@ A decisive Δlog_Z without a clean residual map is just as much a failed
 fit as a low chi²/pixel without a clean residual map. P5
 `bayesian_model_comparison/`'s §5.4 "model misspecification" caveat
 exists exactly for this situation; the +288 row in its worked-examples
-table now has an explicit ⚠️ marker pointing back to this case.
+table now has an explicit ⚠ marker pointing back to this case.
 
 ### `unique_tag` must include the discriminator when fitting a parametric mock family
 

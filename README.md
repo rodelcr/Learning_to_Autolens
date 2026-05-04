@@ -6,7 +6,7 @@ A 14-module tutorial series teaching computational strong lens modeling from fir
 
 This project is a companion to [Learning to Lens](https://github.com/rodelcr/Learning_to_Lens) (GR & lensing theory in Mathematica), but is fully self-contained — all necessary theory is developed inline with references to the primary literature.
 
-> ### 🎓 New to this repo? → **Read [`START_HERE.md`](START_HERE.md) first.** ~30 min orientation, ~3 hours to be productive on a real fit.
+> ### New to this repo? → **Read [`START_HERE.md`](START_HERE.md) first.** ~30 min orientation, ~3 hours to be productive on a real fit.
 >
 > **Current release: v0.92-alpha** (2026-05-03) — first student-handoff-ready alpha. Strict ship discipline: only material audited PASS or borderline-PASS by `/autolens-fit-diagnostics` is in the v0.92 ship-set; the rest is visible but flagged "research-in-progress" with banners on every README. See [`RELEASE_NOTES_v0.92.md`](RELEASE_NOTES_v0.92.md) for the full ship/defer breakdown and [`V092_SCOPE.md`](V092_SCOPE.md) for the per-component audit.
 >
@@ -88,15 +88,15 @@ If you want to *reproduce* or *extend* the fits (rather than view the bundled re
 
 ```bash
 # on your laptop, from the repo root, after activating the autolens env
-bash Modules/10_Cluster_Computing/scripts/push_to_cannon.sh --go         # mirror repo to Cannon
-bash Modules/10_Cluster_Computing/scripts/seed_cannon_data.sh --go       # copy datasets + checkpoint.hdf5
+bash Modules/10_Cluster_Computing/scripts/push_to_cannon.sh --go     # mirror repo to Cannon
+bash Modules/10_Cluster_Computing/scripts/seed_cannon_data.sh --go    # copy datasets + checkpoint.hdf5
 
 # on Cannon
 cd /n/holystore01/LABS/hernquist_lab/Lab/$USER/learning_to_autolens
 sbatch --export=ALL,MODULE=04 Modules/10_Cluster_Computing/scripts/submit_cannon.slurm
 
 # back on your laptop, after the job finishes
-bash Modules/10_Cluster_Computing/scripts/pull_from_cannon.sh --go       # pull lightweight artifacts
+bash Modules/10_Cluster_Computing/scripts/pull_from_cannon.sh --go    # pull lightweight artifacts
 ```
 
 The submit script bills compute to `--account=siag_lab` (fast scheduling) and writes output to Hernquist lab storage. Nautilus checkpoints in `checkpoint.hdf5` auto-resume on re-submit, so a requeued job picks up where it left off.
@@ -184,30 +184,30 @@ See the **"Viewing pre-computed Cannon results"** section above for how to inspe
 
 ```
 Learning_to_Autolens/
-├── Modules/                              # Tutorial notebooks (start here!)
-│   ├── 01_Basics_Grids_Galaxies_RayTracing/
-│   ├── 02_Simulating_Lens_Data/
-│   ├── 03_First_Lens_Model/
-│   ├── 04_Search_Chaining_SLaM/
-│   ├── 05_Pixelized_Source_Reconstructions/
-│   ├── 06_Multi_Component_Mass_Models/
-│   ├── 07_Real_Data_FITS_to_Model/
-│   ├── 08_Results_Diagnostics_Figures/
-│   ├── 09_MGE_Linear_Light_Profiles/
-│   └── 10_Cluster_Computing/             # Slurm jobs + rsync + export_results
-│       └── scripts/                      # fit_module{04,05,09}.py, submit_cannon.slurm, ...
-├── Solutions/                            # Solved exercise notebooks
-├── Notes/                                # LaTeX theory companions (one per module)
-│   ├── preamble.tex                      # Shared macros & environments
-│   └── XX_Topic/XX_topic_theory.tex
-├── Mathematica/                          # Symbolic verification scripts (.wl)
-├── Figures/                              # Exported figures
-├── Output/                               # Compiled PDFs (git-ignored)
-├── autolens_workspace_latest/            # PyAutoLens workspace (v2026.2, datasets)
-├── autolens_workspace_original/          # PyAutoLens workspace (v2025.11, reference)
-├── CLAUDE.md                             # Project context for Claude Code
-├── PROGRESS_LOG.md                       # Timestamped work log
-└── README.md                             # This file
+├── Modules/               # Tutorial notebooks (start here!)
+│  ├── 01_Basics_Grids_Galaxies_RayTracing/
+│  ├── 02_Simulating_Lens_Data/
+│  ├── 03_First_Lens_Model/
+│  ├── 04_Search_Chaining_SLaM/
+│  ├── 05_Pixelized_Source_Reconstructions/
+│  ├── 06_Multi_Component_Mass_Models/
+│  ├── 07_Real_Data_FITS_to_Model/
+│  ├── 08_Results_Diagnostics_Figures/
+│  ├── 09_MGE_Linear_Light_Profiles/
+│  └── 10_Cluster_Computing/       # Slurm jobs + rsync + export_results
+│    └── scripts/           # fit_module{04,05,09}.py, submit_cannon.slurm, ...
+├── Solutions/              # Solved exercise notebooks
+├── Notes/                # LaTeX theory companions (one per module)
+│  ├── preamble.tex           # Shared macros & environments
+│  └── XX_Topic/XX_topic_theory.tex
+├── Mathematica/             # Symbolic verification scripts (.wl)
+├── Figures/               # Exported figures
+├── Output/                # Compiled PDFs (git-ignored)
+├── autolens_workspace_latest/      # PyAutoLens workspace (v2026.2, datasets)
+├── autolens_workspace_original/     # PyAutoLens workspace (v2025.11, reference)
+├── CLAUDE.md               # Project context for Claude Code
+├── PROGRESS_LOG.md            # Timestamped work log
+└── README.md               # This file
 ```
 
 ---

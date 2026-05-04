@@ -342,19 +342,19 @@ needs.
 
 | Pain point | Fixed in this session? | What's next |
 |---|---|---|
-| Stale-hash silent resume | ✅ submit_to_cannon.sh + slurm provenance | Results-diff tool (C) |
-| Forgot to push | ✅ submit_to_cannon.sh | — |
-| Missing fit.fits | ✅ _force_visualize in all fit scripts | Config `force_visualize_overwrite: true` (optional) |
-| PYAUTOFIT_TEST_MODE leak | ✅ 5-layer guard | — |
-| Numbers lie without pictures | ✅ autolens-fit-diagnostics skill | Auto-triggered post-pull diagnostic (E) |
+| Stale-hash silent resume | ✓ submit_to_cannon.sh + slurm provenance | Results-diff tool (C) |
+| Forgot to push | ✓ submit_to_cannon.sh | — |
+| Missing fit.fits | ✓ _force_visualize in all fit scripts | Config `force_visualize_overwrite: true` (optional) |
+| PYAUTOFIT_TEST_MODE leak | ✓ 5-layer guard | — |
+| Numbers lie without pictures | ✓ autolens-fit-diagnostics skill | Auto-triggered post-pull diagnostic (E) |
 | Two-workspace split | — | Consolidate to `_latest` (long-term) |
-| Wrong pull path | ✅ pull_from_cannon.sh fixed | Git-backed sync (A) |
-| Username inconsistency | ✅ unified | — |
-| SSH / 2FA blocks automation | ⚠️ working around | Webhook reporting (I) |
-| No slurm provenance | ✅ hash + git echo in submit_cannon.slurm | Structured JSON output (D) |
+| Wrong pull path | ✓ pull_from_cannon.sh fixed | Git-backed sync (A) |
+| Username inconsistency | ✓ unified | — |
+| SSH / 2FA blocks automation | ⚠ working around | Webhook reporting (I) |
+| No slurm provenance | ✓ hash + git echo in submit_cannon.slurm | Structured JSON output (D) |
 | Script duplication | — | _cluster_utils.py (F) |
 | Forced-rerun ergonomics | — | `--force-fresh-stage=` flag (G) |
-| Handoff discoverability | ✅ CANNON_HANDOFF.md | Inline in Mod 10 notebook (H) |
+| Handoff discoverability | ✓ CANNON_HANDOFF.md | Inline in Mod 10 notebook (H) |
 
 Priorities if we do only three more things:
 

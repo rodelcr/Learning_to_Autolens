@@ -358,7 +358,7 @@ is numerically correct in the new env.
 
 ### Original TODO (post-run audit) — outcome
 
-1. **Audit each run.** ✅ Done inline. All stderrs contained only
+1. **Audit each run.** ✓ Done inline. All stderrs contained only
    `autofit.SearchWarning` (benign); all stages reached their expected
    final result; θ_E values agree with the notebooks' expected ~1.6″.
 2. **Commit results.** Still TODO — the laptop needs to pull the
@@ -1093,7 +1093,7 @@ likelihoods**.
 | `group_scale/00` | BGG + 3 satellites @ same z | Photometric centroid anchoring, BGG ↔ satellite degeneracy |
 
 All four execute clean in `<60s` with `PYAUTOFIT_TEST_MODE=1`.
-`Examples/README.md` updated with 🪜 markers + new "Climb scaffolding"
+`Examples/README.md` updated with [climb] markers + new "Climb scaffolding"
 section listing all four.
 
 **Pre-staged for Cannon recovery (commit `159fd09`):**
