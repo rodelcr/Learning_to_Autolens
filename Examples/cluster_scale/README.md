@@ -1,5 +1,9 @@
 # Example: Cluster-Scale Lens
 
+> **2026-05-04 diagnostic finding:** the cluster_truth_v2 Cannon job (9882023, 8h TIMEOUT) was diagnosed locally by evaluating the FitImaging likelihood at *literal truth values* from `mock_truth.json`. Result: χ²/pixel = 30.5, max\|res\| = 79σ, log_L = −312,687. **The mock data and the stored truth are internally inconsistent** — the truth-anchored point itself does not reproduce the data. This is a mock-generation bug (likely coordinate convention or PSF normalization mismatch in `mocks/generate_mock.py`), not a fit-search-space problem. No further Cannon runs are warranted on this mock until the generator is fixed.
+>
+> **v0.93 plan for cluster_scale:** regenerate the mock (audit `generate_mock.py` for the consistency bug, ideally add a built-in "fit at truth → chi²/N near 1" sanity check), then re-run direct + truth-anchored variants. Until then, this example stays research-in-progress.
+
 ## Status
 
 ◐ **Scaffolded.** Synthetic mock + minimal direct-fit notebook in place; no Cannon results yet. The natural architectural extension of [`../group_scale/`](../group_scale/): more deflectors (this scaffold uses 10 cluster members, real-world clusters have 20–100), and **multiple lensed sources at different redshifts** that constrain the mass distribution at multiple radii.
