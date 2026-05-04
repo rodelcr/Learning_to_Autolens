@@ -84,6 +84,11 @@ Each is a 5-6 step recipe card you can adapt to a new dataset.
 
 ---
 
+## Working with real AGEL HST data
+
+If you're an AGEL collaborator and want to fit a *new* AGEL target end-to-end:
+**[`Examples/agel_real_target/AGEL_QUICKSTART.md`](Examples/agel_real_target/AGEL_QUICKSTART.md)** is the AGEL-specific recipe — assumes you know PyAutoLens, walks you through the AGEL data peculiarities (cutout extraction, empirical PSF from drizzled stars, hot-pixel masking, Keck spectroscopic redshifts, slurm routing for a new target). ~2 hours to first Cannon submit.
+
 ## When you're ready to run a real Cannon fit
 
 Once you've done the orientation + first fit + climb + recipe pass, you're ready for production. The path:
