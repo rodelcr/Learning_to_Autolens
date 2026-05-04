@@ -1,0 +1,167 @@
+Total Free Parameters = 49
+
+model                                                                           Collection (N=49)
+    galaxies                                                                    Collection (N=18)
+        bcg                                                                     Galaxy (N=4)
+            bulge                                                               SersicSph (N=3)
+            mass                                                                IsothermalSph (N=1)
+        source_1 - source_2                                                     Galaxy (N=7)
+            bulge                                                               SersicCore (N=7)
+    extra_galaxies                                                              Collection (N=31)
+        member_1 - member_9                                                     Galaxy (N=4)
+            bulge                                                               SersicSph (N=3)
+            mass                                                                IsothermalSph (N=1)
+                einstein_radius                                                 MultiplePrior (N=1)
+
+galaxies
+    bcg
+        redshift                                                                0.4
+        bulge - mass
+            centre                                                              (0.0, 0.0)
+        bulge
+            intensity                                                           LogUniformPrior [5], lower_limit = 0.01, upper_limit = 10.0
+            effective_radius                                                    GaussianPrior [6], mean = 2.0, sigma = 0.1
+            sersic_index                                                        GaussianPrior [7], mean = 4.0, sigma = 0.3
+        mass
+            einstein_radius                                                     GaussianPrior [11], mean = 4.0, sigma = 0.05
+    source_1
+        redshift                                                                1.5
+        bulge
+            centre
+                centre_0                                                        GaussianPrior [130], mean = 0.5, sigma = 0.05
+                centre_1                                                        GaussianPrior [131], mean = 0.2, sigma = 0.05
+            ell_comps
+                ell_comps_0                                                     GaussianPrior [135], mean = 0.17647058823529416, sigma = 0.05
+                ell_comps_1                                                     GaussianPrior [136], mean = 1.0805707051300178e-17, sigma = 0.05
+            effective_radius                                                    GaussianPrior [133], mean = 0.1, sigma = 0.02
+            sersic_index                                                        GaussianPrior [134], mean = 1.5, sigma = 0.3
+            radius_break                                                        0.025
+            intensity                                                           LogUniformPrior [132], lower_limit = 0.01, upper_limit = 20.0
+            gamma                                                               0.25
+            alpha                                                               3.0
+    source_2
+        redshift                                                                2.8
+        bulge
+            centre
+                centre_0                                                        GaussianPrior [144], mean = -0.3, sigma = 0.05
+                centre_1                                                        GaussianPrior [145], mean = 0.4, sigma = 0.05
+            ell_comps
+                ell_comps_0                                                     GaussianPrior [149], mean = -0.07021827598252203, sigma = 0.05
+                ell_comps_1                                                     GaussianPrior [150], mean = -0.04054054054054058, sigma = 0.05
+            effective_radius                                                    GaussianPrior [147], mean = 0.08, sigma = 0.02
+            sersic_index                                                        GaussianPrior [148], mean = 1.3, sigma = 0.3
+            radius_break                                                        0.025
+            intensity                                                           LogUniformPrior [146], lower_limit = 0.01, upper_limit = 20.0
+            gamma                                                               0.25
+            alpha                                                               3.0
+extra_galaxies
+    member_1
+        redshift                                                                0.4
+        bulge - mass
+            centre                                                              (2.5, 1.5)
+        bulge
+            intensity                                                           GaussianPrior [18], mean = 0.27999999999999997, sigma = 0.027999999999999997
+            effective_radius                                                    GaussianPrior [19], mean = 0.33466401061363027, sigma = 0.05
+            sersic_index                                                        GaussianPrior [20], mean = 3.0, sigma = 0.3
+        mass
+            einstein_radius
+                other                                                           0.8366600265340756
+    member_2
+        redshift                                                                0.4
+        bulge - mass
+            centre                                                              (-1.8, 2.4)
+        bulge
+            intensity                                                           GaussianPrior [29], mean = 0.2, sigma = 0.020000000000000004
+            effective_radius                                                    GaussianPrior [30], mean = 0.28284271247461906, sigma = 0.05
+            sersic_index                                                        GaussianPrior [31], mean = 3.0, sigma = 0.3
+    member_3
+        redshift                                                                0.4
+        bulge - mass
+            centre                                                              (0.5, -3.0)
+        bulge
+            intensity                                                           GaussianPrior [40], mean = 0.16000000000000003, sigma = 0.02
+            effective_radius                                                    GaussianPrior [41], mean = 0.2529822128134704, sigma = 0.05
+            sersic_index                                                        GaussianPrior [42], mean = 3.0, sigma = 0.3
+    member_4
+        redshift                                                                0.4
+        bulge - mass
+            centre                                                              (-3.0, -1.0)
+        bulge
+            intensity                                                           GaussianPrior [51], mean = 0.24, sigma = 0.024
+            effective_radius                                                    GaussianPrior [52], mean = 0.3098386676965934, sigma = 0.05
+            sersic_index                                                        GaussianPrior [53], mean = 3.0, sigma = 0.3
+        mass
+            einstein_radius
+                other                                                           0.7745966692414834
+    member_5
+        redshift                                                                0.4
+        bulge - mass
+            centre                                                              (3.5, -2.0)
+        bulge
+            intensity                                                           GaussianPrior [62], mean = 0.12, sigma = 0.02
+            effective_radius                                                    GaussianPrior [63], mean = 0.21908902300206645, sigma = 0.05
+            sersic_index                                                        GaussianPrior [64], mean = 3.0, sigma = 0.3
+        mass
+            einstein_radius
+                other                                                           0.5477225575051661
+    member_6
+        redshift                                                                0.4
+        bulge - mass
+            centre                                                              (-2.5, 3.5)
+        bulge
+            intensity                                                           GaussianPrior [73], mean = 0.22000000000000003, sigma = 0.022000000000000006
+            effective_radius                                                    GaussianPrior [74], mean = 0.29664793948382656, sigma = 0.05
+            sersic_index                                                        GaussianPrior [75], mean = 3.0, sigma = 0.3
+        mass
+            einstein_radius
+                other                                                           0.7416198487095663
+    member_7
+        redshift                                                                0.4
+        bulge - mass
+            centre                                                              (4.5, 0.5)
+        bulge
+            intensity                                                           GaussianPrior [84], mean = 0.18000000000000002, sigma = 0.02
+            effective_radius                                                    GaussianPrior [85], mean = 0.2683281572999748, sigma = 0.05
+            sersic_index                                                        GaussianPrior [86], mean = 3.0, sigma = 0.3
+        mass
+            einstein_radius
+                other                                                           0.6708203932499369
+    member_8
+        redshift                                                                0.4
+        bulge - mass
+            centre                                                              (-0.5, -4.5)
+        bulge
+            intensity                                                           GaussianPrior [95], mean = 0.13999999999999999, sigma = 0.02
+            effective_radius                                                    GaussianPrior [96], mean = 0.23664319132398465, sigma = 0.05
+            sersic_index                                                        GaussianPrior [97], mean = 3.0, sigma = 0.3
+        mass
+            einstein_radius
+                other                                                           0.5916079783099616
+    member_9
+        redshift                                                                0.4
+        bulge - mass
+            centre                                                              (1.0, 4.0)
+        bulge
+            intensity                                                           GaussianPrior [106], mean = 0.2, sigma = 0.020000000000000004
+            effective_radius                                                    GaussianPrior [107], mean = 0.28284271247461906, sigma = 0.05
+            sersic_index                                                        GaussianPrior [108], mean = 3.0, sigma = 0.3
+    member_10
+        redshift                                                                0.4
+        bulge - mass
+            centre                                                              (-4.0, 0.0)
+        bulge
+            intensity                                                           GaussianPrior [117], mean = 0.16000000000000003, sigma = 0.02
+            effective_radius                                                    GaussianPrior [118], mean = 0.2529822128134704, sigma = 0.05
+            sersic_index                                                        GaussianPrior [119], mean = 3.0, sigma = 0.3
+    member_1 - member_9
+        mass
+            einstein_radius
+                theta_E_star                                                    GaussianPrior [12], mean = 0.6, sigma = 0.05
+    member_2 - member_9
+        mass
+            einstein_radius
+                other                                                           0.7071067811865476
+    member_10 - member_3
+        mass
+            einstein_radius
+                other                                                           0.6324555320336759

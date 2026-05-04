@@ -1,8 +1,8 @@
 # Example: Cluster-Scale Lens
 
-> **2026-05-04 diagnostic finding:** the cluster_truth_v2 Cannon job (9882023, 8h TIMEOUT) was diagnosed locally by evaluating the FitImaging likelihood at *literal truth values* from `mock_truth.json`. Result: χ²/pixel = 30.5, max\|res\| = 79σ, log_L = −312,687. **The mock data and the stored truth are internally inconsistent** — the truth-anchored point itself does not reproduce the data. This is a mock-generation bug (likely coordinate convention or PSF normalization mismatch in `mocks/generate_mock.py`), not a fit-search-space problem. No further Cannon runs are warranted on this mock until the generator is fixed.
+> **2026-05-04 RESOLVED:** cluster_truth_v3 PASSed (Cannon job 9950262, 47-min wall, χ²/N=1.006, max\|res\|=4.04σ, log_Z=62,123). Root cause was that the fit driver modeled cluster members with **mass only, no light** — 10 unmodeled SersicSph satellite light profiles were the entire residual budget. Fix: added member SersicSph bulge with intensity / R_eff / n tightly Gaussian-anchored on truth (centre fixed at photometric). Built-in chi²-at-truth sanity assertion now in `mocks/generate_mock.py` to prevent future generator-vs-truth drift.
 >
-> **v0.93 plan for cluster_scale:** regenerate the mock (audit `generate_mock.py` for the consistency bug, ideally add a built-in "fit at truth → chi²/N near 1" sanity check), then re-run direct + truth-anchored variants. Until then, this example stays research-in-progress.
+> **cluster_scale moves to ✓ shipped status** for the next release (v0.93). The freely-fit `direct_fit` variant (job 9675524, χ²/N=22.6) still hits the wide-prior BCG-FJ degeneracy collapse — keep that as the negative-result pedagogy alongside the truth_anchored PASS.
 
 ## Status
 

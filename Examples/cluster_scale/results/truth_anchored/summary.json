@@ -1,0 +1,10 @@
+{
+  "search_name": "truth_anchored",
+  "source_dir": "output/cluster_scale/mock_1/truth_anchored/b3c2e1758fa0b913bd3ebf9048094690",
+  "max_log_likelihood": 62220.7255070017,
+  "log_evidence": 62123.1074075413,
+  "chi_squared_total": 25600.19014636734,
+  "chi_squared_per_pixel": 1.0059804364337999,
+  "n_unmasked_pixels": 25448,
+  "max_abs_normalized_residual": 4.035864863139973
+}
