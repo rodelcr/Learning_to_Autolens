@@ -72,3 +72,11 @@ Modules/**/*_debug.py
 *.mx
 *.m~
 FrontEnd/
+# Large MCMC chain CSVs (stripped from history 2026-05-03 to fit GitHub 100MB limit)
+Examples/compound_lens/results/slam_staged/stage_3_joint/samples.csv
+Examples/compound_lens_zoo/results/mock_2_R5_freecosmo/samples.csv
+Examples/compound_lens_zoo/results/mock_3_R5/samples.csv
+Examples/compound_lens_zoo/results/mock_3_R5_freecosmo/samples.csv
+Examples/compound_lens_zoo/results/mock_3_R5_staged_stage2_R5/samples.csv
+Examples/compound_lens_zoo/results/mock_4_R5/samples.csv
+Examples/compound_lens_zoo/results/mock_4_R5_staged_stage2_R5/samples.csv
