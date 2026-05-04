@@ -6,7 +6,13 @@ A 14-module tutorial series teaching computational strong lens modeling from fir
 
 This project is a companion to [Learning to Lens](https://github.com/rodelcr/Learning_to_Lens) (GR & lensing theory in Mathematica), but is fully self-contained — all necessary theory is developed inline with references to the primary literature.
 
-> **Alpha build (v0.95)** — April 2026. Modules 01–14 complete (incl. time-delay cosmography + MSD + multi-plane); Cannon cluster results for Mods 04, 05, 09 plus all 10 Examples are committed as small artifacts under each subdirectory's `results/` tree. Feedback welcome at rodrigo.cordova_rosado@cfa.harvard.edu.
+> ### 🎓 New to this repo? → **Read [`START_HERE.md`](START_HERE.md) first.** ~30 min orientation, ~3 hours to be productive on a real fit.
+>
+> **Current release: v0.92-alpha** (2026-05-03) — first student-handoff-ready alpha. Strict ship discipline: only material audited PASS or borderline-PASS by `/autolens-fit-diagnostics` is in the v0.92 ship-set; the rest is visible but flagged "research-in-progress" with banners on every README. See [`RELEASE_NOTES_v0.92.md`](RELEASE_NOTES_v0.92.md) for the full ship/defer breakdown and [`V092_SCOPE.md`](V092_SCOPE.md) for the per-component audit.
+>
+> What's new in v0.92: 3 student-targeted recipe notebooks (pixelization, MGE, SLaM staging); 4 climb bridge notebooks (single-deflector → compound / group / DSPL); 3 cluster docs that work without AI assistance (`SETUP_NEW_USER`, `STUDENT_QUICKSTART`, `RECIPES`); a pre-flight verification script. Pre-flight result: **31 PASS / 0 FAIL.**
+>
+> Modules 01-14 are curriculum-listed; **Mods 11-14 are roadmap/planned** for future releases. v0.92 ships Modules 01-10 + 5 audited example architectures. Feedback welcome at rodrigo.cordova_rosado@cfa.harvard.edu.
 
 ---
 
