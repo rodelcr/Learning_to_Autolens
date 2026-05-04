@@ -203,11 +203,16 @@ def build_truth_anchored(dataset, output_root: Path, truth: dict,
             mean=t["effective_radius"], sigma=0.02)
         s.sersic_index     = af.GaussianPrior(
             mean=t["sersic_index"], sigma=0.3)
-        # Convert truth (axis_ratio, angle_deg) to ell_comps if needed.
-        # For these mocks we just use a tight zero-mean prior and let
-        # the chain refine.
-        s.ell_comps.ell_comps_0 = af.GaussianPrior(mean=0.0, sigma=0.1)
-        s.ell_comps.ell_comps_1 = af.GaussianPrior(mean=0.0, sigma=0.1)
+        # Convert truth (axis_ratio, angle_deg) -> ell_comps and seed
+        # a Gaussian prior centred on the truth ellipticity.
+        # CRITICAL: truth sources have axis_ratio=0.7/0.85 (non-circular);
+        # a Gaussian(0, 0.1) prior would prevent the chain from fitting
+        # the ellipticity, producing log_Z ~ -268k (cluster_truth job
+        # 9727867 TIMEOUT pathology).
+        truth_ell = al.convert.ell_comps_from(
+            axis_ratio=t["axis_ratio"], angle=t["angle_deg"])
+        s.ell_comps.ell_comps_0 = af.GaussianPrior(mean=truth_ell[0], sigma=0.05)
+        s.ell_comps.ell_comps_1 = af.GaussianPrior(mean=truth_ell[1], sigma=0.05)
         return af.Model(al.Galaxy, redshift=z, bulge=s)
 
     source_1 = _src_truth(z_s1, truth["source_1"])
