@@ -1,5 +1,10 @@
 # Example: Interferometer Lens Modeling (uv-Plane)
 
+> **v0.92 ships:** the visibility-plane fit scaffolding + driver. The likelihood is in the uv-plane (no `chi_squared_per_pixel`).
+> 
+> **Research in progress (NOT in v0.92):** validated dirty-image-vs-sky-plane diagnostics, comparison to ALMA / JVLA reference fits.
+
+
 ## Status
 
 ◐ **In progress** — mock generated, driver + notebook scaffolded, Cannon results pending.

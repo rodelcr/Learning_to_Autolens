@@ -1,5 +1,10 @@
 # Example: Bayesian Model Comparison via Log-Evidence
 
+> **v0.92 ships:** the pedagogy notebook covering Jeffreys + Kass-Raftery scales, the factor-of-2 trap, when log_Z misleads.
+> 
+> **Research in progress (NOT in v0.92):** the empirical worked-example tables (P3+P4 Cannon results pending). The pedagogy is complete; the empirical examples will fill in next release.
+
+
 ## Status
 
 ◐ **In progress** — pedagogy notebook + worked-examples placeholders shipped, awaiting P3+P4 Cannon results to fill the empirical table.

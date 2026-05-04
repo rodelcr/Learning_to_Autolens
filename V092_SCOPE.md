@@ -46,7 +46,7 @@ All four ship — they're skip-guarded API walkthroughs that render in <60s, no 
 | Example | Ships in v0.92 | What's NOT shipping |
 |---|---|---|
 | **`compound_lens`** | ✓ all 3 notebooks + 4 audited fits | — |
-| **`compound_lens_zoo`** | ✓ R0/R2/R3/R5 ladder for 5 mocks (`02_compound_lens_ladder.ipynb` §1-12) | §13-§15 (truth + staged + freecosmo): research-in-progress |
+| **`compound_lens_zoo`** | ✓ R0/R2/R3/R5 ladder *as a pedagogical exercise* — `02_compound_lens_ladder.ipynb` §1-12 documents the climb across 5 mocks, including which mocks converge cleanly (mock_3 borderline SUSPECT at R2; mocks 4-6 FAIL at R2 → improve up the ladder but mock_4/6 still SUSPECT/FAIL at R5). The pedagogical value is the *negative-result analysis* (Pattern A/E catalogue), not a "5-of-5 PASS" claim. | §13-§15 (truth + staged + freecosmo): research-in-progress |
 | **`double_source_plane`** | ✓ direct fit + climb notebook | β-cosmography (in flight as `9727096 dspl_beta_v2`) |
 | **`disky_spiral_lens`** | ✓ Bayes-factor demo + 2 audited fits | — |
 | **`group_scale`** | ✓ truth_anchored result (1h05m PASS, χ²/N=1.025) + climb notebook | freely-fit + staged_satellites + SLaM all FAIL — research-in-progress |

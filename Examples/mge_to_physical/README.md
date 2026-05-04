@@ -1,5 +1,10 @@
 # Example: From MGE to Physical Mass Models
 
+> **v0.92 ships:** the methodology (3-search MGE → stars-only → stars+dark chain) and the v2 fits with secondary deflector + 2 sources added. v2 reduces χ²/N from 3.0 → 1.87 — improvement, but max\|res\| ≈ 9.7σ remains (SUSPECT by `/autolens-fit-diagnostics`).
+> 
+> **Research in progress (NOT in v0.92):** publication-grade f_DM extraction. The remaining residuals trace to PSF / noise-correlation issues outside the model. Use this example as a *Bayes-factor-with-caveats* demo, not as a definitive stars+DM measurement.
+
+
 ## Status
 
 ◐ **In progress — methodology shipped, but canonical fit fails the physical bar**. The three-search chain runs end-to-end and produces a clean Bayes-factor ladder (Search 2 → Search 3 = +288 log units favouring stars+DM), but **both Search 2 and Search 3 fail the `/autolens-fit-diagnostics` physical bar** (~10σ coherent ring residuals visible in `results/search_3_stars_dark/fit_subplot.png`). The fit is mis-specified relative to the truth: it omits (a) the secondary deflector at z=0.8 (truth `θ_E=0.11"`) and (b) the second source component (truth has TWO Sersic sources offset by 0.4″). The +288 Bayes factor is *real as a number* but, per `bayesian_model_comparison/`, **a Bayes factor between two misspecified models picks the less-wrong one without validating either**. See §"Caveats" below.

@@ -1,5 +1,10 @@
 # Example: AGEL013322-125201A — Real HST Lens
 
+> **v0.92 ships:** the data-prep recipe (`extract_cutout.py` + `build_empirical_psf.py`) and the empirical PSF that replaces the placeholder Gaussian. The direct-fit Cannon result (job 9676009, χ²/N=0.30) shows one 32σ residual at a hot pixel (cosmic-ray survivor) — this is real-data character not a fit failure.
+> 
+> **Research in progress (NOT in v0.92):** post-hot-pixel-mask refit; full SLaM-with-MGE fit; published parameters. The point of this example is *what changes when you move from clean mocks to real HST data*, not a science result on the AGEL013322 target.
+
+
 ## Status
 
 ◐ **In progress (scaffold)** — real HST cutout + noise map + **empirical PSF** (median-stacked from 14 bright isolated stars in the same drizzled frame) in place; driver + notebook scaffolded; Cannon results pending; mask + lens-light treatment caveats documented in §Caveats.

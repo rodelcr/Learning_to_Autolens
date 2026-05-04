@@ -1,5 +1,10 @@
 # Example: Quad Lens with Time Delays
 
+> **v0.92 ships:** the notebook scaffolding + Cannon driver. The point-source likelihood produces no `chi_squared_per_pixel` (visibility / time-delay likelihoods are pixel-free).
+> 
+> **Research in progress (NOT in v0.92):** audit of the H₀ posterior against published lens-time-delay measurements. Treat this example as a working API demo for `AnalysisPoint` + time-delay cosmography, not a calibrated H₀ result.
+
+
 ## Status
 
 ◐ **In progress** — mock generated, direct-fit notebook + Cannon driver shipped, fit results pending.

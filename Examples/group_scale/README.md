@@ -1,5 +1,10 @@
 # Example: Group-Scale Lens
 
+> **v0.92 ships:** the `truth_anchored` Cannon result (job 9204948, 1h05m, χ²/N=1.025, max\|res\|=4.50σ) — clean PASS that validates the model space can fit this group system.
+> 
+> **Research in progress (NOT in v0.92):** the freely-fit, staged_satellites, and SLaM 3-stage variants all FAILED to converge (search-space exploration is the bottleneck). Documented as approaches #1, #3, #4 in the Status section + `Modules/10_Cluster_Computing/HANDOFF_2026_05_02.md` §1.
+
+
 ## Status
 
 ◐ **In progress** — three approaches investigated:

@@ -1,5 +1,10 @@
 # Example: Subhalo Sensitivity / Detection (Scaffolded)
 
+> **v0.92 ships:** the smooth-vs-with-perturber Bayes-factor scaffolding (2 fits committed) — pedagogical demo of how substructure detection works.
+> 
+> **Research in progress (NOT in v0.92):** full grid-search SLaM pipeline (Vegetti+ 2010 / Despali+ 2018 methodology), formal sensitivity-mapping. Treat as an *introduction to substructure detection*, not a full sensitivity analysis.
+
+
 ## Status
 
 ◐ **In progress (scaffold)** — mock generated, two-fit Bayes-factor demonstration scaffolded as an entry point. The full grid-search SLaM pipeline (Vegetti+ 2010 / Despali+ 2018 methodology) is left as a planned extension; this scaffold is the *minimum viable* version that demonstrates Bayesian model comparison for DM substructure detection.
