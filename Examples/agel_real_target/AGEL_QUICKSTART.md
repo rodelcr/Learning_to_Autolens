@@ -182,7 +182,7 @@ ssh cannon "cd \$CANNON_REPO_ROOT && \
     Modules/10_Cluster_Computing/scripts/submit_cannon.slurm"
 ```
 
-Wall-time expectation for a single PowerLaw + Sersic-source fit: **2-4 hours** on the `siag_gpu` partition (32 cores). Larger if you go to MGE light or pixelized source.
+Wall-time expectation for a single PowerLaw + Sersic-source fit: **2-4 hours** on the `hernquist` partition (32 cores). Larger if you go to MGE light or pixelized source.
 
 ---
 

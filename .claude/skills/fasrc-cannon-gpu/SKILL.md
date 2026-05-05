@@ -34,7 +34,7 @@ Check your accounts: `sacctmgr show associations where user=$USER format=Account
 | `gpu` | Slow (guaranteed) | varies | Long queue wait, but jobs won't be preempted |
 | `gpu_requeue` | Medium | varies | **Preemptible** — your job can be killed anytime. Must checkpoint frequently |
 | `gpu_test` | Fast | 1 hour | Quick smoke tests only |
-| Lab-specific (e.g. `siag_gpu`) | Varies | varies | Check with your PI — some labs have dedicated partitions with faster scheduling |
+| Lab-specific (e.g. `hernquist`) | Varies | varies | Check with your PI — some labs have dedicated partitions with faster scheduling |
 
 ### GPU Selection
 - **Specific GPU type:** `--gres=gpu:nvidia_a100-sxm4-80gb:1` (most precise — specifies exact model)

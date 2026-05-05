@@ -812,7 +812,7 @@ and ignored.
   `cannon.env` (gitignored) for user-specific settings. All cluster
   scripts auto-source it. User-specific defaults (username, lab
   storage path, slurm account, conda env) no longer hardcoded.
-- `submit_cannon.slurm` removed hardcoded `--account=siag_lab` and
+- `submit_cannon.slurm` removed hardcoded `--account=hernquist_lab` and
   `--mail-user=...`. `submit_to_cannon.sh` forwards cannon.env's
   `SLURM_{ACCOUNT,PARTITION,MEM,TIME,CPUS_PER_TASK,MAIL_{USER,TYPE}}`
   as sbatch CLI overrides.

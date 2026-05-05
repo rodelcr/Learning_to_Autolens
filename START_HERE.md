@@ -99,7 +99,7 @@ Once you've done the orientation + first fit + climb + recipe pass, you're ready
 
 The slurm entry point is **[`Modules/10_Cluster_Computing/scripts/submit_cannon.slurm`](Modules/10_Cluster_Computing/scripts/submit_cannon.slurm)** — generic, parametrized via `cannon.env`. **Hernquist-lab members** can `cp Modules/10_Cluster_Computing/cannon.env.hernquist Modules/10_Cluster_Computing/cannon.env` (only `CANNON_USER` to fill in); other lab members use [`cannon.env.example`](Modules/10_Cluster_Computing/cannon.env.example) as a template.
 
-Wall-time budgets per recipe are listed in RECIPES.md (most fits are 1-12 h on Cannon's `siag_gpu` partition with 32 cores).
+Wall-time budgets per recipe are listed in RECIPES.md (most fits are 1-12 h on Cannon's `hernquist` partition with 32 cores).
 
 ---
 

@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=autolens
-#SBATCH --partition=siag_gpu
+#SBATCH --partition=hernquist
 #SBATCH --time=24:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1

@@ -99,7 +99,7 @@ sbatch --export=ALL,MODULE=04 Modules/10_Cluster_Computing/scripts/submit_cannon
 bash Modules/10_Cluster_Computing/scripts/pull_from_cannon.sh --go    # pull lightweight artifacts
 ```
 
-The submit script bills compute to `--account=siag_lab` (fast scheduling) and writes output to Hernquist lab storage. Nautilus checkpoints in `checkpoint.hdf5` auto-resume on re-submit, so a requeued job picks up where it left off.
+The submit script bills compute to `--account=hernquist_lab` (fast scheduling) and writes output to Hernquist lab storage. Nautilus checkpoints in `checkpoint.hdf5` auto-resume on re-submit, so a requeued job picks up where it left off.
 
 ### Student-facing cluster docs
 

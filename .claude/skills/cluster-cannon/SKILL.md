@@ -105,7 +105,7 @@ Discover your accounts: `sacctmgr show associations where user=$USER format=Acco
 
 Typical CfA-affiliated accounts:
 - `hernquist_lab` — Hernquist group (CfA).
-- `siag_lab` — SIAG; often has faster GPU scheduling via dedicated partitions.
+- `hernquist_lab` — Hernquist-lab subgroup; often has faster GPU scheduling via dedicated partitions.
 - Others — ask your PI or check `sshare -u $USER`.
 
 Rotate between accounts if you have multiple — `sshare -u $USER` shows fairshare per account and lets you pick the least-burned one.
@@ -123,12 +123,12 @@ Cannon partitions differ in time limits, availability, and preemption. Account a
 | `gpu` | GPU | varies | Slow scheduling but guaranteed (no preemption). |
 | `gpu_requeue` | GPU | varies | **Preemptible**. Faster queue at the cost of mid-run kills. |
 | `gpu_test` | GPU | 1 hour | Quick GPU smoke tests, minimal fairshare cost. |
-| `siag_gpu` | GPU | varies | Lab-specific; requires `--account=siag_lab`. Usually fastest for SIAG members. |
+| `hernquist` | GPU | varies | Lab-specific; requires `--account=hernquist_lab`. Usually fastest for Hernquist-lab members. |
 | Other `<lab>_gpu` / `<lab>_compute` | varies | varies | Your PI may own dedicated nodes — check with your group. |
 
 Default: `shared` for CPU work, `gpu_test` for GPU smoke tests, your lab's dedicated partition for GPU production, `gpu_requeue` if you're comfortable with preemption.
 
-Check live partition state: `sinfo -p shared`, `sinfo -p siag_gpu`.
+Check live partition state: `sinfo -p shared`, `sinfo -p hernquist`.
 
 ---
 
@@ -140,7 +140,7 @@ A reusable `submit_cannon.slurm` for a **CPU job**:
 #!/bin/bash
 #SBATCH --job-name=myjob
 #SBATCH --partition=shared
-#SBATCH --account=siag_lab             # CRITICAL — always specify, see §5
+#SBATCH --account=hernquist_lab             # CRITICAL — always specify, see §5
 #SBATCH --time=12:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
@@ -188,7 +188,7 @@ echo "=== Done at $(date -Is) ==="
 
 For **GPU work**, additionally add:
 ```bash
-#SBATCH --partition=siag_gpu            # or gpu, gpu_requeue, gpu_test
+#SBATCH --partition=hernquist            # or gpu, gpu_requeue, gpu_test
 #SBATCH --gres=gpu:nvidia_a100-sxm4-80gb:1
 # ... after activate:
 module load cuda/12.4
@@ -361,7 +361,7 @@ Most users end up with several projects on Cannon simultaneously (ML training, l
 - **One `$HOME/<repo>` clone per repo.** Don't symlink shared source dirs between repos — it breaks `git` and makes "which version is running" unanswerable.
 - **One `OUTPUT_ROOT/<repo>/` tree per repo.** Your Slurm script's `OUTPUT_ROOT` must name the repo. Otherwise two jobs clobber each other's `output/` dirs.
 - **One lab-storage subdir per repo** for long-lived artifacts: `/n/holystore*/LABS/<pi>/Users/<user>/<repo>/`.
-- **Account ≠ storage.** You can bill compute to one account (`--account=siag_lab` for fast scheduling) while writing output under a different lab's disk (`/n/holystore02/LABS/hernquist_lab/...` because that's where the space is). Pick each independently.
+- **Account ≠ storage.** You can bill compute to one account (`--account=hernquist_lab` for fast scheduling) while writing output under a different lab's disk (`/n/holystore02/LABS/hernquist_lab/...` because that's where the space is). Pick each independently.
 
 Put the repo name in the Slurm `--job-name` (`#SBATCH --job-name=<repo>-<task>`) so `squeue --me` and email subject lines are unambiguous.
 
