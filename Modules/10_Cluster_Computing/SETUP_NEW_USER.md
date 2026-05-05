@@ -129,11 +129,17 @@ If you don't have lab storage yet, ask your PI to grant access to
 
 ## Step 4 — Create your `cannon.env`
 
-On the laptop, copy the template and edit with your values:
+On the laptop, copy a template and edit with your values:
 
 ```bash
+# Hernquist-lab members: pre-filled variant — only CANNON_USER to fill in
+cp Modules/10_Cluster_Computing/cannon.env.hernquist \
+   Modules/10_Cluster_Computing/cannon.env
+
+# Everyone else: generic template
 cp Modules/10_Cluster_Computing/cannon.env.example \
    Modules/10_Cluster_Computing/cannon.env
+
 $EDITOR Modules/10_Cluster_Computing/cannon.env
 ```
 

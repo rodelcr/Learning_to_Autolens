@@ -173,4 +173,5 @@ If steps 1-6 work, your full pipeline is operational. Move on to RECIPES.md to s
 - [`SETUP_NEW_USER.md`](SETUP_NEW_USER.md) — one-time setup walk-through (SSH alias, conda env, cannon.env)
 - [`RECIPES.md`](RECIPES.md) — all `EXAMPLE=` × `FIT_EXTRA_ARGS=` recipes, with time budgets
 - [`CLUSTER_WORKFLOW_NOTES.md`](CLUSTER_WORKFLOW_NOTES.md) — design notes on the rsync/sbatch architecture (read if you want to extend it)
-- `cannon.env.example` — annotated config template
+- `cannon.env.example` — annotated config template (generic, all labs)
+- `cannon.env.hernquist` — pre-filled config for Hernquist-lab members (only `CANNON_USER` to fill in)
