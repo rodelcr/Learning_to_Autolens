@@ -1114,3 +1114,57 @@ Re-fire-ready as `--part=staged_satellites`.
 Detailed checklist in `Modules/10_Cluster_Computing/HANDOFF_2026_04_29.md`
 §13.
 
+
+## 2026-05-05 — Hernquist-lab onboarding + chi²-at-truth diagnostic on truth_fc trio
+
+### Morning: cluster pull + Hernquist student onboarding
+
+- `pull_from_cannon.sh` round-trip. **No new Cannon completions** — `dspl_beta_v2` still RUNNING (1d04h elapsed at pull time, ~19h left). `truth_fc` trio (jobs 9727090/92/94) confirmed TIMEOUT at 48h. 13 untracked dirs surfaced (stale pre-v0.92-tag results from Cannon-side state); kept untracked per ship-set discipline.
+- Created **`Modules/10_Cluster_Computing/cannon.env.hernquist`** — pre-filled config for Hernquist-lab students. Smoke-tested on Cannon (4 checks: file syncs, env vars resolve, FASRC Miniforge activates `autolens312`, `sbatch --test-only` accepts the resource combo). Cross-linked from `START_HERE.md`, `SETUP_NEW_USER.md` Step 4, and `STUDENT_QUICKSTART.md` see-also (commit `04f7847`).
+- **Scrubbed all SIAG references project-wide** (commit `342bcd8`): SLURM defaults flipped from `siag_gpu`/`siag_lab` (SIAG-subgroup-specific, not all Hernquist-lab members have access) to `hernquist`/`hernquist_lab` (10-node lab partition + lab-wide fairshare account). 22 files updated incl. notebooks, slurm header, env templates, internal Claude-skill docs. Re-smoke-tested: dispatches immediately to `holy7c16203`.
+
+### Afternoon: PositionsLH API contract in compound_lens 01 (commit `acb0ffb`)
+
+- Fixed latent bug in `Examples/compound_lens/01_compound_direct_fit.ipynb`: §4 fit cell referenced `positions_A` / `positions_B` which were never defined (only `positions_all` existed).
+- Rewrote §2 to make the dual-API explicit: the **same `al.Grid2DIrregular`** flows to both `aplt.subplot_imaging_dataset(positions=...)` and `al.PositionsLH(positions=..., threshold=...)`. Spelled out the multi-image-conjugate prerequisite — peaks of an extended arc aren't valid PositionsLH inputs.
+- Added §2.5 sanity-check section that empirically demonstrates the constraint: build truth tracer + 3 perturbed tracers (centre +0.5″, θ_E ±33%, θ_E +124%), trace image positions through each to source plane, print penalty contract:
+
+  | Model | src-plane spread | penalty |
+  |---|---|---|
+  | truth (v4 PASS) | 0.0004″ | 0 |
+  | centre +0.5″ | 0.145″ | 4.5e6 |
+  | θ_E -33% | 1.14″ | 1.0e8 |
+  | θ_E +124% | 4.31″ | 4.2e8 |
+
+  (Penalty factor = 1e8, ~10⁴× larger than typical imaging-likelihood differences, so PositionsLH genuinely prunes parameter space.)
+
+### Evening: chi²-at-truth diagnostic on compound zoo mocks 2/3/5
+
+Per `HANDOFF_2026_05_05` §4 priority 1 — diagnose whether the three TIMEOUT'd `R5_truth_freecosmo` jobs are model-fix-bound or budget-bound, before re-spending Cannon compute.
+
+**Method.** Same pattern as the cluster_scale fix (`f8471bb`): build an `al.Tracer` with literal truth values, wrap in `FitImaging`, read off chi²/N. Two iterations needed:
+
+1. **First pass with literal lenstronomy `amp` → autolens `intensity` 1:1** gave chi²/N in the millions on all mocks. Lenstronomy/autolens use different surface-brightness conventions; the 1:1 mapping is wrong. The R5_truth_freecosmo Cannon driver finesses this by using `LogUniformPrior(1e-3, 1e3)` on every intensity.
+2. **Second pass with `al.lp_linear.Sersic`** (linear light profiles solve their intensity analytically per likelihood — same effective freedom as the LogUniform fit). Result:
+
+| Mock | chi²/N at truth | max\|res\| | Cannon truth_fc | Cosmology |
+|---|---|---|---|---|
+| 2 | 11.4 | 25.7σ | TIMEOUT 48h | Om=0.25, w=−0.9 |
+| 3 | **2.1** | 6.8σ | TIMEOUT 48h | Om=0.30, w=−1.0 (std) |
+| **4** | **4.9** | 11.2σ | KNOWN-GOOD (R5_truth_anchored shipped, χ²/N=1.025) | Om=0.30, w=−1.0 |
+| 5 | 9.6 | 33.6σ | TIMEOUT 48h | Om=0.35, w=−1.2 |
+
+**Verdict.** The diagnostic itself has a baseline inflation: mock_4 — a *converged shipped fit* with χ²/N=1.025 — gives chi²/N=4.9 at literal-truth values. The 4× gap is convention drift (sign on shear/ell_comps, sub-pixel centre offsets) that the actual Cannon fit absorbs via the σ=0.1 truncated-Gaussian truth-anchored priors but a literal-instance eval does not.
+
+**Mock_3 at chi²/N=2.1 starts BELOW mock_4's baseline** — clean evidence the truth_fc TIMEOUT is search-budget bound, not model-space bound. Mocks 2 and 5 at chi²/N ~ 10 sit ~2× above mock_4's baseline, attributable to the cosmology-dimension freedom the truth_fc model has but I deliberately constrained at truth.
+
+**This is NOT Pattern F** (no missing component). The model space is correct; Nautilus just needed more than 48h to land in the basin. Recommend resubmit: 96h budget for mock_3, 120h for mocks 2 and 5 (cosmology-dimension penalty).
+
+Diagnostic scripts saved at `/tmp/chi2_diag*.py` and JSON at `/tmp/chi2_at_truth_linear.json`.
+
+### What's left for the next session
+
+1. Audit `dspl_beta_v2` when it lands (ETA 2026-05-06 04:00 local).
+2. Submit AGEL hot-pixel cleaned refit (`--part=direct_clean`).
+3. Resubmit truth_fc trio at 96–120h (per the diagnostic above).
+4. Tag `v0.93` once items 1–3 land.
