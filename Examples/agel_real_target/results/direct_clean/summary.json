@@ -1,0 +1,10 @@
+{
+  "search_name": "agel013322_direct_clean",
+  "source_dir": "output/agel013322_sersic_powerlaw_shear_sersiccore_hotpix8/agel013322_direct_clean/7ae718164a13d310ad0f0b2d33783ff1",
+  "max_log_likelihood": 20742.35406019611,
+  "log_evidence": 20662.529949597225,
+  "chi_squared_total": 1514.426734760586,
+  "chi_squared_per_pixel": 0.1650961228344692,
+  "n_unmasked_pixels": 9173,
+  "max_abs_normalized_residual": 3.407690071574428
+}
