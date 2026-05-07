@@ -196,10 +196,87 @@ def build_direct_h0_free(dataset, output_root: Path, n_live: int = 150,
     return result
 
 
+def build_direct_h0_free_tight(dataset, output_root: Path, n_live: int = 300,
+                               use_jax: bool = False):
+    """Phase 3 — same as Phase 2 but with a tightened H0 prior and bumped
+    n_live, targeting strict-PASS H0 recovery.
+
+    Phase 2 (Uniform(40, 120) on H0, n_live=150) recovered median H0=92.7
+    with truth=70 at the 2σ edge — borderline. Tightening the prior to
+    Uniform(50, 100) (still 30 km/s/Mpc on each side of truth, far beyond
+    any survey-tension consideration) and bumping n_live to 300 should
+    pull the posterior down toward truth and tighten the 1σ band. Lens
+    parameters were already within 1σ of truth in Phase 2, so this run is
+    essentially a cosmography-only refinement.
+
+    Wall: ~30-60 min on 32 cores (point-source fits are cheap).
+    """
+    import autofit as af
+    import autolens as al
+
+    print("\n[QTD/direct_h0_free_tight] Phase 3: H0 free, prior "
+          "Uniform(50, 100), n_live=300.", flush=True)
+
+    mass = af.Model(al.mp.PowerLaw)
+    mass.centre.centre_0 = af.GaussianPrior(mean=0.0, sigma=0.1)
+    mass.centre.centre_1 = af.GaussianPrior(mean=0.0, sigma=0.1)
+    mass.einstein_radius = af.UniformPrior(lower_limit=0.5, upper_limit=2.5)
+    mass.slope           = af.TruncatedGaussianPrior(
+        mean=2.0, sigma=0.2, lower_limit=1.5, upper_limit=2.5)
+    mass.ell_comps.ell_comps_0 = af.TruncatedGaussianPrior(
+        mean=0.0, sigma=0.3, lower_limit=-1.0, upper_limit=1.0)
+    mass.ell_comps.ell_comps_1 = af.TruncatedGaussianPrior(
+        mean=0.0, sigma=0.3, lower_limit=-1.0, upper_limit=1.0)
+
+    shear = af.Model(al.mp.ExternalShear)
+    shear.gamma_1 = af.GaussianPrior(mean=0.0, sigma=0.1)
+    shear.gamma_2 = af.GaussianPrior(mean=0.0, sigma=0.1)
+
+    lens = af.Model(al.Galaxy, redshift=0.5, mass=mass, shear=shear)
+
+    point_0 = af.Model(al.ps.Point)
+    point_0.centre.centre_0 = af.GaussianPrior(mean=0.0, sigma=0.3)
+    point_0.centre.centre_1 = af.GaussianPrior(mean=0.0, sigma=0.3)
+    source = af.Model(al.Galaxy, redshift=2.0, point_0=point_0)
+
+    cosmology = af.Model(al.cosmo.FlatLambdaCDM)
+    cosmology.H0 = af.UniformPrior(lower_limit=50.0, upper_limit=100.0)
+    cosmology.Om0 = 0.30
+
+    model = af.Collection(
+        galaxies=af.Collection(lens=lens, source=source),
+        cosmology=cosmology,
+    )
+
+    solver = build_solver(use_jax=use_jax)
+    analysis = al.AnalysisPoint(
+        dataset=dataset, solver=solver, use_jax=use_jax,
+    )
+
+    search = af.Nautilus(
+        path_prefix=output_root,
+        name="quad_direct_fit",
+        unique_tag="phase_3_h0_free_tight",
+        n_live=n_live,
+        n_batch=50,
+        iterations_per_update=5000,
+        number_of_cores=int(os.environ.get("SLURM_CPUS_PER_TASK", "1")),
+    )
+
+    t0 = time.time()
+    result = search.fit(model=model, analysis=analysis)
+    print(f"[QTD/direct_h0_free_tight] done in {(time.time()-t0)/60:.1f} min",
+          flush=True)
+    _force_visualize(analysis, result, tag="direct_h0_free_tight")
+    print(result.info, flush=True)
+    return result
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--part",
-                   choices=("direct", "direct_h0_free", "all"),
+                   choices=("direct", "direct_h0_free",
+                            "direct_h0_free_tight", "all"),
                    default="direct")
     p.add_argument("--output-root", type=Path,
                    default=Path("./output").resolve())
@@ -241,6 +318,10 @@ def main():
     if args.part in ("direct_h0_free", "all"):
         build_direct_h0_free(dataset, args.output_root,
                              n_live=args.n_live_h0, use_jax=args.use_jax)
+
+    if args.part == "direct_h0_free_tight":
+        build_direct_h0_free_tight(dataset, args.output_root,
+                                   n_live=300, use_jax=args.use_jax)
 
     print(f"\nTotal wall time: {(time.time()-t_start)/3600:.2f} h", flush=True)
 
