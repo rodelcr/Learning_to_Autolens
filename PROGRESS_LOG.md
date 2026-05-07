@@ -1168,3 +1168,58 @@ Diagnostic scripts saved at `/tmp/chi2_diag*.py` and JSON at `/tmp/chi2_at_truth
 2. Submit AGEL hot-pixel cleaned refit (`--part=direct_clean`).
 3. Resubmit truth_fc trio at 96–120h (per the diagnostic above).
 4. Tag `v0.93` once items 1–3 land.
+
+## 2026-05-07 — v0.94 work session: methodology fixes + Modules 11+12 shipped
+
+### Morning: Track B diagnostic + Tracks A/B fixes
+
+- **Track B (Nautilus checkpoint resume deadlock, task #111)**: built `Modules/10_Cluster_Computing/scripts/diagnose_nautilus_resume.py` and ran it on the 3 stuck checkpoints from the v0.93 truth_fc trio. Findings:
+
+  | Mock | Bound count | n_like | mtime | n_dim |
+  |---|---|---|---|---|
+  | mock_2 | 161 | 384,100 | 2026-05-01 | 37 ✓ |
+  | mock_3 | **239** | **733,700** | 2026-05-04 | 37 ✓ |
+  | mock_5 | 43 | 21,850 | 2026-05-01 | 37 ✓ |
+
+  `n_dim=37` matches expected → not B1 (model-hash mismatch). Nautilus 1.0.5 reads the files cleanly → not B2 (format mismatch). Smoking gun: `min(log_l) = -1e+99` universally — Nautilus's "bad value" placeholder. Saved live points include cosmology samples that crash the autolens FlatwCDM angular-diameter integrator on resume → worker hangs (Pattern B3).
+
+- **Fix applied to BOTH offending model builders**:
+  - `fit_example_compound_lens_zoo_climb.py:build_R5_truth_freecosmo_model()` — TruncatedGaussianPrior on Om0 [0.05, 0.60], w0 [-1.6, -0.4]
+  - `fit_example_double_source_plane.py:build_beta_freecosmo_v3_fit()` — same bounds + a new staged-chain machinery (`build_beta_chain` runs `beta_fixedcosmo` → `beta_freecosmo_v3` with prior passing)
+
+- **`Modules/10_Cluster_Computing/CLUSTER_WORKFLOW_NOTES.md` "Checkpoint hygiene" section** codifies the rule: **always assign a fresh `unique_tag` when prior bounds change**.
+
+- **Cannon submits**: `dspl_beta_chain` (job 11214940, 96h) + `truth_fc_m3_v4` (job 11214941, 96h, fresh unique_tag bypassing the deadlocked checkpoints).
+
+### Afternoon: Track C (Module 11) + Track D (mge_to_physical) + Module 12
+
+- **Track C — Module 11 (Physical Mass Models) shipped**: 29 cells main + Solutions/SOLVED variant, executes <5s. Full 6-panel residual audit walkthrough (uses the v0.93 AGEL direct_clean strict-PASS as the example), Bonferroni-corrected numerical bar, Pattern A-F failure catalogue, f_DM(<θ_E) extraction from the existing mge_to_physical results, γ′ recovery cross-check, decision flowchart. 6 cross-link READMEs flipped from "Module 11 planned" to shipped pointers.
+
+- **Track D — mge_to_physical chi²-at-truth diagnostic**: applied the same methodology as cluster_scale's `f8471bb` fix. **Falsified** the v0.92 stated diagnosis ("missing 2nd source + secondary deflector"). Truth-tracer with all components: χ²/N=6.35, max=33σ, 694 pixels >4σ at the lens centre. Removing components: χ² changes <1%. Actual cause is a **framework-level evaluation difference** — lenstronomy and autolens integrate the cuspy `n=4.9` Sersic peak slightly differently. README updated with corrected diagnosis. Pattern G candidate name: "framework-level evaluation mismatch."
+
+- **Module 12 (Time-Delay Cosmography & MSD)** drafted for v0.95 prep but lands in HEAD past v0.93-alpha → ships in v0.94. 19 cells main + 21 cells SOLVED, executes <4s. Sections: Refsdal time-delay derivation, Fermat potential via `mass.potential_2d_from`, D_Δt across (H0, w) with FlatLambdaCDM vs FlatwCDM, full mass-sheet-degeneracy derivation + numerical verification (image positions invariant to ~10⁻⁴″, time delays scale exactly by λ, flux ratios identical), TDCOSMO chain (Wong+20, Birrer+20). The 14-module curriculum table is now complete.
+
+- **`Examples/quad_time_delay/` Phase 3 submission**: `--part=direct_h0_free_tight` adds tightened H0 prior (Uniform(50, 100) vs Phase 2's (40, 120)) + n_live=300 (vs 150). Phase 2 recovered median H0=92.7 with truth=70 at the 2σ edge — borderline. Phase 3 should tighten this. Cannon job 11237334, 4h budget.
+
+### v0.94 tag readiness end-of-day
+
+`bash Modules/10_Cluster_Computing/scripts/preflight_check_v094.sh` → **17 PASS / 2 WARN / 0 FAIL**. The 2 WARNs are conditional Cannon results (DSPL chain + mock_3 v4 summary.json) — they'll flip to PASS when the Cannon jobs land, or stay research-in-progress. v0.94 can ship as-is whenever the user wants.
+
+### Cannon queue state
+
+```
+RUNNING (96h budget):
+  11214940 dspl_beta_chain
+  11214941 truth_fc_m3_v4
+
+PENDING (4h budget):
+  11237334 quad_h0_phase3
+```
+
+### What's left for the next session
+
+1. **Wait for Cannon results** (3-4 days for the 96h jobs, ~hours for quad Phase 3).
+2. **Audit when they land** — DSPL chain with 6-panel + recovered (Om0, w0); mock_3 v4 with 6-panel + position-conjugate; quad Phase 3 by H0 posterior.
+3. **Tag v0.94-alpha**.
+4. **v0.95 sketch**: see `HANDOFF_2026_05_07.md` §4 — quad_time_delay strict-PASS by H0 recovery, mge_to_physical native-autolens remock, possibly mocks 2/5 truth_fc retry if the deadlock fix is verified.
+
