@@ -74,12 +74,14 @@ else
     print_fail "v0.93 preflight returned non-zero — see /tmp/preflight_v093.log"
 fi
 
-# -------- 2. Module 11 notebooks present + execute clean --------
+# -------- 2. Module 11 + Module 12 notebooks present + execute clean --------
 echo
-echo "=== Step 2: Module 11 (Physical Mass Models) ==="
+echo "=== Step 2: Modules 11 + 12 (Physical Mass Models, TDCOSMO + MSD) ==="
 for nb in \
     "Modules/11_Physical_Mass_Models/11_physical_mass_models.ipynb" \
-    "Solutions/11_physical_mass_models_SOLVED.ipynb"; do
+    "Solutions/11_physical_mass_models_SOLVED.ipynb" \
+    "Modules/12_Time_Delay_Cosmography_MSD/12_time_delay_cosmography_msd.ipynb" \
+    "Solutions/12_time_delay_cosmography_msd_SOLVED.ipynb"; do
     if [ ! -f "$nb" ]; then
         print_fail "MISSING: $nb"
         continue

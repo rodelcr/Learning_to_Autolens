@@ -9,15 +9,17 @@
 
 ## What's new in v0.94
 
-v0.94 closes the two methodology debts from v0.93 and adds the canonical "physical bar" reference notebook that v0.92/v0.93 examples have all been pointing at without it existing.
+v0.94 closes the two methodology debts from v0.93 AND fills the only-missing-module gap in the curriculum (Module 12). Two pedagogical capstones plus methodology fixes.
 
 1. **Module 11 (Physical Mass Models)** — pedagogical capstone shipped (~29 cells, executes <5s with no Cannon dependency). Six sections: 6-panel residual audit, numerical bar with Bonferroni-corrected noise floor, Pattern A-F failure catalogue, f_DM(<θ_E) extraction, γ′ slope recovery, decision flowchart. Solutions/SOLVED variant included. 6 cross-referencing READMEs updated from "Module 11 planned" to "Module 11 shipped".
 
-2. **DSPL β-cosmography staged chain (task #110)** — replaces the v0.93 Pattern A stall. Stage 1 fits lens + sources at fixed FlatLambdaCDM(70, 0.30); Stage 2 frees Om0/w0 with **TruncatedGaussianPrior** bounds (Om0 in [0.05, 0.60], w0 in [-1.6, -0.4]) and inherits Stage 1 lens/source posteriors as priors. The truncated bounds prevent the autolens FlatwCDM angular-diameter integrator from being asked about Om0 ≤ 0 or extreme phantom-DE w0 < -1.5 — which crashed the integrator and produced f_live=1.0 indefinitely in v0.93.
+2. **Module 12 (Time-Delay Cosmography & MSD)** — second pedagogical capstone shipped (19 cells main + 21 cells Solutions/SOLVED, executes <4s). Six sections: time delays as cosmography + Refsdal 1964, Fermat potential derivation with autolens `mass.potential_2d_from`, D_Δt across (H0, w) cosmologies, full mass-sheet-degeneracy derivation + numerical verification (image positions invariant to ~10⁻⁴″, time delays scale by exactly λ, flux ratios identical), TDCOSMO chain (Wong+20 / Birrer+20), hand-off to Module 13 kinematics. Module 13's §3 ("Internal vs external MST") presumes Module 12 derivation — gap is now closed. The 14-module curriculum table is now complete.
 
-3. **Nautilus checkpoint resume deadlock fix (task #111)** — same TruncatedGaussian fix applied to `build_R5_truth_freecosmo_model()` in the compound_lens_zoo climb driver. The v0.93 truth_fc trio resume deadlock was traced via `diagnose_nautilus_resume.py` to Pattern B3: a saved live point evaluating to a cosmology that crashed the autolens integrator on resume, hanging the worker. New `Modules/10_Cluster_Computing/CLUSTER_WORKFLOW_NOTES.md` "Checkpoint hygiene" section establishes the rule **"always assign a fresh `unique_tag` when prior bounds change"** to prevent recurrence.
+3. **DSPL β-cosmography staged chain (task #110)** — replaces the v0.93 Pattern A stall. Stage 1 fits lens + sources at fixed FlatLambdaCDM(70, 0.30); Stage 2 frees Om0/w0 with **TruncatedGaussianPrior** bounds (Om0 in [0.05, 0.60], w0 in [-1.6, -0.4]) and inherits Stage 1 lens/source posteriors as priors. The truncated bounds prevent the autolens FlatwCDM angular-diameter integrator from being asked about Om0 ≤ 0 or extreme phantom-DE w0 < -1.5 — which crashed the integrator and produced f_live=1.0 indefinitely in v0.93.
 
-4. **chi²-at-truth methodology applied to mge_to_physical (Track D)** — the diagnostic falsified the v0.92-stated diagnosis ("missing 2nd source + secondary deflector"). Removing those components changes χ²/N by <1%; the actual issue is a **framework-level Sersic evaluation difference** (lenstronomy simulator vs autolens fitter) at the cuspy `n=4.9` lens-light peak, producing 33σ at the central pixel even with all truth components present. README updated with corrected diagnosis. Fix is to regenerate the mock natively in autolens — deferred to v0.95+.
+4. **Nautilus checkpoint resume deadlock fix (task #111)** — same TruncatedGaussian fix applied to `build_R5_truth_freecosmo_model()` in the compound_lens_zoo climb driver. The v0.93 truth_fc trio resume deadlock was traced via `diagnose_nautilus_resume.py` to Pattern B3: a saved live point evaluating to a cosmology that crashed the autolens integrator on resume, hanging the worker. New `Modules/10_Cluster_Computing/CLUSTER_WORKFLOW_NOTES.md` "Checkpoint hygiene" section establishes the rule **"always assign a fresh `unique_tag` when prior bounds change"** to prevent recurrence.
+
+5. **chi²-at-truth methodology applied to mge_to_physical (Track D)** — the diagnostic falsified the v0.92-stated diagnosis ("missing 2nd source + secondary deflector"). Removing those components changes χ²/N by <1%; the actual issue is a **framework-level Sersic evaluation difference** (lenstronomy simulator vs autolens fitter) at the cuspy `n=4.9` lens-light peak, producing 33σ at the central pixel even with all truth components present. README updated with corrected diagnosis. Fix is to regenerate the mock natively in autolens — deferred to v0.95+.
 
 ### New strict-PASS shipped fits
 
@@ -42,11 +44,14 @@ v0.94 closes the two methodology debts from v0.93 and adds the canonical "physic
 
 ## v0.94 ship-set tally (delta from v0.93)
 
-### Modules — Module 11 newly shipped
+### Modules — Modules 11 and 12 newly shipped
 
 | # | Module | v0.93 status | v0.94 status |
 |---|---|---|---|
 | 11 | Physical Mass Models | ◯ planned | **✓ ship** (full notebook + Solutions/SOLVED, executes <5s) |
+| 12 | Time-Delay Cosmography & MSD | ◯ planned | **✓ ship** (19 cells main + 21 cells SOLVED, executes <4s) |
+
+The 14-module curriculum table is now complete (Modules 13 and 14 already shipped pre-v0.93).
 
 ### Examples — status changes since v0.93
 
@@ -66,7 +71,7 @@ All other examples retain their v0.93 ship/research-in-progress status.
 
 2. **Compound zoo mocks 2 and 5** (truth_freecosmo) — only mock_3 was retried in v0.94 because the v0.93 chi²-at-truth diagnostic showed it was the most likely to converge (chi²/N=2.1 at literal truth, below the mock_4 known-good baseline of 4.9). Mocks 2/5 stay deferred unless mock_3 v4 ships clean and budget remains.
 
-3. **Modules 12 (TDCOSMO + MSD), 13 (kinematic TDCOSMO), 14 (multi-plane)** — curriculum expansion, not blocked.
+3. ~~Modules 12 (TDCOSMO + MSD)~~ shipped in v0.94 (see above). 13 (kinematic TDCOSMO) and 14 (multi-plane) shipped pre-v0.93.
 
 4. **`subhalo_sensitivity` full grid-search SLaM** (Vegetti+ 2010 / Despali+ 2018 methodology) — scaffolded only.
 
