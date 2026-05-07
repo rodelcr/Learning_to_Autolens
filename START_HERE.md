@@ -119,6 +119,8 @@ Open `fit_subplot.png` for any committed result; the residual map panel is the t
 
 The full auditing methodology — 6-panel walk, Pattern A–F failure catalogue, f_DM and γ′ extraction, decision flowchart — now ships as **[`Modules/11_Physical_Mass_Models/11_physical_mass_models.ipynb`](Modules/11_Physical_Mass_Models/11_physical_mass_models.ipynb)** (✓ shipped). It's a read-only ~25-cell notebook that executes in under a minute on existing committed artifacts; read it before you sit down to audit a fresh Cannon result.
 
+The cosmography pedagogy line begins with **[`Modules/12_Time_Delay_Cosmography_MSD/12_time_delay_cosmography_msd.ipynb`](Modules/12_Time_Delay_Cosmography_MSD/12_time_delay_cosmography_msd.ipynb)** (✓ shipped) — a ~19-cell notebook that derives the Fermat potential, computes $D_{\Delta t}$ for $H_0$ vs $w$ with `astropy`, and verifies the mass-sheet degeneracy numerically on an SIE quad (image positions invariant, flux ratios invariant, time delays scale by $\lambda$). It runs in well under a minute and has no Cannon dependency. Module 13 (kinematics) and Module 14 (multi-plane) extend the same pedagogy line.
+
 ---
 
 ## What's research-frontier (NOT in v0.92, may show up in v0.93+)

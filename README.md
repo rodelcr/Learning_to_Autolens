@@ -12,7 +12,7 @@ This project is a companion to [Learning to Lens](https://github.com/rodelcr/Lea
 >
 > What's new in v0.92: 3 student-targeted recipe notebooks (pixelization, MGE, SLaM staging); 4 climb bridge notebooks (single-deflector → compound / group / DSPL); 3 cluster docs that work without AI assistance (`SETUP_NEW_USER`, `STUDENT_QUICKSTART`, `RECIPES`); a pre-flight verification script. Pre-flight result: **31 PASS / 0 FAIL.**
 >
-> Modules 01-14 are curriculum-listed; **Mods 11-14 are roadmap/planned** for future releases. v0.92 ships Modules 01-10 + 5 audited example architectures. Feedback welcome at rodrigo.cordova_rosado@cfa.harvard.edu.
+> Modules 01-14 are curriculum-listed. v0.92 ships Modules 01-10 + 5 audited example architectures. Modules 11 and 12 are shipped (✓) as pedagogical-only notebooks (no Cannon dependency, no new fits); Modules 13-14 are in a similar state but not yet listed in the v0.92 curriculum table below. Feedback welcome at rodrigo.cordova_rosado@cfa.harvard.edu.
 
 ---
 
@@ -173,6 +173,7 @@ See **Module 10** for the design notes (`CLUSTER_WORKFLOW_NOTES.md`), failure mo
 | # | Module | What You'll Learn | Runtime |
 |---|--------|-------------------|---------|
 | 11 | [Physical Mass Models](Modules/11_Physical_Mass_Models/) ✓ shipped | Auditing a converged fit against the *physical* bar: 6-panel residual walk on a strict-PASS reference fit, Pattern A–F failure catalogue (rotational mirror, sign-convention drift, SLaM cascade, doc/code mismatch, forced compound, light omission), Bonferroni noise floor, `f_DM(<θ_E)` extraction (Sersic incomplete-gamma + NFW Wright-Brainerd), γ′ recovery vs Auger+10 SLACS, decision flowchart for the next action | < 1 min (read-only on committed results) |
+| 12 | [Time-Delay Cosmography & MSD](Modules/12_Time_Delay_Cosmography_MSD/) ✓ shipped | Fermat potential, time-delay distance $D_{\Delta t} \propto 1/H_0$, the mass-sheet degeneracy ($\kappa \to \lambda\kappa + (1-\lambda)$) derived analytically and verified numerically on an SIE quad (image positions invariant, flux ratios invariant, time delays scale by $\lambda$), the H0LiCOW / TDCOSMO pipeline, and why Module 13 (kinematics) and Module 14 (multi-plane) exist | < 1 min (small synthetic mocks, no fits) |
 
 > **Runtimes** are approximate for a laptop with 8+ cores. Modules with non-linear searches (03–06, 09) take longer on first run; results are cached for subsequent runs. **Modules 04, 05, 06, 09** have ready-made cluster drop-ins (`Modules/10_Cluster_Computing/scripts/fit_module{04,05,06,09}.py`) if your laptop can't keep up.
 

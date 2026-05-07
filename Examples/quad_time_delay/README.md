@@ -90,6 +90,6 @@ Parts: `direct` (Phase 1, cosmology fixed), `direct_h0_free` (Phase 2), `all` (b
 
 ## What this example DOESN'T cover
 
-- **Stellar kinematics** — the dominant external constraint that breaks the MSD when combined with imaging+delays. Module 12 (planned) will cover the full TDCOSMO chain. Here we get the imaging-only result.
+- **Stellar kinematics** — the dominant external constraint that breaks the MSD when combined with imaging+delays. **[Module 12](../../Modules/12_Time_Delay_Cosmography_MSD/12_time_delay_cosmography_msd.ipynb) (✓ shipped)** derives the MSD from $\kappa \to \lambda\kappa + (1-\lambda)$ and motivates the TDCOSMO chain at the level of analytic + small-mock numerics; **[Module 13](../../Modules/13_TDCOSMO_Kinematics_MSD/13_tdcosmo_kinematics_msd.ipynb) (✓ shipped)** walks through the kinematic constraint that pins $\lambda_\mathrm{int}$. Here we get the imaging-only result.
 - **Real-image deblending** of the quasar from the lens galaxy — see `autolens_workspace_latest/scripts/point_source/features/deblending/` for that.
 - **Microlensing time-delay error budget** — the dominant systematic on real H0LiCOW-class measurements (Tie & Kochanek 2018), not modelled here.
