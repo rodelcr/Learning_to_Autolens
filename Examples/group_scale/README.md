@@ -34,7 +34,7 @@ Options:
 
 1. Compare a single-NFW model against a single-Isothermal total model. Is the BGG stellar mass recoverable?
 2. Satellite-galaxy ablation: drop each satellite in turn, re-fit, measure the ΔlogZ. Which satellite(s) are actually needed for the fit?
-3. Dark-matter fraction inside θ_E (Section 1 of Module 11).
+3. Dark-matter fraction inside θ_E — see [`Modules/11_Physical_Mass_Models/11_physical_mass_models.ipynb`](../../Modules/11_Physical_Mass_Models/11_physical_mass_models.ipynb) §5 for the f_DM(<θ_E) extraction recipe (Sersic incomplete-gamma + NFW Wright-Brainerd integral). The shipped `truth_anchored_fit` here is the canonical Exercise 1 in that module.
 
 ## References
 

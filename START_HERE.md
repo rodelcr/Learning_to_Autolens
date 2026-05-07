@@ -117,6 +117,8 @@ For a 9000-pixel mask, max\|res\| ~4.3σ is the **Bonferroni-corrected expected 
 
 Open `fit_subplot.png` for any committed result; the residual map panel is the truth-teller.
 
+The full auditing methodology — 6-panel walk, Pattern A–F failure catalogue, f_DM and γ′ extraction, decision flowchart — now ships as **[`Modules/11_Physical_Mass_Models/11_physical_mass_models.ipynb`](Modules/11_Physical_Mass_Models/11_physical_mass_models.ipynb)** (✓ shipped). It's a read-only ~25-cell notebook that executes in under a minute on existing committed artifacts; read it before you sit down to audit a fresh Cannon result.
+
 ---
 
 ## What's research-frontier (NOT in v0.92, may show up in v0.93+)

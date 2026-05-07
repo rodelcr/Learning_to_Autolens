@@ -3,6 +3,8 @@
 > **2026-05-04 RESOLVED:** cluster_truth_v3 PASSed (Cannon job 9950262, 47-min wall, χ²/N=1.006, max\|res\|=4.04σ, log_Z=62,123). Root cause was that the fit driver modeled cluster members with **mass only, no light** — 10 unmodeled SersicSph satellite light profiles were the entire residual budget. Fix: added member SersicSph bulge with intensity / R_eff / n tightly Gaussian-anchored on truth (centre fixed at photometric). Built-in chi²-at-truth sanity assertion now in `mocks/generate_mock.py` to prevent future generator-vs-truth drift.
 >
 > **cluster_scale moves to ✓ shipped status** for the next release (v0.93). The freely-fit `direct_fit` variant (job 9675524, χ²/N=22.6) still hits the wide-prior BCG-FJ degeneracy collapse — keep that as the negative-result pedagogy alongside the truth_anchored PASS.
+>
+> The light-omission failure mode is now the canonical **Pattern F** example in [`Modules/11_Physical_Mass_Models/11_physical_mass_models.ipynb`](../../Modules/11_Physical_Mass_Models/11_physical_mass_models.ipynb) §4 — and `Examples/cluster_scale/results/truth_anchored/fit_subplot.png` is the strict-PASS reference for what the fix looks like.
 
 ## Status
 

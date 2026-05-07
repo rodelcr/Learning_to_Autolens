@@ -172,7 +172,7 @@ See **Module 10** for the design notes (`CLUSTER_WORKFLOW_NOTES.md`), failure mo
 
 | # | Module | What You'll Learn | Runtime |
 |---|--------|-------------------|---------|
-| 11 | [Physical Mass Models](Modules/11_Physical_Mass_Models/) | Auditing a converged fit against the *physical* bar (decomposability, light-consistency, reasonable scales, stability), six mandatory diagnostics, reading `model_results.txt` as a reviewer, upgrade path from Isothermal → composite → PowerLaw, when to refuse to publish | < 5 min (read-only on committed results) |
+| 11 | [Physical Mass Models](Modules/11_Physical_Mass_Models/) ✓ shipped | Auditing a converged fit against the *physical* bar: 6-panel residual walk on a strict-PASS reference fit, Pattern A–F failure catalogue (rotational mirror, sign-convention drift, SLaM cascade, doc/code mismatch, forced compound, light omission), Bonferroni noise floor, `f_DM(<θ_E)` extraction (Sersic incomplete-gamma + NFW Wright-Brainerd), γ′ recovery vs Auger+10 SLACS, decision flowchart for the next action | < 1 min (read-only on committed results) |
 
 > **Runtimes** are approximate for a laptop with 8+ cores. Modules with non-linear searches (03–06, 09) take longer on first run; results are cached for subsequent runs. **Modules 04, 05, 06, 09** have ready-made cluster drop-ins (`Modules/10_Cluster_Computing/scripts/fit_module{04,05,06,09}.py`) if your laptop can't keep up.
 

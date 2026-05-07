@@ -21,7 +21,7 @@ The chain is:
 3. Compute f_DM(<θ_E) and γ'_stellar           → physical-bar audit
 ```
 
-This is the workflow used in publication-grade analyses (Auger+10 SLACS, Sonnenfeld+13 SL2S, Treu+10) and in TDCOSMO-class systems where the stars/DM split matters for cosmology. Module 09 introduces the *MGE basis*; Module 11 introduces the *physical bar*. This example puts them together end-to-end.
+This is the workflow used in publication-grade analyses (Auger+10 SLACS, Sonnenfeld+13 SL2S, Treu+10) and in TDCOSMO-class systems where the stars/DM split matters for cosmology. Module 09 introduces the *MGE basis*; **Module 11** ships the *physical-bar audit* — the 6-panel residual walk, the Pattern A–F failure catalogue, and the `f_DM(<θ_E)` extraction recipe applied to *this fit's* `search_3_stars_dark/` artifacts. This example puts MGE light and physical-bar audit together end-to-end.
 
 ## Mock data
 
@@ -95,4 +95,4 @@ Until these are addressed, the recovered f_DM and M/L from Search 3 should be tr
 - `autolens_workspace_latest/scripts/imaging/features/advanced/mass_stellar_dark/chaining.py` — the canonical PyAutoLens 3-search chain we mirror here.
 - `autolens_workspace_latest/scripts/imaging/features/multi_gaussian_expansion/source_science.py` — for the related "source-science" flavour (intrinsic R_e, total flux, magnification of the *source*).
 - Module 09 (MGE & linear light profiles) — the basis-function mechanics.
-- Module 11 (physical mass models) — the audit methodology.
+- **Module 11 (physical mass models)** — the audit methodology. ✓ shipped — see `Modules/11_Physical_Mass_Models/11_physical_mass_models.ipynb` for the 6-panel walk, Pattern A–F catalogue, f_DM and γ′ extraction. This example's `search_3_stars_dark/` is the canonical fit Module 11 §5 audits.
