@@ -77,13 +77,15 @@ Parts: `light` (Search 1, MGE light only), `stars_only` (Search 2, MGE mass-foll
 
 ## Caveats — what to fix before this is publication-grade
 
-The canonical Cannon fit (Searches 1–3) recovers a clean Bayes-factor ladder, but the fit's residual map shows ~10σ coherent ring structure. Three concrete improvements would fix this:
+> **2026-05-07 update (v0.94 chi²-at-truth diagnostic):** A literal-truth-tracer eval on this mock (all 5 truth components: primary EPL + shear + secondary EPL + 2 sources + lens light) gives χ²/N = 6.35, max\|res\| = 33σ, with **694 pixels above 4σ concentrated at the lens centre**. Removing the secondary or 2nd source changes χ² by **<1%**, falsifying the v0.92 diagnosis. The dominant residual is **a framework-level evaluation difference for the cuspy `n=4.9` Sersic lens light** — lenstronomy (simulator) and autolens (fitter) integrate the central peak slightly differently, even with adaptive over-sampling. v0.95+ fix: regenerate the mock natively in autolens. v0.94 status: research-in-progress unchanged; methodology + Bayes-factor ladder remain valid as pedagogy.
 
-1. **Add the second source.** Truth has two `SERSIC_ELLIPSE` sources at (-0.05, 0.02)″ and (0.3, 0.22)″ — both unmodelled in the canonical fit. Adding a second `SersicCore` source with a centre prior near (0.3, 0.22)″ should drop the residuals dramatically.
-2. **Add the secondary deflector** at z=0.8 (truth `θ_E=0.11″`, centre (-0.05, 0.02)″) as a fixed-centre `extra_galaxies` perturber. Per Pattern E (`compound_lens` story), a small enough secondary often gets absorbed into shear, but `θ_E=0.11″` is *just at the boundary* — for this mock it likely needs explicit modelling.
-3. **Tighten the lens-light mask** if the MGE light fit is leaking flux into the arcs. Search 1's `chi²/N=3.23` already suggests the MGE light alone is leaving ~3σ residuals before any source is fit.
+The canonical Cannon fit (Searches 1–3) recovers a clean Bayes-factor ladder, but the fit's residual map shows ~10σ coherent ring structure. Three v0.92 hypotheses (now disproved by the chi²-at-truth diagnostic above):
 
-Until these are addressed, the recovered f_DM and M/L from Search 3 should be treated as *methodology demonstration* rather than physical inference. The Bayes-factor ladder still holds as a teaching example for `bayesian_model_comparison/` (it's exactly what §5.4 — *model misspecification* — warns about).
+1. ~~**Add the second source.**~~ Truth has two `SERSIC_ELLIPSE` sources at (-0.05, 0.02)″ and (0.3, 0.22)″. *(Disproved 2026-05-07: ablating it changes χ²/N by <1%.)*
+2. ~~**Add the secondary deflector**~~ at z=0.8 (truth `θ_E=0.11″`, centre (-0.05, 0.02)″). *(Disproved 2026-05-07: same ablation result.)*
+3. **Tighten the lens-light mask** if the MGE light fit is leaking flux into the arcs. Search 1's `chi²/N=3.23` already suggests the MGE light alone is leaving ~3σ residuals before any source is fit. *(Partially valid — but the dominant residual is at the lens centre where masking is hardest.)*
+
+Until the framework-level Sersic evaluation issue is addressed, the recovered f_DM and M/L from Search 3 should be treated as *methodology demonstration* rather than physical inference. The Bayes-factor ladder still holds as a teaching example for `bayesian_model_comparison/` (it's exactly what §5.4 — *model misspecification* — warns about).
 
 ## References
 
