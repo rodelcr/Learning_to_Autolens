@@ -714,8 +714,19 @@ def build_R5_truth_freecosmo_model(truths: dict):
     but now with proper methodology behind it.
 
     H0 fixed at truth (70). Om0/w0 priors:
-      - Om0: GaussianPrior(mean=0.30, sigma=0.10)
-      - w0:  GaussianPrior(mean=-1.0, sigma=0.20)
+      - Om0: TruncatedGaussianPrior(0.30, 0.10) on [0.05, 0.60]
+      - w0:  TruncatedGaussianPrior(-1.0, 0.20) on [-1.6, -0.4]
+
+    The TRUNCATED bounds (vs the previous uncapped GaussianPrior) prevent
+    Nautilus from drawing unphysical samples (Om0 < 0 or extreme phantom-DE
+    w0 < -1.5) that crash the autolens FlatwCDM angular-diameter integrator
+    and return -inf log-likelihood. Pre-2026-05-07 those samples produced
+    Nautilus's "bad value" placeholder (-1e+99) for the chain to skip, but
+    on RESUME the same samples can deadlock the worker pool — see
+    diagnose_nautilus_resume.py findings (task #111). The bounds here are
+    physically conservative: Om0 in [0.05, 0.60] brackets all flagship
+    survey constraints, w0 in [-1.6, -0.4] brackets even DESI-extreme
+    quintessence.
 
     Total free parameters: 35 (R5_truth) + 2 (cosmology) = 37 free params.
     """
@@ -724,12 +735,14 @@ def build_R5_truth_freecosmo_model(truths: dict):
     # Start with the truth-anchored R5 model (tight Gaussians on everything).
     model = build_R5_truth_model(truths)
 
-    # Build the cosmology Model.
+    # Build the cosmology Model with physically-bounded priors.
     FlatwCDMWrap = make_FlatwCDMWrap_class()
     cosmology = af.Model(FlatwCDMWrap)
     cosmology.H0 = 70.0
-    cosmology.Om0 = af.GaussianPrior(mean=0.30, sigma=0.10)
-    cosmology.w0  = af.GaussianPrior(mean=-1.0, sigma=0.20)
+    cosmology.Om0 = af.TruncatedGaussianPrior(
+        mean=0.30, sigma=0.10, lower_limit=0.05, upper_limit=0.60)
+    cosmology.w0  = af.TruncatedGaussianPrior(
+        mean=-1.0, sigma=0.20, lower_limit=-1.6, upper_limit=-0.4)
     cosmology.Tcmb0 = 2.7255
     cosmology.Neff  = 3.046
     cosmology.m_nu  = 0.0

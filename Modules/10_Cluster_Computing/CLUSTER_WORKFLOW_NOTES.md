@@ -179,6 +179,25 @@ dirty at job start. The log file is self-contained for forensics.
 
 ---
 
+## Checkpoint hygiene (rule established 2026-05-07)
+
+Nautilus auto-resumes from `output/<path_prefix>/<name>/<unique_tag>/<model_hash>/files/search_internal/checkpoint.hdf5` when the same fit is re-submitted. The 2026-05-07 truth_fc deadlock (task #111) showed that a stale checkpoint **can lock up a worker pool indefinitely** if the live points it stored evaluate to NaN/-inf differently than they did when written — typically because the likelihood touches an integrator (e.g. autolens FlatwCDM angular-diameter) that's sensitive to extreme parameter values.
+
+**Rule.** When a fit's *prior bounds change* between submissions (e.g. cosmology priors widened/narrowed/truncated, mass profile slope range adjusted, a new component added), **always assign a fresh `unique_tag`** (e.g. append `_v0_94`, `_truncated`, etc.). Do not rely on the `<model_hash>` directory differing — it's keyed on the model spec but not on the prior shapes.
+
+**Detection.** A deadlocked resume looks like:
+- Slurm reports the job as RUNNING but `tail -f logs/<name>.out` produces no new output
+- `find $output_dir -name 'checkpoint.hdf5' -newer <some-recent-time>` returns nothing — the file's mtime hasn't advanced
+- Worker processes are at 80-95% CPU on the compute node (not zombied — actually computing) but the main loop never returns
+
+If you see this pattern, `scancel` the job (don't waste cluster time) and:
+1. Move the stuck checkpoint dir aside (`mv output/.../checkpoint.hdf5 output/.../checkpoint.hdf5.deadlocked`).
+2. Either fix the prior bounds (TruncatedGaussian on the offending dimension) OR submit with a fresh `unique_tag`.
+
+**Diagnostic tool.** `Modules/10_Cluster_Computing/scripts/diagnose_nautilus_resume.py` opens a checkpoint with h5py and dumps the bound count, n_dim, n_live, and per-column min/max of the saved live points. Use it to discriminate model-hash-mismatch vs. version-mismatch vs. bad-sample-point. Example output and the v0.94 task #111 diagnosis are in `PROGRESS_LOG.md`.
+
+---
+
 ## Medium-term improvements (worth doing next)
 
 ### A. Git-backed sync instead of rsync

@@ -4,11 +4,17 @@ Fits the one-lens / two-source DSPL mock at
 Examples/double_source_plane/mocks/. Native multi-plane via
 `al.Tracer` with 3 redshift planes (z_L=0.5, z_S1=1.0, z_S2=2.5).
 
-Part:
-    direct     Single Nautilus fit of 1 lens + 2 sources (~26 free params)
+Parts:
+    direct                Single free fit of 1 lens + 2 sources (~26 free params)
+    beta_fixedcosmo       Tight truth-anchored, cosmology FIXED at FlatLambdaCDM(70, 0.30)
+    beta_freecosmo_v3     Tight truth-anchored, cosmology FREE with TruncatedGaussian
+                          on Om0/w0 (replaces the v0.93 beta_freecosmo which stalled
+                          at f_live=1.0 due to Om0 ≤ 0 / extreme w0 sampling)
+    beta_chain            Stage 1 = beta_fixedcosmo, Stage 2 = beta_freecosmo_v3 with
+                          Stage 1 lens/source posteriors as priors. Recommended.
 
 Usage (Cannon):
-    sbatch --export=ALL,EXAMPLE=double_source_plane,FIT_EXTRA_ARGS=--part=direct \
+    sbatch --export=ALL,EXAMPLE=double_source_plane,FIT_EXTRA_ARGS=--part=beta_chain \
         submit_cannon.slurm
 """
 from __future__ import annotations
@@ -154,27 +160,15 @@ def build_direct_fit(dataset, output_root: Path, n_live: int = 200):
     return result
 
 
-def build_beta_freecosmo_fit(dataset, output_root: Path, dataset_root: Path,
-                             n_live: int = 200):
-    """β-cosmography fit on the DSPL system.
+def _truth_anchored_lens_sources(dataset_root: Path):
+    """Build truth-anchored lens + 2 source af.Models from mock_truth.json.
 
-    Tight Gaussian priors on every lens / source / light parameter (truth-
-    anchored), plus FlatwCDMWrap with Om0 + w0 free. H0 fixed at 70.
-
-    Per 2026-05-01 methodology lesson: free-cosmography requires NARROW
-    priors on the lens model so the chain has only cosmology as a free
-    knob. With wide lens priors, cosmology absorbs lens-model misfit.
-
-    The β-cosmography measurement comes from the data driving the ratio
-    of Einstein radii at z_s1 and z_s2 (tied to angular-diameter ratios
-    via the cosmology). Single-source compound lenses cannot do this
-    because there's only one Einstein radius.
-
-    Reads truth values from {dataset_root}/mock_truth.json.
+    Shared helper for the three β-cosmography variants (fixedcosmo,
+    freecosmo_v3, chain Stage 2). Returns (lens_model, source_1_model,
+    source_2_model, redshifts_dict).
     """
     import autofit as af
     import autolens as al
-    import time
     import json
 
     truth = json.loads((dataset_root / "mock_truth.json").read_text())
@@ -185,7 +179,6 @@ def build_beta_freecosmo_fit(dataset, output_root: Path, dataset_root: Path,
     src1_truth = truth["source_1"]
     src2_truth = truth["source_2"]
 
-    # ---- Lens (tight Gaussian on truth) ----
     bulge = af.Model(al.lp.Sersic)
     bulge.centre.centre_0 = af.GaussianPrior(mean=lens_truth["bulge"]["centre"][0], sigma=0.05)
     bulge.centre.centre_1 = af.GaussianPrior(mean=lens_truth["bulge"]["centre"][1], sigma=0.05)
@@ -208,7 +201,6 @@ def build_beta_freecosmo_fit(dataset, output_root: Path, dataset_root: Path,
 
     lens = af.Model(al.Galaxy, redshift=z_l, bulge=bulge, mass=mass, shear=shear)
 
-    # ---- Sources (tight on truth) ----
     def _src(z, t):
         s = af.Model(al.lp.SersicCore)
         s.centre.centre_0 = af.GaussianPrior(mean=t["bulge"]["centre"][0], sigma=0.05)
@@ -222,9 +214,18 @@ def build_beta_freecosmo_fit(dataset, output_root: Path, dataset_root: Path,
 
     source_1 = _src(z_s1, src1_truth)
     source_2 = _src(z_s2, src2_truth)
+    return lens, source_1, source_2, {"z_l": z_l, "z_s1": z_s1, "z_s2": z_s2}
 
-    # ---- Cosmology (FlatwCDMWrap, Om0 + w0 free) ----
-    # Reuse the FlatwCDMWrap from the climb driver.
+
+def _bounded_freecosmo_model():
+    """FlatwCDM cosmology af.Model with TruncatedGaussian priors on
+    Om0/w0. The truncated bounds prevent the autolens FlatwCDM
+    angular-diameter integrator from being asked about Om0 ≤ 0 or extreme
+    phantom-DE w0 < -1.5 — exactly the family of inputs that crashed the
+    integrator and produced the v0.93 Pattern A stall (task #110) and
+    deadlocked the truth_fc resume (task #111).
+    """
+    import autofit as af
     import importlib.util
     here = Path(__file__).parent
     spec = importlib.util.spec_from_file_location(
@@ -232,45 +233,184 @@ def build_beta_freecosmo_fit(dataset, output_root: Path, dataset_root: Path,
     climb_drv = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(climb_drv)
     FlatwCDMWrap = climb_drv.make_FlatwCDMWrap_class()
-
     cosmology = af.Model(FlatwCDMWrap)
     cosmology.H0 = 70.0
-    cosmology.Om0 = af.GaussianPrior(mean=0.30, sigma=0.10)
-    cosmology.w0  = af.GaussianPrior(mean=-1.0, sigma=0.20)
+    cosmology.Om0 = af.TruncatedGaussianPrior(
+        mean=0.30, sigma=0.10, lower_limit=0.05, upper_limit=0.60)
+    cosmology.w0  = af.TruncatedGaussianPrior(
+        mean=-1.0, sigma=0.20, lower_limit=-1.6, upper_limit=-0.4)
     cosmology.Tcmb0 = 2.7255
     cosmology.Neff  = 3.046
     cosmology.m_nu  = 0.0
     cosmology.Ob0   = 0.04897
+    return cosmology
+
+
+def build_beta_fixedcosmo_fit(dataset, output_root: Path, dataset_root: Path,
+                              n_live: int = 200):
+    """Stage 1 of the staged β-cosmography chain.
+
+    Truth-anchored lens + sources, cosmology FIXED at FlatLambdaCDM(70, 0.30).
+    Goal: nail down the lens / source posteriors before introducing the
+    Om0/w0 nuisance dimensions in Stage 2. Wall: ~12-24h on 32 cores.
+
+    Returns the af.NonLinearSearch result so Stage 2 can pass posteriors.
+    """
+    import autofit as af
+    import autolens as al
+    import time
+
+    lens, source_1, source_2, _ = _truth_anchored_lens_sources(dataset_root)
+    model = af.Collection(galaxies=af.Collection(
+        lens=lens, source_1=source_1, source_2=source_2))
+    print(f"[DSPL/beta_fixedcosmo] {model.total_free_parameters} free params "
+          f"(no cosmology — fixed FlatLambdaCDM(70, 0.30))", flush=True)
+
+    analysis = al.AnalysisImaging(dataset=dataset, use_jax=False)
+    search = af.Nautilus(
+        path_prefix=output_root / "double_source_plane",
+        name="beta_fixedcosmo",
+        unique_tag="mock_1_v0_94",
+        n_live=n_live, n_batch=50, iterations_per_update=30000,
+        number_of_cores=int(os.environ.get("SLURM_CPUS_PER_TASK", "1")),
+    )
+    print("[DSPL/beta_fixedcosmo] Nautilus starting...", flush=True)
+    t0 = time.time()
+    result = search.fit(model=model, analysis=analysis)
+    print(f"[DSPL/beta_fixedcosmo] done in {(time.time()-t0)/60:.1f} min, "
+          f"log_Z={result.samples.log_evidence:.2f}", flush=True)
+    _force_visualize(analysis, result, tag="beta_fixedcosmo")
+    return result
+
+
+def build_beta_freecosmo_v3_fit(dataset, output_root: Path, dataset_root: Path,
+                                n_live: int = 200,
+                                stage1_result=None):
+    """β-cosmography fit on the DSPL system — v3 with TruncatedGaussian
+    cosmology priors AND optional Stage 1 prior passing.
+
+    Why "v3": v1 of the original `build_beta_freecosmo_fit` used uncapped
+    GaussianPrior(0.30, 0.10) on Om0 and GaussianPrior(-1, 0.20) on w0. That
+    sampled Om0 ≤ 0 and extreme phantom-DE w0 < -1.5, both of which crashed
+    the autolens FlatwCDM integrator and produced -inf log-likelihood. The
+    chain stalled at f_live=1.0 (task #110, Pattern A). v3 truncates both
+    priors to physical regions.
+
+    If `stage1_result` is supplied, the lens + source priors are taken from
+    Stage 1 (build_beta_fixedcosmo_fit) posteriors via prior-passing — this
+    is the Stage 2 of the recommended `--part=beta_chain` flow.
+
+    Reads truth values from {dataset_root}/mock_truth.json.
+    """
+    import autofit as af
+    import autolens as al
+    import time
+
+    if stage1_result is not None:
+        # Stage 2: pass posteriors from Stage 1 as priors
+        lens = stage1_result.model.galaxies.lens
+        source_1 = stage1_result.model.galaxies.source_1
+        source_2 = stage1_result.model.galaxies.source_2
+        print(f"[DSPL/beta_freecosmo_v3] using Stage 1 posteriors as priors",
+              flush=True)
+    else:
+        lens, source_1, source_2, _ = _truth_anchored_lens_sources(dataset_root)
+        print(f"[DSPL/beta_freecosmo_v3] using truth-anchored priors (no Stage 1)",
+              flush=True)
+
+    cosmology = _bounded_freecosmo_model()
 
     model = af.Collection(
         galaxies=af.Collection(lens=lens, source_1=source_1, source_2=source_2),
         cosmology=cosmology,
     )
-    print(f"[DSPL/beta_freecosmo] {model.total_free_parameters} free params "
+    print(f"[DSPL/beta_freecosmo_v3] {model.total_free_parameters} free params "
           f"(lens={lens.prior_count}, src1={source_1.prior_count}, "
           f"src2={source_2.prior_count}, cosmo={cosmology.prior_count})", flush=True)
 
     analysis = al.AnalysisImaging(dataset=dataset, use_jax=False)
+    # Fresh unique_tag (v0_94) so this run does NOT pick up the deadlocked
+    # 2026-05-01-era checkpoints under the original "mock_1" tag (task #111).
+    tag = "mock_1_v0_94_chain" if stage1_result is not None else "mock_1_v0_94_standalone"
     search = af.Nautilus(
         path_prefix=output_root / "double_source_plane",
-        name="beta_freecosmo",
-        unique_tag="mock_1",
+        name="beta_freecosmo_v3",
+        unique_tag=tag,
         n_live=n_live, n_batch=50, iterations_per_update=30000,
         number_of_cores=int(os.environ.get("SLURM_CPUS_PER_TASK", "1")),
     )
-    print("[DSPL/beta_freecosmo] Nautilus starting...", flush=True)
+    print(f"[DSPL/beta_freecosmo_v3] Nautilus starting (unique_tag={tag})...",
+          flush=True)
     t0 = time.time()
     result = search.fit(model=model, analysis=analysis)
-    print(f"[DSPL/beta_freecosmo] done in {(time.time()-t0)/60:.1f} min, "
+    print(f"[DSPL/beta_freecosmo_v3] done in {(time.time()-t0)/60:.1f} min, "
           f"log_Z={result.samples.log_evidence:.2f}", flush=True)
-    _force_visualize(analysis, result, tag="beta_freecosmo")
+    _force_visualize(analysis, result, tag="beta_freecosmo_v3")
     print(result.info, flush=True)
     return result
 
 
+def build_beta_chain(dataset, output_root: Path, dataset_root: Path,
+                     n_live: int = 200):
+    """Recommended β-cosmography flow — Stage 1 fixedcosmo, Stage 2
+    freecosmo_v3 with prior passing.
+
+    Stage 1 (~12-24h): nail down the lens / source posteriors at fixed
+    FlatLambdaCDM(70, 0.30). Truth-anchored Gaussian priors keep the
+    chain near the basin from the start.
+
+    Stage 2 (~24-48h): swap in TruncatedGaussian priors on Om0/w0 and
+    inherit lens/source priors from Stage 1 posteriors. The chain now
+    has only 2 free dimensions (cosmography) on top of a tightly
+    constrained nuisance manifold.
+
+    Total: ~36-72h. Rationale for splitting: the v0.93 single-stage
+    `beta_freecosmo` stalled at f_live=1.0 because the cosmology dim
+    was wide AND the lens prior box was Gaussian (not yet narrow at
+    the Stage 1 posterior), so cosmology absorbed lens-model misfit.
+    Splitting forces the cosmology dimension to face only what the
+    lens/source can't already absorb.
+    """
+    print("[DSPL/beta_chain] Stage 1 — fixedcosmo", flush=True)
+    stage1 = build_beta_fixedcosmo_fit(
+        dataset, output_root, dataset_root, n_live=n_live)
+    print("[DSPL/beta_chain] Stage 2 — freecosmo_v3 with Stage 1 priors",
+          flush=True)
+    stage2 = build_beta_freecosmo_v3_fit(
+        dataset, output_root, dataset_root, n_live=n_live,
+        stage1_result=stage1)
+    return stage1, stage2
+
+
+def build_beta_freecosmo_fit(dataset, output_root: Path, dataset_root: Path,
+                             n_live: int = 200):
+    """Backward-compat shim — redirects to the v3 (TruncatedGaussian) fit.
+
+    Pre-v0.94 callers (sbatch scripts that pass `--part=beta_freecosmo`)
+    transparently get the safe v3 priors.
+    """
+    print("[DSPL/beta_freecosmo] redirecting to v3 (TruncatedGaussian "
+          "cosmology priors). v0.94 task #110 fix.", flush=True)
+    return build_beta_freecosmo_v3_fit(
+        dataset, output_root, dataset_root, n_live=n_live)
+
+
 def main():
     p = argparse.ArgumentParser()
-    p.add_argument("--part",         choices=("direct", "beta_freecosmo"), default="direct")
+    p.add_argument(
+        "--part",
+        choices=("direct", "beta_fixedcosmo", "beta_freecosmo_v3",
+                 "beta_chain", "beta_freecosmo"),
+        default="direct",
+        help="direct: 1 lens + 2 sources free fit (~26 free params). "
+             "beta_fixedcosmo: Stage 1 of chain — truth-anchored, "
+             "cosmology fixed. "
+             "beta_freecosmo_v3: free Om0/w0 with TruncatedGaussian "
+             "priors (no Stage 1). "
+             "beta_chain: Stage 1 -> Stage 2 with prior passing — "
+             "RECOMMENDED. "
+             "beta_freecosmo: backward-compat shim, redirects to v3.",
+    )
     p.add_argument("--repo-root",    type=Path, required=True)
     p.add_argument("--dataset-root", type=Path, required=True)
     p.add_argument("--output-root",  type=Path, required=True)
@@ -282,7 +422,17 @@ def main():
 
     if args.part == "direct":
         build_direct_fit(dataset, args.output_root, n_live=args.n_live)
+    elif args.part == "beta_fixedcosmo":
+        build_beta_fixedcosmo_fit(dataset, args.output_root, args.dataset_root,
+                                  n_live=args.n_live)
+    elif args.part == "beta_freecosmo_v3":
+        build_beta_freecosmo_v3_fit(dataset, args.output_root, args.dataset_root,
+                                    n_live=args.n_live)
+    elif args.part == "beta_chain":
+        build_beta_chain(dataset, args.output_root, args.dataset_root,
+                         n_live=args.n_live)
     elif args.part == "beta_freecosmo":
+        # Backward-compat shim
         build_beta_freecosmo_fit(dataset, args.output_root, args.dataset_root,
                                  n_live=args.n_live)
 
