@@ -1,0 +1,11 @@
+{
+  "search_name": "quad_direct_fit",
+  "source_dir": "output/phase_4_positions_only_v2/quad_direct_fit/5a9cc03f9b08ca922179432f937fac1c",
+  "max_log_likelihood": 17.316771718859975,
+  "log_evidence": -23.541395402375123,
+  "chi_squared_total": null,
+  "chi_squared_per_pixel": null,
+  "n_unmasked_pixels": null,
+  "max_abs_normalized_residual": null,
+  "chi_squared_status": "image/fit.fits not found \u2014 likely a resumed search skipped visualization. Fix: re-run with force_visualize_overwrite=True in the config, or call analysis.visualize(paths, instance, during_analysis=False) post-fit in the fit script."
+}

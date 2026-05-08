@@ -1264,6 +1264,20 @@ Better than Phase 2 but still biased high. Likely needs more data (single quad +
 
 `cl_pos_lh` (Track C, 1h53m), `qtd_pos_only_v2` (Track B, 14min) — both OOM'd in `export_results.py` post-process at 32-64GB. Pattern matches the v0.93 AGEL OOM. The fits themselves completed; manual `--search-dir` export works fine. **Action item for v0.95**: refactor `export_results.py` to free analysis-loaded fit objects between searches OR bump default Cannon `--mem` to 128GB for example jobs.
 
+### Track B v2 re-exported (added 2026-05-08 next-session)
+
+Manual `--search-dir` export of the OOM'd `phase_4_positions_only_v2` lands at `Examples/quad_time_delay/results/phase_4_positions_only_v2/` (renamed from auto-export collision with `quad_direct_fit/`). Positions-only fit has no imaging likelihood so the chi²/max-residual fields are null; the H0 posterior is what matters.
+
+**The H0 chain across the three sister fits is now complete** — this is the pedagogical payoff:
+
+| Fit | Likelihood | H0 median | H0 1σ width | Bias from truth (70) |
+|---|---|---|---|---|
+| Track B v2 — pos-only | quasar positions | 79.4 | ±26 | +9.4 |
+| Phase 3 — image-plane only | extended host arc | 81.95 | ±10 | +12.0 |
+| Track D — **joint** | image + Δt + positions | **74.95** | **±2.3** | **+5.0** |
+
+Joint TDCOSMO methodology narrows σ(H0) by **~10×** relative to positions-only and **~4×** relative to imaging-only, and reduces the bias from +12 → +5 km/s/Mpc. This is the textbook Refsdal-1964/H0LiCOW-XIII demonstration that **time delays carry the H0 information that positions alone don't** — the imaging side anchors the lens model, the point side anchors the source position, and Δt locks in D_Δt = (1+z_l)·c⁻¹·D_l·D_s/D_ls. Module 12 §3 + §5 should reference this empirical chain.
+
 ### Cannon queue still running
 
 - `dspl_beta_chain` (job 11214940) — 17h elapsed, 3d 7h left, the v0.94 Track A
