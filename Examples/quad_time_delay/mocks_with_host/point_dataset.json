@@ -1,0 +1,115 @@
+{
+    "type": "instance",
+    "class_path": "autolens.point.dataset.PointDataset",
+    "arguments": {
+        "time_delays": {
+            "type": "instance",
+            "class_path": "autoarray.structures.arrays.irregular.ArrayIrregular",
+            "arguments": {
+                "values": {
+                    "type": "ndarray",
+                    "array": [
+                        -61.052666486082344,
+                        -64.74720043020277,
+                        -44.24027945184677,
+                        -60.501113381885254
+                    ],
+                    "dtype": "float64"
+                }
+            }
+        },
+        "fluxes_noise_map": {
+            "type": "instance",
+            "class_path": "autoarray.structures.arrays.irregular.ArrayIrregular",
+            "arguments": {
+                "values": {
+                    "type": "ndarray",
+                    "array": [
+                        0.593827520498783,
+                        0.3679820700296502,
+                        0.18263046076297595,
+                        0.5883094565072254
+                    ],
+                    "dtype": "float64"
+                }
+            }
+        },
+        "fluxes": {
+            "type": "instance",
+            "class_path": "autoarray.structures.arrays.irregular.ArrayIrregular",
+            "arguments": {
+                "values": {
+                    "type": "ndarray",
+                    "array": [
+                        11.866573420273378,
+                        7.045736530298255,
+                        3.813214072602745,
+                        12.223771480952413
+                    ],
+                    "dtype": "float64"
+                }
+            }
+        },
+        "name": "point_0",
+        "positions": {
+            "type": "instance",
+            "class_path": "autoarray.structures.grids.irregular_2d.Grid2DIrregular",
+            "arguments": {
+                "values": {
+                    "type": "ndarray",
+                    "array": [
+                        [
+                            -0.677382664601228,
+                            0.9992993368791855
+                        ],
+                        [
+                            1.2279710059790325,
+                            0.1702399710761691
+                        ],
+                        [
+                            -0.4261614259432693,
+                            -0.9812405316896096
+                        ],
+                        [
+                            0.15220170201583644,
+                            1.220777560088193
+                        ]
+                    ],
+                    "dtype": "float64"
+                }
+            }
+        },
+        "time_delays_noise_map": {
+            "type": "instance",
+            "class_path": "autoarray.structures.arrays.irregular.ArrayIrregular",
+            "arguments": {
+                "values": {
+                    "type": "ndarray",
+                    "array": [
+                        0.5,
+                        0.5,
+                        0.5,
+                        0.5
+                    ],
+                    "dtype": "float64"
+                }
+            }
+        },
+        "positions_noise_map": {
+            "type": "instance",
+            "class_path": "autoarray.structures.arrays.irregular.ArrayIrregular",
+            "arguments": {
+                "values": {
+                    "type": "ndarray",
+                    "array": [
+                        0.005,
+                        0.005,
+                        0.005,
+                        0.005
+                    ],
+                    "dtype": "float64"
+                }
+            }
+        }
+    }
+}

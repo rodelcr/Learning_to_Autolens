@@ -73,6 +73,60 @@ sbatch --export=ALL,EXAMPLE=quad_time_delay,FIT_EXTRA_ARGS=--part=all \
 
 Parts: `direct` (Phase 1, cosmology fixed), `direct_h0_free` (Phase 2), `all` (both). Wall time: ~10–30 min per part on 32 cores (point-source fits are much cheaper than imaging).
 
+## Joint fit (TDCOSMO methodology)
+
+The point-only fit above teaches the time-delay likelihood, but the published H0 measurements (Wong+ 2020 H0LiCOW XIII; Birrer+ 2020 TDCOSMO IV) fit the quasar positions+delays **jointly with the extended host galaxy arc as imaging data**. The host arc anchors the lens model — particularly the slope γ′ and the centre — beyond what 4 image positions + 4 delays can constrain on their own. Combined with stellar kinematics (covered in [Module 13](../../Modules/13_TDCOSMO_Kinematics_MSD/13_tdcosmo_kinematics_msd.ipynb)), the joint fit also breaks the mass-sheet degeneracy.
+
+This example provides a self-contained mock + Cannon driver for the joint fit, **without** the kinematic constraint:
+
+### Files
+
+- `mocks_with_host/generate_mock.py` — extends the point-only generator with an extended host galaxy at the same source plane (`lp.SersicCore`, `R_eff=0.15"`, `n=2`, `intensity=0.5`, co-located with the quasar). Outputs:
+  - `point_dataset.json` — same 4 image positions + delays + fluxes as `mocks/`
+  - `image.fits`, `noise_map.fits`, `psf.fits` — 200×200 HST F814W-like host arc imaging (FWHM 0.10″ Gaussian PSF, exposure 2000 s, sky 0.05 e⁻/pix). Self-consistency assertion: χ²/N at truth ≤ 1.5.
+- `Modules/10_Cluster_Computing/scripts/fit_example_quad_time_delay.py` — adds two new parts:
+  - `--part=joint_fit` — joint AnalysisPoint + AnalysisImaging on the shared lens + shared source Galaxy. Cosmology fixed at H₀=70. n_live=200, ~13 free params.
+  - `--part=joint_fit_h0_free` — same as above + free `cosmology.H0` (uniform 40–120). n_live=250, ~14 free params. **The TDCOSMO IV / H0LiCOW XIII methodology.**
+
+### How the joint likelihood is constructed
+
+The two analyses are combined via PyAutoFit's `af.FactorGraphModel`. The pattern (mirrored from `autolens_workspace_latest/scripts/multi/features/imaging_and_interferometer/modeling.py`):
+
+```python
+# Single Galaxy carrying BOTH a SersicCore bulge (for the imaging arc) AND
+# a ps.Point (for the quasar positions/delays). The point centre is tied
+# to the bulge centre — the AGN sits at the photometric centre of its host.
+source = af.Model(al.Galaxy, redshift=2.0, bulge=bulge_model, point_0=point_model)
+point_model.centre = bulge_model.centre
+
+model = af.Collection(galaxies=af.Collection(lens=lens, source=source))
+
+af_point   = af.AnalysisFactor(prior_model=model, analysis=AnalysisPoint(...))
+af_imaging = af.AnalysisFactor(prior_model=model, analysis=AnalysisImaging(...))
+factor_graph = af.FactorGraphModel(af_point, af_imaging)
+
+result_list = search.fit(model=factor_graph.global_prior_model,
+                         analysis=factor_graph)
+```
+
+PyAutoLens routes the appropriate profile to each analysis automatically:
+`AnalysisImaging` only renders LightProfiles (the SersicCore arc), `AnalysisPoint` only consumes the Point profile (positions / delays / fluxes). The joint log-likelihood is the sum of both.
+
+### Running the joint fit on Cannon
+
+```bash
+sbatch --time=12:00:00 --mem=64G --cpus-per-task=32 \
+       --job-name=qtd_joint_h0 \
+       --export=ALL,EXAMPLE=quad_time_delay_joint,FIT_EXTRA_ARGS=--part=joint_fit_h0_free \
+       Modules/10_Cluster_Computing/scripts/submit_cannon.slurm
+```
+
+(Where `EXAMPLE=quad_time_delay_joint` resolves to `Examples/quad_time_delay/mocks_with_host/` in the slurm wrapper.) Wall: ~6–12 h on 32 cores — imaging convolution makes this 10–30× more expensive than the point-only Phase 2.
+
+### What this *doesn't* cover (in this example)
+
+The joint fit here uses imaging of the host arc only — it does *not* model the quasar PSF spots in the imaging data (real surveys must deblend them; see `autolens_workspace_latest/scripts/point_source/features/deblending/`). It also does not include stellar kinematics — that lives in Module 13.
+
 ## Exercises
 
 1. **Positions-only baseline.** Drop `time_delays` from the dataset, refit. How well-constrained is H₀? It shouldn't be — positions don't carry distance information.

@@ -101,6 +101,15 @@ if [[ -n "${EXAMPLE:-}" ]]; then
             DATASET_ROOT="${REPO_ROOT}/Examples/quad_time_delay/mocks"
             FIT_SCRIPT="${REPO_ROOT}/Modules/10_Cluster_Computing/scripts/fit_example_quad_time_delay.py"
             ;;
+        quad_time_delay_joint)
+            # Joint AnalysisPoint + AnalysisImaging variant — uses
+            # `mocks_with_host/`, which adds the host-galaxy imaging triplet
+            # (image.fits, noise_map.fits, psf.fits) to the same point
+            # dataset as `quad_time_delay`. See Examples/quad_time_delay/
+            # README.md §"Joint fit (TDCOSMO methodology)".
+            DATASET_ROOT="${REPO_ROOT}/Examples/quad_time_delay/mocks_with_host"
+            FIT_SCRIPT="${REPO_ROOT}/Modules/10_Cluster_Computing/scripts/fit_example_quad_time_delay.py"
+            ;;
         mge_to_physical)
             DATASET_ROOT="${REPO_ROOT}/Examples/mge_to_physical/mocks"
             FIT_SCRIPT="${REPO_ROOT}/Modules/10_Cluster_Computing/scripts/fit_example_mge_to_physical.py"
