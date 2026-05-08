@@ -479,6 +479,64 @@ def _build_joint_lens_source(use_truth_centre_prior: bool = False):
     return lens, source
 
 
+def _make_robust_analysis_point(*args, **kwargs):
+    """Subclass `al.AnalysisPoint` to catch the upstream-fragile
+    `numpy.AxisError` (and any other arithmetic blow-up) raised by
+    `PointSolver.solve` for ill-defined mass models, and return -1.0e99
+    instead.
+
+    Why this exists: when `AnalysisPoint` is composed inside an
+    `af.FactorGraphModel`, exceptions raised by `point_solver.solve()` (e.g.
+    `numpy.AxisError: axis 1 is out of bounds for array of dimension 1` when
+    no images are found for a given prior draw) escape through
+    `AnalysisFactor.log_likelihood_function` (which does NOT catch them) and
+    crash the multiprocessing worker pool. The stand-alone AnalysisPoint
+    docstring explicitly promises this discards-and-skips behavior, so we
+    enforce it here.
+
+    First seen on Cannon job 11373458 (qtd_joint_h0, --part=joint_fit_h0_free).
+    """
+    import autolens as al
+
+    class _RobustAnalysisPoint(al.AnalysisPoint):
+        def log_likelihood_function(self, instance):
+            import math
+            try:
+                ll = super().log_likelihood_function(instance)
+            except Exception:  # pragma: no cover - solver safety net
+                return -1.0e99
+            if ll is None or not math.isfinite(ll):
+                return -1.0e99
+            return ll
+
+    return _RobustAnalysisPoint(*args, **kwargs)
+
+
+def _make_robust_analysis_imaging(*args, **kwargs):
+    """Imaging counterpart to `_make_robust_analysis_point`. The default
+    `al.AnalysisImaging` raises `af.exc.FitException` for ill-defined
+    tracers; Nautilus normally catches that, but inside an
+    `af.FactorGraphModel` worker pool we have observed unrelated
+    NumericalErrors (over/underflow in Sersic gradients) from extreme
+    prior draws. Same fix: catch & return -1e99.
+    """
+    import autolens as al
+    import autofit as af
+
+    class _RobustAnalysisImaging(al.AnalysisImaging):
+        def log_likelihood_function(self, instance):
+            import math
+            try:
+                ll = super().log_likelihood_function(instance)
+            except (af.exc.FitException, Exception):  # pragma: no cover
+                return -1.0e99
+            if ll is None or not math.isfinite(ll):
+                return -1.0e99
+            return ll
+
+    return _RobustAnalysisImaging(*args, **kwargs)
+
+
 def build_joint_fit(dataset_point, dataset_imaging, output_root: Path,
                     n_live: int = 200, use_jax: bool = False,
                     h0_free: bool = False):
@@ -510,13 +568,16 @@ def build_joint_fit(dataset_point, dataset_imaging, output_root: Path,
         analysis_cosmology = cosmology_fixed
 
     # --- Analyses ---------------------------------------------------------
+    # Use the robust subclasses to absorb upstream solver / numerical
+    # exceptions inside the FactorGraphModel worker pool — see
+    # `_make_robust_analysis_point` for context.
     solver = build_solver(use_jax=use_jax)
-    analysis_point = al.AnalysisPoint(
+    analysis_point = _make_robust_analysis_point(
         dataset=dataset_point, solver=solver,
         cosmology=analysis_cosmology,
         use_jax=use_jax,
     )
-    analysis_imaging = al.AnalysisImaging(
+    analysis_imaging = _make_robust_analysis_imaging(
         dataset=dataset_imaging,
         cosmology=analysis_cosmology,
         use_jax=use_jax,
