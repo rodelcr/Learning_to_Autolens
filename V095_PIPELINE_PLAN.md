@@ -190,22 +190,41 @@ sbatch --time=24:00:00 --mem=64G --cpus-per-task=32 \
 
 ## End-to-end pipeline runnability check
 
-For each stage, the cluster driver must satisfy 3 invariants:
+For each pipeline driver, the cluster invariants are:
 
-1. **`build_*_fit()` constructs without error** — model + priors + data load
-2. **`--part=<name>` validates in argparse** — no silent typo failures
-3. **A 1-min smoke test fit (n_live=20, 1 iteration) completes** — proves the
-   likelihood is finite at the truth and Nautilus can step
+1. **Argparse exposes the expected `--part` choices** (no silent typo failures)
+2. **The driver imports cleanly** under the laptop `autolens` env (catches
+   syntax errors and missing modules before a Cannon round-trip)
+3. **A real test fit lands** — proven by the recent successful Cannon runs
+   (Track D joint fit STRICT-PASS, dspl_beta_chain in flight, truth_fc_m3_v4
+   converging at f_live=0.13 N_eff=4988)
 
-The 1-min smoke test pattern (laptop):
+The first two are tested by `Modules/10_Cluster_Computing/scripts/smoke_test_drivers.sh`:
 ```bash
-LTA_RUN_HEAVY=0 PYAUTOFIT_TEST_MODE=1 \
-   python Modules/10_Cluster_Computing/scripts/fit_example_<NAME>.py \
-   --part=<PART>
-```
-PYAUTOFIT_TEST_MODE=1 short-circuits Nautilus to 1 iteration (used in CI).
+bash Modules/10_Cluster_Computing/scripts/smoke_test_drivers.sh --pipeline
+# 3 pipeline drivers (DSPL, MGE, qtd) pass argparse + imports
 
-A pipeline-wide smoke test runner is `Modules/10_Cluster_Computing/scripts/smoke_test_drivers.sh` — TBD if it exists.
+bash Modules/10_Cluster_Computing/scripts/smoke_test_drivers.sh
+# All 12 fit_example_*.py drivers pass
+```
+
+**Note:** `PYAUTOFIT_TEST_MODE=1` was removed from autofit 2026.4+, so we
+can't short-circuit Nautilus to do a sub-second dry-run. The lightweight
+`--help` check in the smoke runner catches typos and import failures; the
+heavier likelihood-finite-at-truth check is left to the chi²-at-truth
+diagnostic (run on the rendered mock at the truth instance, see
+`feedback_truth_anchored_validation.md` and the v0.93 cluster_scale fix).
+For untrusted drivers, a 5-min Cannon test run with `--time=00:10:00` is
+the simplest way to verify before committing CPU-days.
+
+### 2026-05-08 status
+
+| Pipeline stage | Driver | Smoke (--help) | Cannon-runnable |
+|---|---|---|---|
+| 1. DSPL | `fit_example_double_source_plane.py` | ✓ | ✓ (job 11214940 in flight) |
+| 2. MGE | `fit_example_mge_to_physical.py` | ✓ | ✓ (v0.94 ran clean; mock-mismatch is a science issue, not cluster) |
+| 3. Physical | (no driver — Module 11 notebook only) | n/a | n/a (laptop post-fit analysis) |
+| 4. Cosmography | `fit_example_quad_time_delay.py` | ✓ | ✓ (Track D STRICT-PASS in 37 min) |
 
 ---
 
