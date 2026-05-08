@@ -7,7 +7,19 @@
 
 ## Status
 
-◐ **In progress** — mock generated, direct-fit notebook + Cannon driver shipped, fit results pending.
+◐ **In progress** — mock + drivers + 3-rung H0 chain landed (2026-05-08); H0 not yet calibrated (needs MSD-breaker / kinematics for that, see Modules 12 + 13). Joint TDCOSMO methodology fit (`results/joint_h0_free/`) STRICT-PASS at chi²/N=1.05, max\|res\|=4.66σ; methodology demonstration, not a published H0 measurement.
+
+### H0 chain (2026-05-08)
+
+The three sister fits on the same mock (`mocks_with_host/`) demonstrate the textbook Refsdal-1964 / H0LiCOW-XIII result that **time delays carry the H0 information that positions alone don't**:
+
+| Fit | Likelihood | Free params | H0 median | H0 1σ width | Bias from truth (70) | Result dir |
+|---|---|---|---|---|---|---|
+| Track B v2 | quasar positions | 9 (no Δt, no imaging) | 79.4 | ±26 | +9.4 | `results/phase_4_positions_only_v2/` |
+| Phase 3 | extended host arc imaging | 8 (no points) | 81.95 | ±10 | +12.0 | `results/phase_3_h0_free_tight/` |
+| Track D | **joint** image + Δt + positions | 16 | **74.95** | **±2.3** | **+5.0** | `results/joint_h0_free/` |
+
+Joint TDCOSMO methodology narrows σ(H0) by **~10×** over pos-only and **~4×** over image-only, and reduces the bias from +12 → +5 km/s/Mpc. The remaining +5 bias is the un-broken mass-sheet degeneracy — kinematics (Module 13) close that gap.
 
 ## Problem
 
