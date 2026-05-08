@@ -272,11 +272,101 @@ def build_direct_h0_free_tight(dataset, output_root: Path, n_live: int = 300,
     return result
 
 
+def build_positions_only(dataset, output_root: Path, n_live: int = 200,
+                         use_jax: bool = False):
+    """Phase 4 of the v0.95 PositionsLH research batch (Track B from
+    plan).
+
+    Strips time delays from the PointDataset and refits with positions +
+    fluxes only. Cosmology FREE (Uniform(40, 120) on H0).
+
+    The expected outcome is the *negative* result: H0 should be
+    essentially **unconstrained** by positions + flux ratios alone — the
+    posterior should match the prior. This validates Module 12's claim
+    that *time delays carry the cosmography signal*, not multiple imaging
+    per se. Compare against Phase 3's ~few-percent H0 recovery.
+
+    Wall: ~30 min on 32 cores.
+    """
+    import autofit as af
+    import autolens as al
+    import time
+
+    print("\n[QTD/positions_only] stripping time_delays from dataset…",
+          flush=True)
+    # Rebuild the PointDataset without time_delays.
+    dataset_positions_only = al.PointDataset(
+        name=dataset.name,
+        positions=dataset.positions,
+        positions_noise_map=dataset.positions_noise_map,
+        fluxes=dataset.fluxes,
+        fluxes_noise_map=dataset.fluxes_noise_map,
+        # NOTE: time_delays + time_delays_noise_map deliberately omitted.
+    )
+    print(f"[QTD/positions_only] {len(dataset_positions_only.positions)} "
+          f"image positions retained, time_delays dropped.", flush=True)
+
+    mass = af.Model(al.mp.PowerLaw)
+    mass.centre.centre_0 = af.GaussianPrior(mean=0.0, sigma=0.1)
+    mass.centre.centre_1 = af.GaussianPrior(mean=0.0, sigma=0.1)
+    mass.einstein_radius = af.UniformPrior(lower_limit=0.5, upper_limit=2.5)
+    mass.slope           = af.TruncatedGaussianPrior(
+        mean=2.0, sigma=0.2, lower_limit=1.5, upper_limit=2.5)
+    mass.ell_comps.ell_comps_0 = af.TruncatedGaussianPrior(
+        mean=0.0, sigma=0.3, lower_limit=-1.0, upper_limit=1.0)
+    mass.ell_comps.ell_comps_1 = af.TruncatedGaussianPrior(
+        mean=0.0, sigma=0.3, lower_limit=-1.0, upper_limit=1.0)
+
+    shear = af.Model(al.mp.ExternalShear)
+    shear.gamma_1 = af.GaussianPrior(mean=0.0, sigma=0.1)
+    shear.gamma_2 = af.GaussianPrior(mean=0.0, sigma=0.1)
+
+    lens = af.Model(al.Galaxy, redshift=0.5, mass=mass, shear=shear)
+
+    point_0 = af.Model(al.ps.Point)
+    point_0.centre.centre_0 = af.GaussianPrior(mean=0.0, sigma=0.3)
+    point_0.centre.centre_1 = af.GaussianPrior(mean=0.0, sigma=0.3)
+    source = af.Model(al.Galaxy, redshift=2.0, point_0=point_0)
+
+    cosmology = af.Model(al.cosmo.FlatLambdaCDM)
+    cosmology.H0 = af.UniformPrior(lower_limit=40.0, upper_limit=120.0)
+    cosmology.Om0 = 0.30
+
+    model = af.Collection(
+        galaxies=af.Collection(lens=lens, source=source),
+        cosmology=cosmology,
+    )
+
+    solver = build_solver(use_jax=use_jax)
+    analysis = al.AnalysisPoint(
+        dataset=dataset_positions_only, solver=solver, use_jax=use_jax,
+    )
+
+    search = af.Nautilus(
+        path_prefix=output_root,
+        name="quad_direct_fit",
+        unique_tag="phase_4_positions_only",
+        n_live=n_live,
+        n_batch=50,
+        iterations_per_update=5000,
+        number_of_cores=int(os.environ.get("SLURM_CPUS_PER_TASK", "1")),
+    )
+
+    t0 = time.time()
+    result = search.fit(model=model, analysis=analysis)
+    print(f"[QTD/positions_only] done in {(time.time()-t0)/60:.1f} min",
+          flush=True)
+    _force_visualize(analysis, result, tag="positions_only")
+    print(result.info, flush=True)
+    return result
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--part",
                    choices=("direct", "direct_h0_free",
-                            "direct_h0_free_tight", "all"),
+                            "direct_h0_free_tight",
+                            "positions_only", "all"),
                    default="direct")
     p.add_argument("--output-root", type=Path,
                    default=Path("./output").resolve())
@@ -322,6 +412,10 @@ def main():
     if args.part == "direct_h0_free_tight":
         build_direct_h0_free_tight(dataset, args.output_root,
                                    n_live=300, use_jax=args.use_jax)
+
+    if args.part == "positions_only":
+        build_positions_only(dataset, args.output_root,
+                             n_live=200, use_jax=args.use_jax)
 
     print(f"\nTotal wall time: {(time.time()-t_start)/3600:.2f} h", flush=True)
 

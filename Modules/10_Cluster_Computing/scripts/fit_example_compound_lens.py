@@ -709,11 +709,182 @@ def build_slam_staged(dataset, output_root: Path):
 # main
 # -----------------------------------------------------------------------
 
+def _conjugate_positions_set_a():
+    """Two image-plane positions of the brighter source component, derived
+    via PointSolver on the v4 best-fit truth tracer (PROGRESS_LOG 2026-05-05).
+
+    These conjugate at truth to ~10⁻³ arcsec (machine precision). They are
+    the canonical PositionsLH input for compound_lens mock_1.
+    """
+    import autolens as al
+    return al.Grid2DIrregular(values=[
+        (-1.173, +1.806),   # outer NE image
+        (+1.360, -0.571),   # outer SW image
+    ])
+
+
+def build_direct_with_positions_lh(dataset, output_root: Path,
+                                   n_live: int = 250,
+                                   positions_threshold: float = 0.1):
+    """Phase C of v0.95 PositionsLH research batch.
+
+    Identical model to `build_direct_fit` but adds an `al.PositionsLH` term
+    using the 2 conjugate positions derived in `compound_lens/01` §2.5.
+    The committed v4 PASS fit (log_Z=+30,856.54, chi²/N=0.69, max=4.40σ)
+    used positions_likelihood_list=None; this run tests whether adding
+    PositionsLH on top of the already-converging model:
+      (a) tightens the posterior on lens_0.einstein_radius
+      (b) accelerates burn-in (fewer Nautilus iterations to f_live=0.01)
+      (c) preserves the existing log_Z (PositionsLH should add ~0 once the
+          chain has found the basin — the penalty term is zero whenever
+          source-plane spread < threshold)
+
+    Multi-plane note: PositionsLH.log_likelihood_penalty_from traces input
+    positions through the entire al.Tracer to its deepest source plane, so
+    the constraint applies cleanly in the compound (3-redshift) setup.
+
+    Default threshold = 0.1″. Sub-arcsecond for a converged fit; the
+    looser threshold sweep is build_direct_positions_threshold_sweep.
+    """
+    import autofit as af
+    import autolens as al
+    import time
+
+    print(f"\n[CL/direct_pos_lh] threshold={positions_threshold}\"", flush=True)
+
+    # Same model as build_direct_fit. Inline-rebuilt to keep the function
+    # self-contained (the helper functions in build_direct_fit aren't
+    # split out yet).
+    bulge_0 = af.Model(al.lp.Sersic)
+    mass_0  = af.Model(al.mp.Isothermal)
+    mass_0.centre.centre_0  = af.GaussianPrior(mean=0.0, sigma=0.1)
+    mass_0.centre.centre_1  = af.GaussianPrior(mean=0.0, sigma=0.1)
+    bulge_0.centre.centre_0 = af.GaussianPrior(mean=0.0, sigma=0.3)
+    bulge_0.centre.centre_1 = af.GaussianPrior(mean=0.0, sigma=0.3)
+    bulge_0.ell_comps.ell_comps_0 = af.TruncatedGaussianPrior(
+        mean=0.0, sigma=0.3, lower_limit=-1.0, upper_limit=1.0)
+    bulge_0.ell_comps.ell_comps_1 = af.TruncatedGaussianPrior(
+        mean=0.0, sigma=0.3, lower_limit=-1.0, upper_limit=1.0)
+    bulge_0.intensity        = af.LogUniformPrior(lower_limit=1e-6, upper_limit=1e6)
+    bulge_0.effective_radius = af.UniformPrior(lower_limit=0.0, upper_limit=30.0)
+    bulge_0.sersic_index     = af.UniformPrior(lower_limit=0.8, upper_limit=5.0)
+    mass_0.ell_comps.ell_comps_0 = af.TruncatedGaussianPrior(
+        mean=0.0, sigma=0.3, lower_limit=-1.0, upper_limit=1.0)
+    mass_0.ell_comps.ell_comps_1 = af.TruncatedGaussianPrior(
+        mean=0.0, sigma=0.3, lower_limit=-1.0, upper_limit=1.0)
+    mass_0.einstein_radius       = af.UniformPrior(lower_limit=0.0, upper_limit=8.0)
+    shear_0 = af.Model(al.mp.ExternalShear)
+    shear_0.gamma_1 = af.GaussianPrior(mean=0.0, sigma=0.15)
+    shear_0.gamma_2 = af.GaussianPrior(mean=0.0, sigma=0.15)
+    lens_0 = af.Model(al.Galaxy, redshift=0.5,
+                      bulge=bulge_0, mass=mass_0, shear=shear_0)
+
+    bulge_1 = af.Model(al.lp.Sersic)
+    mass_1  = af.Model(al.mp.Isothermal)
+    mass_1.centre.centre_0  = af.GaussianPrior(mean=0.0, sigma=0.1)
+    mass_1.centre.centre_1  = af.GaussianPrior(mean=0.0, sigma=0.1)
+    bulge_1.centre.centre_0 = af.GaussianPrior(mean=0.0, sigma=0.3)
+    bulge_1.centre.centre_1 = af.GaussianPrior(mean=0.0, sigma=0.3)
+    bulge_1.ell_comps.ell_comps_0 = af.TruncatedGaussianPrior(
+        mean=0.0, sigma=0.3, lower_limit=-1.0, upper_limit=1.0)
+    bulge_1.ell_comps.ell_comps_1 = af.TruncatedGaussianPrior(
+        mean=0.0, sigma=0.3, lower_limit=-1.0, upper_limit=1.0)
+    bulge_1.intensity        = af.LogUniformPrior(lower_limit=1e-6, upper_limit=1e6)
+    bulge_1.effective_radius = af.UniformPrior(lower_limit=0.0, upper_limit=30.0)
+    bulge_1.sersic_index     = af.UniformPrior(lower_limit=0.8, upper_limit=5.0)
+    mass_1.ell_comps.ell_comps_0 = af.TruncatedGaussianPrior(
+        mean=0.0, sigma=0.3, lower_limit=-1.0, upper_limit=1.0)
+    mass_1.ell_comps.ell_comps_1 = af.TruncatedGaussianPrior(
+        mean=0.0, sigma=0.3, lower_limit=-1.0, upper_limit=1.0)
+    mass_1.einstein_radius   = af.UniformPrior(lower_limit=0.0, upper_limit=8.0)
+    lens_1 = af.Model(al.Galaxy, redshift=0.8, bulge=bulge_1, mass=mass_1)
+
+    bulge_src = af.Model(al.lp.SersicCore)
+    bulge_src.centre.centre_0  = af.GaussianPrior(mean=0.0, sigma=0.3)
+    bulge_src.centre.centre_1  = af.GaussianPrior(mean=0.0, sigma=0.3)
+    bulge_src.ell_comps.ell_comps_0 = af.TruncatedGaussianPrior(
+        mean=0.0, sigma=0.3, lower_limit=-1.0, upper_limit=1.0)
+    bulge_src.ell_comps.ell_comps_1 = af.TruncatedGaussianPrior(
+        mean=0.0, sigma=0.3, lower_limit=-1.0, upper_limit=1.0)
+    bulge_src.intensity        = af.LogUniformPrior(lower_limit=1e-5, upper_limit=1e3)
+    bulge_src.effective_radius = af.UniformPrior(lower_limit=0.0, upper_limit=30.0)
+    bulge_src.sersic_index     = af.UniformPrior(lower_limit=0.8, upper_limit=5.0)
+    source = af.Model(al.Galaxy, redshift=1.7, bulge=bulge_src)
+
+    model = af.Collection(galaxies=af.Collection(
+        lens_0=lens_0, lens_1=lens_1, source=source))
+    print(f"[CL/direct_pos_lh] free params: {model.total_free_parameters}",
+          flush=True)
+
+    positions = _conjugate_positions_set_a()
+    positions_lh = al.PositionsLH(positions=positions,
+                                  threshold=positions_threshold)
+    print(f"[CL/direct_pos_lh] PositionsLH: {len(positions)} points, "
+          f"threshold={positions_threshold}\"", flush=True)
+
+    analysis = al.AnalysisImaging(
+        dataset=dataset,
+        positions_likelihood_list=[positions_lh],
+        use_jax=False,
+    )
+
+    # Tag encodes the threshold so multiple sweep points coexist.
+    tag = f"mock_1_pos_lh_t{positions_threshold:.3g}".replace(".", "p")
+    search = af.Nautilus(
+        path_prefix           = output_root / "compound_lens",
+        name                  = "compound_direct_with_positions_lh",
+        unique_tag            = tag,
+        n_live                = n_live,
+        n_batch               = 50,
+        iterations_per_update = 30000,
+        number_of_cores       = int(os.environ.get("SLURM_CPUS_PER_TASK", "1")),
+    )
+
+    print(f"[CL/direct_pos_lh] Nautilus starting (tag={tag})...", flush=True)
+    t0 = time.time()
+    result = search.fit(model=model, analysis=analysis)
+    print(f"[CL/direct_pos_lh] done in {(time.time()-t0)/60:.1f} min",
+          flush=True)
+    _force_visualize(analysis, result, tag=f"direct_pos_lh_t{positions_threshold:.3g}")
+    print(result.info, flush=True)
+    return result
+
+
+def build_positions_threshold_sweep(dataset, output_root: Path,
+                                    n_live: int = 200):
+    """Phase A of v0.95 PositionsLH research batch.
+
+    Loops over 4 thresholds (1.0, 0.3, 0.1, 0.01 arcsec) and runs the
+    same direct fit at each. Pedagogically validates the §2.5 sanity
+    check from compound_lens/01: at the LOOSE end (1.0″) the constraint
+    barely fires; at the TIGHT end (0.01″) it's ~aggressively
+    rejecting; in the middle it accelerates burn-in.
+
+    Wall: ~30-45 min/threshold × 4 ≈ 2.5h on 32 cores. Use n_live=200
+    (slightly lower than the canonical 250) for speed.
+    """
+    thresholds = [1.0, 0.3, 0.1, 0.01]
+    for t in thresholds:
+        print(f"\n{'='*70}\n[CL/threshold_sweep] threshold = {t}\"\n{'='*70}",
+              flush=True)
+        try:
+            build_direct_with_positions_lh(dataset, output_root,
+                                           n_live=n_live,
+                                           positions_threshold=t)
+        except Exception as e:
+            print(f"[CL/threshold_sweep] WARNING: threshold={t} failed: {e}",
+                  flush=True)
+            import traceback
+            traceback.print_exc()
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--part",
                    choices=("direct", "direct_epl", "direct_pix",
-                            "slam_effective", "slam_staged", "all"),
+                            "slam_effective", "slam_staged", "all",
+                            "direct_with_positions_lh",
+                            "positions_threshold_sweep"),
                    default="direct")
     p.add_argument("--output-root", type=Path,
                    default=Path("./output").resolve())
@@ -758,6 +929,14 @@ def main():
 
     if args.part in ("slam_staged", "all"):
         build_slam_staged(dataset, args.output_root)
+
+    if args.part == "direct_with_positions_lh":
+        build_direct_with_positions_lh(dataset, args.output_root,
+                                       n_live=args.n_live)
+
+    if args.part == "positions_threshold_sweep":
+        build_positions_threshold_sweep(dataset, args.output_root,
+                                        n_live=200)
 
     print(f"\nTotal wall time: {(time.time()-t_start)/3600:.2f} h", flush=True)
 
