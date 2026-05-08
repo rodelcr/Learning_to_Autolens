@@ -21,6 +21,12 @@ The three sister fits on the same mock (`mocks_with_host/`) demonstrate the text
 
 Joint TDCOSMO methodology narrows σ(H0) by **~10×** over pos-only and **~4×** over image-only, and reduces the bias from +12 → +5 km/s/Mpc. The remaining +5 bias is the un-broken mass-sheet degeneracy — kinematics (Module 13) close that gap.
 
+Overlaid posteriors (peak-normalised) — the picture matches the table:
+
+![H0 chain overlay](figures/h0_chain_overlay.png)
+
+Reproduce: `python Examples/quad_time_delay/h0_chain_overlay.py`. Reads the three samples.csv files directly and renders the figure from the Nautilus posterior weights — no fits required.
+
 ## Problem
 
 A **point-source quasar** at z_S = 2.0 is quadruply imaged by a foreground galaxy at z_L = 0.5. Because the source varies in time, the **time delays** between the four images carry direct information about the time-delay distance
