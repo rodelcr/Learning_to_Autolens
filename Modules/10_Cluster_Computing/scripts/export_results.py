@@ -39,6 +39,7 @@ Discovery:
 from __future__ import annotations
 
 import argparse
+import gc
 import json
 import shutil
 import sys
@@ -247,24 +248,37 @@ def export_one(search_dir: Path, dest: Path, repo_root: Path | None = None, forc
 
     # 5. Corner plot — render to PDF unless already there
     corner_pdf = dest / "corner.pdf"
-    if corner_pdf.exists() and not force:
+    skip_corner = (
+        (corner_pdf.exists() and not force)
+        or so is None
+        or so.samples is None
+    )
+    if skip_corner and corner_pdf.exists():
         print("[export] corner.pdf already present, skipping (use --force to rebuild)",
               flush=True)
-        return
-    if so is None or so.samples is None:
+    elif skip_corner:
         print("[export] no samples available — skipping corner plot", flush=True)
-        return
-    try:
-        corner_cornerpy(
-            samples=so.samples,
-            path=str(dest),
-            filename="corner",
-            format="pdf",
-        )
-        plt.close("all")
-    except Exception as e:
-        print(f"[export] corner plot failed: {e}", flush=True)
-        traceback.print_exc()
+    else:
+        try:
+            corner_cornerpy(
+                samples=so.samples,
+                path=str(dest),
+                filename="corner",
+                format="pdf",
+            )
+        except Exception as e:
+            print(f"[export] corner plot failed: {e}", flush=True)
+            traceback.print_exc()
+
+    # Aggressive cleanup: when exporting many searches in one process
+    # (the OOM-prone path), Nautilus samples + matplotlib axes can hold
+    # 100s of MB each. Closing figures + dropping `so` + forcing a GC
+    # pass between exports keeps the worst case bounded. Without this the
+    # 2026-05-07 cl_pos_lh + qtd_pos_only_v2 jobs OOM'd at 64 GB during
+    # post-process even though each individual fit fit comfortably.
+    plt.close("all")
+    del so
+    gc.collect()
 
 
 def main():
