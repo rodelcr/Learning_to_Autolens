@@ -1,0 +1,10 @@
+{
+  "search_name": "quad_joint_fit",
+  "source_dir": "output/phase_joint_h0_free/quad_joint_fit/540dc4d595b051a831a80d0a7b61b849",
+  "max_log_likelihood": 76693.95957834697,
+  "log_evidence": 76606.97824499736,
+  "chi_squared_total": 21132.49460419562,
+  "chi_squared_per_pixel": 1.050949602357053,
+  "n_unmasked_pixels": 20108,
+  "max_abs_normalized_residual": 4.6641456996266735
+}

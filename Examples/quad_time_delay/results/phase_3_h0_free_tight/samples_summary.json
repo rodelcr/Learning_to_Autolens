@@ -1,0 +1,386 @@
+{
+    "type": "instance",
+    "class_path": "autofit.non_linear.samples.summary.SamplesSummary",
+    "arguments": {
+        "max_log_likelihood_sample": {
+            "type": "instance",
+            "class_path": "autofit.non_linear.samples.sample.Sample",
+            "arguments": {
+                "log_likelihood": 15.897358138082314,
+                "log_prior": 1.1682806431523654,
+                "weight": 7.70355276966839e-05,
+                "kwargs": {
+                    "type": "dict",
+                    "arguments": {
+                        "galaxies.lens.mass.centre.centre_0": 0.004867874032432461,
+                        "galaxies.lens.mass.centre.centre_1": 0.007591276447354388,
+                        "galaxies.lens.mass.einstein_radius": 1.2032790555090738,
+                        "galaxies.lens.mass.slope": 2.0710162919070867,
+                        "galaxies.lens.mass.ell_comps.ell_comps_0": 0.09668494655254854,
+                        "galaxies.lens.mass.ell_comps.ell_comps_1": 0.11462187665389316,
+                        "galaxies.lens.shear.gamma_1": 0.018156429815165555,
+                        "galaxies.lens.shear.gamma_2": 0.019514683003715002,
+                        "galaxies.source.point_0.centre.centre_0": 0.04931061275987872,
+                        "galaxies.source.point_0.centre.centre_1": 0.07145353250972544,
+                        "cosmology.H0": 63.61564229408208
+                    }
+                }
+            }
+        },
+        "errors_at_sigma_1": {
+            "type": "dict",
+            "arguments": {
+                "galaxies.lens.mass.centre.centre_0": {
+                    "type": "tuple",
+                    "values": [
+                        0.00882125753911035,
+                        0.00822805706177534
+                    ]
+                },
+                "galaxies.lens.mass.centre.centre_1": {
+                    "type": "tuple",
+                    "values": [
+                        0.013769632135086996,
+                        0.012534831744549306
+                    ]
+                },
+                "galaxies.lens.mass.einstein_radius": {
+                    "type": "tuple",
+                    "values": [
+                        0.021643466137887257,
+                        0.016643212278375952
+                    ]
+                },
+                "galaxies.lens.mass.slope": {
+                    "type": "tuple",
+                    "values": [
+                        0.08564964214837034,
+                        0.08735559051324282
+                    ]
+                },
+                "galaxies.lens.mass.ell_comps.ell_comps_0": {
+                    "type": "tuple",
+                    "values": [
+                        0.019980335342344044,
+                        0.01916467932537655
+                    ]
+                },
+                "galaxies.lens.mass.ell_comps.ell_comps_1": {
+                    "type": "tuple",
+                    "values": [
+                        0.02538768478701542,
+                        0.02615065544123324
+                    ]
+                },
+                "galaxies.lens.shear.gamma_1": {
+                    "type": "tuple",
+                    "values": [
+                        0.01261378233362486,
+                        0.013825906882009228
+                    ]
+                },
+                "galaxies.lens.shear.gamma_2": {
+                    "type": "tuple",
+                    "values": [
+                        0.01012734625666142,
+                        0.011040705501120004
+                    ]
+                },
+                "galaxies.source.point_0.centre.centre_0": {
+                    "type": "tuple",
+                    "values": [
+                        0.005711410430774215,
+                        0.0053226829981352156
+                    ]
+                },
+                "galaxies.source.point_0.centre.centre_1": {
+                    "type": "tuple",
+                    "values": [
+                        0.008530947446395008,
+                        0.007358323225171423
+                    ]
+                },
+                "cosmology.H0": {
+                    "type": "tuple",
+                    "values": [
+                        10.064677832036722,
+                        10.329114056560641
+                    ]
+                }
+            }
+        },
+        "log_evidence": -29.082151065001554,
+        "errors_at_sigma_3": {
+            "type": "dict",
+            "arguments": {
+                "galaxies.lens.mass.centre.centre_0": {
+                    "type": "tuple",
+                    "values": [
+                        0.024534638971429316,
+                        0.021240063618561615
+                    ]
+                },
+                "galaxies.lens.mass.centre.centre_1": {
+                    "type": "tuple",
+                    "values": [
+                        0.03897834841386938,
+                        0.030238149169336252
+                    ]
+                },
+                "galaxies.lens.mass.einstein_radius": {
+                    "type": "tuple",
+                    "values": [
+                        0.055056731822445526,
+                        0.048566371196146596
+                    ]
+                },
+                "galaxies.lens.mass.slope": {
+                    "type": "tuple",
+                    "values": [
+                        0.2092195350453303,
+                        0.22824194115523122
+                    ]
+                },
+                "galaxies.lens.mass.ell_comps.ell_comps_0": {
+                    "type": "tuple",
+                    "values": [
+                        0.04923514580702838,
+                        0.049557941030141966
+                    ]
+                },
+                "galaxies.lens.mass.ell_comps.ell_comps_1": {
+                    "type": "tuple",
+                    "values": [
+                        0.06012965983045805,
+                        0.06583253682044779
+                    ]
+                },
+                "galaxies.lens.shear.gamma_1": {
+                    "type": "tuple",
+                    "values": [
+                        0.02998133663431042,
+                        0.041718300092596694
+                    ]
+                },
+                "galaxies.lens.shear.gamma_2": {
+                    "type": "tuple",
+                    "values": [
+                        0.02695829506081223,
+                        0.030653786503668297
+                    ]
+                },
+                "galaxies.source.point_0.centre.centre_0": {
+                    "type": "tuple",
+                    "values": [
+                        0.0167123978767068,
+                        0.013854376583943763
+                    ]
+                },
+                "galaxies.source.point_0.centre.centre_1": {
+                    "type": "tuple",
+                    "values": [
+                        0.023426078214080798,
+                        0.01734119866636709
+                    ]
+                },
+                "cosmology.H0": {
+                    "type": "tuple",
+                    "values": [
+                        27.260748030715703,
+                        18.002346245843754
+                    ]
+                }
+            }
+        },
+        "model": null,
+        "values_at_sigma_1": {
+            "type": "dict",
+            "arguments": {
+                "galaxies.lens.mass.centre.centre_0": {
+                    "type": "tuple",
+                    "values": [
+                        -0.01732452993527647,
+                        -0.0002752153343907774
+                    ]
+                },
+                "galaxies.lens.mass.centre.centre_1": {
+                    "type": "tuple",
+                    "values": [
+                        -0.02800841924096337,
+                        -0.0017039553613270697
+                    ]
+                },
+                "galaxies.lens.mass.einstein_radius": {
+                    "type": "tuple",
+                    "values": [
+                        1.2016316570631569,
+                        1.23991833547942
+                    ]
+                },
+                "galaxies.lens.mass.slope": {
+                    "type": "tuple",
+                    "values": [
+                        1.9500530896156583,
+                        2.1230583222772714
+                    ]
+                },
+                "galaxies.lens.mass.ell_comps.ell_comps_0": {
+                    "type": "tuple",
+                    "values": [
+                        0.10976039887332563,
+                        0.14890541354104622
+                    ]
+                },
+                "galaxies.lens.mass.ell_comps.ell_comps_1": {
+                    "type": "tuple",
+                    "values": [
+                        0.136143988641198,
+                        0.18768232886944666
+                    ]
+                },
+                "galaxies.lens.shear.gamma_1": {
+                    "type": "tuple",
+                    "values": [
+                        0.023036369015650697,
+                        0.049476058231284786
+                    ]
+                },
+                "galaxies.lens.shear.gamma_2": {
+                    "type": "tuple",
+                    "values": [
+                        0.021269659473437317,
+                        0.04243771123121874
+                    ]
+                },
+                "galaxies.source.point_0.centre.centre_0": {
+                    "type": "tuple",
+                    "values": [
+                        0.04325348253108076,
+                        0.05428757595999019
+                    ]
+                },
+                "galaxies.source.point_0.centre.centre_1": {
+                    "type": "tuple",
+                    "values": [
+                        0.05839761874668257,
+                        0.074286889418249
+                    ]
+                },
+                "cosmology.H0": {
+                    "type": "tuple",
+                    "values": [
+                        71.885860874606,
+                        92.27965276320336
+                    ]
+                }
+            }
+        },
+        "median_pdf_sample": {
+            "type": "instance",
+            "class_path": "autofit.non_linear.samples.sample.Sample",
+            "arguments": {
+                "log_likelihood": 15.897358138082314,
+                "log_prior": 1.1682806431523654,
+                "weight": 7.70355276966839e-05,
+                "kwargs": {
+                    "type": "dict",
+                    "arguments": {
+                        "galaxies.lens.mass.centre.centre_0": -0.008503272396166118,
+                        "galaxies.lens.mass.centre.centre_1": -0.014238787105876375,
+                        "galaxies.lens.mass.einstein_radius": 1.2232751232010441,
+                        "galaxies.lens.mass.slope": 2.0357027317640286,
+                        "galaxies.lens.mass.ell_comps.ell_comps_0": 0.12974073421566967,
+                        "galaxies.lens.mass.ell_comps.ell_comps_1": 0.16153167342821342,
+                        "galaxies.lens.shear.gamma_1": 0.03565015134927556,
+                        "galaxies.lens.shear.gamma_2": 0.03139700573009874,
+                        "galaxies.source.point_0.centre.centre_0": 0.048964892961854974,
+                        "galaxies.source.point_0.centre.centre_1": 0.06692856619307758,
+                        "cosmology.H0": 81.95053870664272
+                    }
+                }
+            }
+        },
+        "values_at_sigma_3": {
+            "type": "dict",
+            "arguments": {
+                "galaxies.lens.mass.centre.centre_0": {
+                    "type": "tuple",
+                    "values": [
+                        -0.033037911367595436,
+                        0.012736791222395497
+                    ]
+                },
+                "galaxies.lens.mass.centre.centre_1": {
+                    "type": "tuple",
+                    "values": [
+                        -0.05321713551974575,
+                        0.01599936206345988
+                    ]
+                },
+                "galaxies.lens.mass.einstein_radius": {
+                    "type": "tuple",
+                    "values": [
+                        1.1682183913785986,
+                        1.2718414943971907
+                    ]
+                },
+                "galaxies.lens.mass.slope": {
+                    "type": "tuple",
+                    "values": [
+                        1.8264831967186983,
+                        2.26394467291926
+                    ]
+                },
+                "galaxies.lens.mass.ell_comps.ell_comps_0": {
+                    "type": "tuple",
+                    "values": [
+                        0.08050558840864129,
+                        0.17929867524581164
+                    ]
+                },
+                "galaxies.lens.mass.ell_comps.ell_comps_1": {
+                    "type": "tuple",
+                    "values": [
+                        0.10140201359775537,
+                        0.2273642102486612
+                    ]
+                },
+                "galaxies.lens.shear.gamma_1": {
+                    "type": "tuple",
+                    "values": [
+                        0.005668814714965136,
+                        0.07736845144187225
+                    ]
+                },
+                "galaxies.lens.shear.gamma_2": {
+                    "type": "tuple",
+                    "values": [
+                        0.004438710669286506,
+                        0.062050792233767034
+                    ]
+                },
+                "galaxies.source.point_0.centre.centre_0": {
+                    "type": "tuple",
+                    "values": [
+                        0.03225249508514817,
+                        0.06281926954579874
+                    ]
+                },
+                "galaxies.source.point_0.centre.centre_1": {
+                    "type": "tuple",
+                    "values": [
+                        0.04350248797899678,
+                        0.08426976485944467
+                    ]
+                },
+                "cosmology.H0": {
+                    "type": "tuple",
+                    "values": [
+                        54.689790675927014,
+                        99.95288495248647
+                    ]
+                }
+            }
+        }
+    }
+}

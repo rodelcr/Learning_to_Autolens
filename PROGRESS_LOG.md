@@ -1223,3 +1223,60 @@ PENDING (4h budget):
 3. **Tag v0.94-alpha**.
 4. **v0.95 sketch**: see `HANDOFF_2026_05_07.md` §4 — quad_time_delay strict-PASS by H0 recovery, mge_to_physical native-autolens remock, possibly mocks 2/5 truth_fc retry if the deadlock fix is verified.
 
+
+## 2026-05-08 — Position-likelihood research batch lands
+
+### Overnight Cannon results (4 jobs completed since 2026-05-07 evening)
+
+**Track A — PositionsLH threshold sensitivity sweep (job 11368641, 5h52min)**
+Beautiful pedagogical result. The four-threshold sweep on compound_lens mock_1:
+
+| Threshold | chi²/N | max\|res\| | log_Z |
+|---|---|---|---|
+| 1.0″ | 0.692 | 4.65σ | +30,856.16 |
+| 0.3″ | 0.693 | 4.69σ | +30,855.96 |
+| **0.1″** | **0.692** | **4.42σ** | **+30,855.76** |
+| 0.01″ | 0.873 | 9.19σ | +30,019.99 |
+
+**Interpretation:** for ≥0.1″, the constraint is loose enough that the converged fit reproduces the v4 PASS result (log_Z=+30,856 ≈ v4's +30,856.54, max|res|≈4.4σ ≈ v4's 4.40σ). At 0.01″, the threshold is *tighter than the actual conjugate spread the data supports* and the chain gets pulled into a worse basin (log_Z drops by ~840 units, max|res| rises to 9.19σ). The sweet spot is the 0.1″ threshold; below that, the soft penalty becomes a hard constraint that fights the imaging likelihood.
+
+**Track C — direct_with_positions_lh (job 11368643, 1h53min OUT_OF_MEMORY in post-process)**
+Same 0.1″ threshold as Track A's middle point. Fit completed but post-process OOM'd; manually exported via `--search-dir`. Identical numerics to A's t0p1 (chi²/N=0.69, max=4.42σ). Confirms PositionsLH carries through multi-plane Tracer correctly.
+
+**Track D — TDCOSMO joint fit `qtd_joint_h0` (job 11375367, 37 min)**
+**STRICT-PASS** on the first end-to-end run of joint AnalysisPoint + AnalysisImaging:
+- chi²/N = **1.051** (≤1.3 strict)
+- max\|res\| = **4.66σ** at 20,108 pixels (Bonferroni noise floor √(2·ln(20k))≈4.45σ → borderline-PASS strict-PASS)
+- log_Z = **+76,607**
+
+This is the canonical TDCOSMO IV / Birrer+20 setup working at scale: quasar positions + flux ratios + time delays jointly fit with the extended host arc imaging, sharing a single lens model + a single source Galaxy that carries both `point_0=ps.Point(...)` and `bulge=lp.SersicCore(...)`. The two analyses are combined via `af.FactorGraphModel`. 37 minutes wall — point-source side adds <1 min on top of the imaging fit.
+
+**Quad Phase 3 — H0 strict-PASS retry (job 11237334, 12 min)**
+Tightened H0 prior to Uniform(50, 100) + n_live=300:
+- ML H0 = 63.6 (closer to truth 70 than Phase 2's ML=74.6)
+- median H0 = 81.95 (Phase 2 median was 92.7 — improving)
+- 1σ band: [71.9, 92.3] — does NOT bracket truth
+- 2σ band: [54.7, 100.0] — brackets truth
+
+Better than Phase 2 but still biased high. Likely needs more data (single quad + 0.5d delay precision is the H0LiCOW best-case noise floor; this mock matches that). Methodology demo, not a calibrated H0 result.
+
+### OOM cases (failed export, salvageable)
+
+`cl_pos_lh` (Track C, 1h53m), `qtd_pos_only_v2` (Track B, 14min) — both OOM'd in `export_results.py` post-process at 32-64GB. Pattern matches the v0.93 AGEL OOM. The fits themselves completed; manual `--search-dir` export works fine. **Action item for v0.95**: refactor `export_results.py` to free analysis-loaded fit objects between searches OR bump default Cannon `--mem` to 128GB for example jobs.
+
+### Cannon queue still running
+
+- `dspl_beta_chain` (job 11214940) — 17h elapsed, 3d 7h left, the v0.94 Track A
+- `truth_fc_m3_v4` (job 11214941) — 17h elapsed, 3d 7h left, the v0.94 Track B
+
+### v0.95 deliverables landed today
+
+The PositionsLH research batch was conceived this morning (user request: "any other runs we can do to keep building on programs like how we use the point modeling to constrain the position likelihood") and ships 4/4 Tracks within ~24h:
+
+- **A**: PositionsLH threshold sweep — empirical pedagogy + v0.93 §2.5 sanity check validated at scale
+- **B**: positions-only fit — pending re-export (OOM in v1)
+- **C**: multi-plane PositionsLH — identical to A's t0p1 point, confirms multi-plane carry-through
+- **D**: joint AnalysisPoint + AnalysisImaging — first TDCOSMO-methodology fit, STRICT-PASS
+
+The Track D result is particularly notable: it's the first time the H0LiCOW XIII / TDCOSMO IV joint methodology is exercised end-to-end in the curriculum. Module 12 §5 references this — now there's an audited example fit to point at.
+

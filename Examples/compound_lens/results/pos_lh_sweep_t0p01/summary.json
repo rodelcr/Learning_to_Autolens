@@ -1,0 +1,10 @@
+{
+  "search_name": "compound_direct_with_positions_lh",
+  "source_dir": "output/compound_lens/mock_1_pos_lh_t0p01/compound_direct_with_positions_lh/4217b108585fd4533db511b7a642bc7e",
+  "max_log_likelihood": 30186.78835200909,
+  "log_evidence": 30019.99547119184,
+  "chi_squared_total": 8010.300587901107,
+  "chi_squared_per_pixel": 0.8729621390476359,
+  "n_unmasked_pixels": 9176,
+  "max_abs_normalized_residual": 9.190268371947312
+}
