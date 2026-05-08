@@ -367,14 +367,19 @@ def build_positions_only(dataset, output_root: Path, n_live: int = 200,
     )
 
     solver = build_solver(use_jax=use_jax)
-    analysis = al.AnalysisPoint(
+    # Use the robust wrapper (defined below for Track D's joint fit) to
+    # absorb numpy.AxisError from PointSolver.solve() on extreme prior
+    # draws. v1 of this submission (job 11368642) crashed in <2 min on
+    # exactly that error path; the wrapper returns -1e99 instead of
+    # propagating the exception (which would kill the worker pool).
+    analysis = _make_robust_analysis_point(
         dataset=dataset_positions_only, solver=solver, use_jax=use_jax,
     )
 
     search = af.Nautilus(
         path_prefix=output_root,
         name="quad_direct_fit",
-        unique_tag="phase_4_positions_only",
+        unique_tag="phase_4_positions_only_v2",
         n_live=n_live,
         n_batch=50,
         iterations_per_update=5000,
