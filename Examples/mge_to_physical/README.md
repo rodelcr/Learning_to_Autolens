@@ -7,7 +7,13 @@
 
 ## Status
 
-◐ **In progress — methodology shipped, but canonical fit fails the physical bar**. The three-search chain runs end-to-end and produces a clean Bayes-factor ladder (Search 2 → Search 3 = +288 log units favouring stars+DM), but **both Search 2 and Search 3 fail the `/autolens-fit-diagnostics` physical bar** (~10σ coherent ring residuals visible in `results/search_3_stars_dark/fit_subplot.png`). The fit is mis-specified relative to the truth: it omits (a) the secondary deflector at z=0.8 (truth `θ_E=0.11"`) and (b) the second source component (truth has TWO Sersic sources offset by 0.4″). The +288 Bayes factor is *real as a number* but, per `bayesian_model_comparison/`, **a Bayes factor between two misspecified models picks the less-wrong one without validating either**. See §"Caveats" below.
+◐ **In progress — autolens-native mock regenerated 2026-05-09; canonical fit pending Cannon resubmit**.
+
+The 2026-05-07 chi²-at-truth diagnostic disproved the v0.92-stated diagnosis (missing 2nd source + secondary deflector). With *all* truth components present in an autolens Tracer, the central-pixel residual on the lenstronomy-simulated mock was still 33σ — caused by a **framework-level Sersic evaluation difference** at the cuspy `n=4.9` lens-light core. Lenstronomy and autolens use slightly different inner-radius integration schemes for high-n Sersic profiles; they agree at n ≲ 3 but diverge above.
+
+**v0.95 fix (2026-05-09)**: regenerated the mock natively in autolens with identical truth params via `mocks/regenerate_in_autolens.py`. New artifacts: `mocks/autolens_mock_1_{image,noise_map,psf}.fits` + `mocks/autolens_truths.json`. **chi²-at-truth on the regenerated mock: chi²/N = 1.003, max|res| = 3.96σ — self-consistent.**
+
+The driver (`fit_example_mge_to_physical.py`) now defaults to the autolens-native mock when present (`--mock-prefix=auto`); explicit A/B comparison via `--mock-prefix={lenstronomy,autolens}`. Once the regenerated mock is fit on Cannon, the canonical Search 3 should drop max\|res\| from 9.7σ → ~4σ and ship strict-PASS.
 
 ## What this example is for
 

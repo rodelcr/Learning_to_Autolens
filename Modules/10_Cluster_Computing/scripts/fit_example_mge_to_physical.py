@@ -61,14 +61,41 @@ def _force_visualize(analysis, result, tag: str = ""):
               flush=True)
 
 
-def load_dataset(dataset_root: Path, mask_radius: float = 2.7):
-    """Load the lenstronomy_mock_1 imaging with a 2.7'' circular mask."""
+def load_dataset(dataset_root: Path, mask_radius: float = 2.7,
+                 mock_prefix: str = "auto"):
+    """Load the mge_to_physical mock imaging with a 2.7'' circular mask.
+
+    Two mock variants are available:
+      * `lenstronomy_mock_1_*.fits` — the original lenstronomy-simulated
+        version. Has a known framework-level Sersic eval mismatch at the
+        cuspy n=4.9 lens light core (chi²-at-truth = 6.35, max|res|=33σ).
+        Documented in PROGRESS_LOG 2026-05-07.
+      * `autolens_mock_1_*.fits`   — regenerated natively in autolens with
+        identical truth params (regenerate_in_autolens.py, 2026-05-09).
+        Self-consistent: chi²-at-truth = 1.003, max|res| = 3.96σ.
+
+    `mock_prefix="auto"` prefers the autolens-native mock if present,
+    else falls back to the lenstronomy mock. `="lenstronomy"` or
+    `="autolens"` forces a specific variant for A/B comparison.
+    """
     import autolens as al
 
+    autolens_path = dataset_root / "autolens_mock_1_image.fits"
+    lenstronomy_path = dataset_root / "lenstronomy_mock_1_image.fits"
+    if mock_prefix == "auto":
+        prefix = "autolens" if autolens_path.exists() else "lenstronomy"
+    else:
+        prefix = mock_prefix
+    if prefix == "autolens":
+        noise_name = "autolens_mock_1_noise_map.fits"
+    else:
+        noise_name = "lenstronomy_mock_1_noise.fits"
+    print(f"[MGE] using mock variant: {prefix}_mock_1_*.fits", flush=True)
+
     dataset = al.Imaging.from_fits(
-        data_path      = dataset_root / "lenstronomy_mock_1_image.fits",
-        noise_map_path = dataset_root / "lenstronomy_mock_1_noise.fits",
-        psf_path       = dataset_root / "lenstronomy_mock_1_psf.fits",
+        data_path      = dataset_root / f"{prefix}_mock_1_image.fits",
+        noise_map_path = dataset_root / noise_name,
+        psf_path       = dataset_root / f"{prefix}_mock_1_psf.fits",
         pixel_scales   = 0.05,
     )
     mask = al.Mask2D.circular(
@@ -445,10 +472,17 @@ def main():
     p.add_argument("--output-root", type=Path,
                    default=Path("./output").resolve())
     p.add_argument("--dataset-root", type=Path, required=True,
-                   help="Path containing lenstronomy_mock_1_*.fits")
+                   help="Path containing mock_1 FITS (autolens_* preferred, "
+                        "lenstronomy_* fallback)")
     p.add_argument("--repo-root", type=Path, required=False,
                    help="Path to Learning_to_Autolens "
                         "(unused; kept for slurm-driver compatibility)")
+    p.add_argument("--mock-prefix",
+                   choices=("auto", "autolens", "lenstronomy"),
+                   default="auto",
+                   help="Which mock variant to fit. 'auto' prefers the "
+                        "autolens-native regeneration if present "
+                        "(2026-05-09 regenerate_in_autolens.py).")
     p.add_argument("--mask-radius", type=float, default=2.7)
     p.add_argument("--n-live-light", type=int, default=100)
     p.add_argument("--n-live-stars", type=int, default=150)
@@ -468,7 +502,8 @@ def main():
           flush=True)
 
     t_start = time.time()
-    dataset = load_dataset(args.dataset_root, mask_radius=args.mask_radius)
+    dataset = load_dataset(args.dataset_root, mask_radius=args.mask_radius,
+                           mock_prefix=args.mock_prefix)
     print(f"Loaded dataset: {dataset.shape_native}, "
           f"{dataset.mask.pixels_in_mask} masked pixels",
           flush=True)

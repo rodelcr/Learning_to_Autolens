@@ -1,0 +1,105 @@
+{
+  "framework": "PyAutoLens 2026.4.13.6 (native simulator)",
+  "regenerated_from": "lenstronomy_mock_1 truth-params (truths.json)",
+  "regenerated_date": "2026-05-09",
+  "imaging": {
+    "shape_native": [
+      110,
+      110
+    ],
+    "pixel_scales_arcsec": 0.05,
+    "exp_time_s": 500.0,
+    "background_rms": 0.004,
+    "ra_at_xy_0": -2.725,
+    "dec_at_xy_0": -2.725
+  },
+  "redshifts": {
+    "lens_primary": 0.5,
+    "lens_secondary": 0.8,
+    "source": 1.7
+  },
+  "cosmology": {
+    "Om": 0.3,
+    "w": -1,
+    "H0": 70
+  },
+  "lens_primary": {
+    "mass": {
+      "type": "al.mp.PowerLaw",
+      "centre": [
+        0.01,
+        -0.08
+      ],
+      "ell_comps": [
+        -0.13,
+        -0.07
+      ],
+      "einstein_radius": 1.65,
+      "slope": 2.15
+    },
+    "shear": {
+      "type": "al.mp.ExternalShear",
+      "gamma_1": 0.014736975904046162,
+      "gamma_2": -0.006230693476938409
+    },
+    "bulge": {
+      "type": "al.lp.Sersic",
+      "centre": [
+        0.01,
+        -0.08
+      ],
+      "ell_comps": [
+        -0.13,
+        -0.07
+      ],
+      "intensity": 3.3,
+      "effective_radius": 1.9,
+      "sersic_index": 4.9
+    }
+  },
+  "lens_secondary": {
+    "mass": {
+      "type": "al.mp.PowerLaw",
+      "centre": [
+        -0.05,
+        0.02
+      ],
+      "ell_comps": [
+        0.2,
+        -0.12
+      ],
+      "einstein_radius": 0.11,
+      "slope": 2.0
+    }
+  },
+  "source": {
+    "bulge": {
+      "type": "al.lp.Sersic",
+      "centre": [
+        -0.05,
+        0.02
+      ],
+      "ell_comps": [
+        0.2,
+        -0.12
+      ],
+      "intensity": 9.0,
+      "effective_radius": 0.19,
+      "sersic_index": 2.3
+    },
+    "disk": {
+      "type": "al.lp.Sersic",
+      "centre": [
+        0.3,
+        0.22
+      ],
+      "ell_comps": [
+        0.39,
+        -0.35
+      ],
+      "intensity": 17.0,
+      "effective_radius": 0.15,
+      "sersic_index": 1.5
+    }
+  }
+}
