@@ -48,6 +48,32 @@ import time
 from pathlib import Path
 
 
+# ---- autolens 2026.4.13.6 visualizer compatibility shim ----------------------
+# Galaxy.potential_2d_from() iterates each profile and passes xp= to it. The
+# light-profile branch accepts xp; the mass-profile branch (MassProfile in
+# autogalaxy/profiles/mass/abstract/abstract.py) does not, and raises
+# TypeError("got an unexpected keyword argument 'xp'") whenever the
+# visualizer asks for a potential plot. Two jobs (mge_autolens_v2 + v3)
+# crashed at 2h58m and 23min respectively before this shim landed.
+#
+# Patch: wrap MassProfile.potential_2d_from to swallow xp= and forward
+# everything else. When the upstream bug is fixed (likely a one-line
+# `xp=None` default on MassProfile.potential_2d_from), this shim becomes
+# a no-op and can be deleted.
+try:
+    from autogalaxy.profiles.mass.abstract.abstract import MassProfile as _MP
+    _orig_potential_2d_from = _MP.potential_2d_from
+    def _patched_potential_2d_from(self, grid, **kwargs):
+        kwargs.pop("xp", None)
+        return _orig_potential_2d_from(self, grid, **kwargs)
+    _MP.potential_2d_from = _patched_potential_2d_from
+    print("[MGE] applied MassProfile.potential_2d_from xp= compatibility shim",
+          flush=True)
+except Exception as _e:
+    print(f"[MGE] WARNING: failed to apply MassProfile shim: {_e}", flush=True)
+# -----------------------------------------------------------------------------
+
+
 def _force_visualize(analysis, result, tag: str = ""):
     """Re-emit standard visualisations after a resumed search."""
     try:
