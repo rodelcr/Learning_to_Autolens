@@ -119,7 +119,7 @@ def load_dataset(dataset_root: Path, mask_radius: float = 2.7,
 
 
 def build_search_1_light(dataset, output_root: Path, mask_radius: float,
-                         n_live: int = 100):
+                         n_live: int = 100, tag_suffix: str = ""):
     """Search 1: MGE lens light only. No mass, no source."""
     import autofit as af
     import autolens as al
@@ -146,7 +146,7 @@ def build_search_1_light(dataset, output_root: Path, mask_radius: float,
     search = af.Nautilus(
         path_prefix=output_root,
         name="search_1_light",
-        unique_tag="mge_lens_light",
+        unique_tag=f"mge_lens_light{tag_suffix}",
         n_live=n_live,
         n_batch=50,
         iterations_per_update=5000,
@@ -162,7 +162,7 @@ def build_search_1_light(dataset, output_root: Path, mask_radius: float,
 
 
 def build_search_2_stars_only(dataset, output_root: Path, result_1=None,
-                              n_live: int = 150):
+                              n_live: int = 150, tag_suffix: str = ""):
     """Search 2: stars-only mass (MGE-light-as-mass via lmp.Sersic) + shear + source."""
     import autofit as af
     import autolens as al
@@ -203,7 +203,7 @@ def build_search_2_stars_only(dataset, output_root: Path, result_1=None,
     search = af.Nautilus(
         path_prefix=output_root,
         name="search_2_stars_only",
-        unique_tag="lmp_sersic_no_dark",
+        unique_tag=f"lmp_sersic_no_dark{tag_suffix}",
         n_live=n_live,
         n_batch=50,
         iterations_per_update=10000,
@@ -219,7 +219,7 @@ def build_search_2_stars_only(dataset, output_root: Path, result_1=None,
 
 
 def build_search_3_stars_dark(dataset, output_root: Path, result_2=None,
-                              n_live: int = 200):
+                              n_live: int = 200, tag_suffix: str = ""):
     """Search 3: stars (lmp.Sersic) + NFW dark matter, joint fit."""
     import autofit as af
     import autolens as al
@@ -274,7 +274,7 @@ def build_search_3_stars_dark(dataset, output_root: Path, result_2=None,
     search = af.Nautilus(
         path_prefix=output_root,
         name="search_3_stars_dark",
-        unique_tag="lmp_sersic_plus_nfw",
+        unique_tag=f"lmp_sersic_plus_nfw{tag_suffix}",
         n_live=n_live,
         n_batch=50,
         iterations_per_update=10000,
@@ -345,7 +345,7 @@ def _build_two_source_galaxy():
 
 
 def build_search_2_v2_stars_only(dataset, output_root: Path, result_1=None,
-                                 n_live: int = 200):
+                                 n_live: int = 200, tag_suffix: str = ""):
     """Search 2 v2 — stars-only + secondary deflector + TWO sources.
 
     Same as Search 2 but:
@@ -383,7 +383,7 @@ def build_search_2_v2_stars_only(dataset, output_root: Path, result_1=None,
     search = af.Nautilus(
         path_prefix=output_root,
         name="search_2_v2_stars_only",
-        unique_tag="lmp_sersic_2src_secondary_no_dark",
+        unique_tag=f"lmp_sersic_2src_secondary_no_dark{tag_suffix}",
         n_live=n_live,
         n_batch=50,
         iterations_per_update=10000,
@@ -400,7 +400,7 @@ def build_search_2_v2_stars_only(dataset, output_root: Path, result_1=None,
 
 
 def build_search_3_v2_stars_dark(dataset, output_root: Path, result_2=None,
-                                 n_live: int = 250):
+                                 n_live: int = 250, tag_suffix: str = ""):
     """Search 3 v2 — stars + NFW dark + secondary deflector + TWO sources."""
     import autofit as af
     import autolens as al
@@ -446,7 +446,7 @@ def build_search_3_v2_stars_dark(dataset, output_root: Path, result_2=None,
     search = af.Nautilus(
         path_prefix=output_root,
         name="search_3_v2_stars_dark",
-        unique_tag="lmp_sersic_2src_secondary_plus_nfw",
+        unique_tag=f"lmp_sersic_2src_secondary_plus_nfw{tag_suffix}",
         n_live=n_live,
         n_batch=50,
         iterations_per_update=10000,
@@ -508,35 +508,50 @@ def main():
           f"{dataset.mask.pixels_in_mask} masked pixels",
           flush=True)
 
+    # Resolve effective mock_prefix (in case 'auto' chose a variant) and
+    # derive a tag_suffix to keep checkpoints from the two variants disjoint.
+    # The lenstronomy variant uses the empty suffix for backward compat with
+    # the v0.94 results that exist on disk; only the autolens variant gets
+    # a suffix. See CLUSTER_WORKFLOW_NOTES "Checkpoint hygiene".
+    effective_prefix = args.mock_prefix
+    if effective_prefix == "auto":
+        if (args.dataset_root / "autolens_mock_1_image.fits").exists():
+            effective_prefix = "autolens"
+        else:
+            effective_prefix = "lenstronomy"
+    tag_suffix = "_autolens" if effective_prefix == "autolens" else ""
+    print(f"Effective mock prefix: {effective_prefix} "
+          f"(unique_tag suffix: '{tag_suffix}')", flush=True)
+
     result_1 = result_2 = result_2_v2 = None
     if args.part in ("light", "all", "all_v2"):
         result_1 = build_search_1_light(
             dataset, args.output_root, mask_radius=args.mask_radius,
-            n_live=args.n_live_light,
+            n_live=args.n_live_light, tag_suffix=tag_suffix,
         )
 
     if args.part in ("stars_only", "all"):
         result_2 = build_search_2_stars_only(
             dataset, args.output_root, result_1=result_1,
-            n_live=args.n_live_stars,
+            n_live=args.n_live_stars, tag_suffix=tag_suffix,
         )
 
     if args.part in ("stars_dark", "all"):
         build_search_3_stars_dark(
             dataset, args.output_root, result_2=result_2,
-            n_live=args.n_live_stars_dark,
+            n_live=args.n_live_stars_dark, tag_suffix=tag_suffix,
         )
 
     if args.part in ("stars_only_v2", "all_v2"):
         result_2_v2 = build_search_2_v2_stars_only(
             dataset, args.output_root, result_1=result_1,
-            n_live=200,
+            n_live=200, tag_suffix=tag_suffix,
         )
 
     if args.part in ("stars_dark_v2", "all_v2"):
         build_search_3_v2_stars_dark(
             dataset, args.output_root, result_2=result_2_v2,
-            n_live=250,
+            n_live=250, tag_suffix=tag_suffix,
         )
 
     print(f"\nTotal wall time: {(time.time()-t_start)/3600:.2f} h", flush=True)
