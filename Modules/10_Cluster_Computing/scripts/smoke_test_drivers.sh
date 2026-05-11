@@ -101,6 +101,7 @@ else
     check_driver double_source_plane    direct beta_fixedcosmo beta_freecosmo_v3 beta_chain
     check_driver mge_to_physical        light stars_only stars_dark stars_dark_v2 all
     check_driver quad_time_delay        direct direct_h0_free_tight positions_only joint_fit joint_fit_h0_free
+    check_driver galaxy_galaxy_single_arc direct truth_anchored all
     check_driver compound_lens          direct direct_epl slam_effective slam_staged direct_with_positions_lh
     check_driver compound_lens_zoo_climb R5_truth_freecosmo
     check_driver agel_real_target       direct_clean
