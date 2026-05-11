@@ -53,21 +53,67 @@ from pathlib import Path
 # light-profile branch accepts xp; the mass-profile branch (MassProfile in
 # autogalaxy/profiles/mass/abstract/abstract.py) does not, and raises
 # TypeError("got an unexpected keyword argument 'xp'") whenever the
-# visualizer asks for a potential plot. Two jobs (mge_autolens_v2 + v3)
-# crashed at 2h58m and 23min respectively before this shim landed.
+# visualizer asks for a potential plot.
 #
-# Patch: wrap MassProfile.potential_2d_from to swallow xp= and forward
-# everything else. When the upstream bug is fixed (likely a one-line
-# `xp=None` default on MassProfile.potential_2d_from), this shim becomes
-# a no-op and can be deleted.
+# Three failure flavours we ran into iterating on this shim:
+#   v2 (2h58m): no shim; PowerLaw.potential_2d_from raised TypeError
+#   v3 (23min): shim wrapped ABSTRACT method, broke MRO -> NotImplementedError
+#   v4 (20min): per-subclass shim covered 21 classes, but NFW inherits
+#               directly from abstract (no override) so the abstract raise
+#               still fires
+#
+# Correct shim is TWO-LAYER:
+#   1. Per-subclass wrapper for classes that DO override potential_2d_from
+#      (PowerLaw, ExternalShear, lmp.Sersic, ...). Strips xp= from kwargs.
+#   2. Abstract MassProfile.potential_2d_from fallback that accepts xp=
+#      and returns zeros. Profiles like NFW that don't have an analytic
+#      potential implementation fall through to here. Visualizer plots
+#      zero potential for those — correct enough for a debug plot; doesn't
+#      affect the fit likelihood (which doesn't use the potential).
+#
+# Delete this whole block when upstream fixes MassProfile.potential_2d_from
+# to accept xp=None.
 try:
+    import autolens as _al_for_shim  # noqa: F401 -- triggers profile imports
     from autogalaxy.profiles.mass.abstract.abstract import MassProfile as _MP
-    _orig_potential_2d_from = _MP.potential_2d_from
-    def _patched_potential_2d_from(self, grid, **kwargs):
-        kwargs.pop("xp", None)
-        return _orig_potential_2d_from(self, grid, **kwargs)
-    _MP.potential_2d_from = _patched_potential_2d_from
-    print("[MGE] applied MassProfile.potential_2d_from xp= compatibility shim",
+
+    def _all_subclasses(cls):
+        out = set()
+        for sub in cls.__subclasses__():
+            out.add(sub)
+            out.update(_all_subclasses(sub))
+        return out
+
+    def _make_xp_stripping_wrapper(orig):
+        def wrapper(self, grid, *args, **kwargs):
+            kwargs.pop("xp", None)
+            return orig(self, grid, *args, **kwargs)
+        wrapper.__name__ = orig.__name__
+        wrapper.__qualname__ = orig.__qualname__
+        return wrapper
+
+    _patched_count = 0
+    for _sub in _all_subclasses(_MP):
+        if "potential_2d_from" in _sub.__dict__:
+            _orig = _sub.__dict__["potential_2d_from"]
+            _sub.potential_2d_from = _make_xp_stripping_wrapper(_orig)
+            _patched_count += 1
+
+    # Layer 2: abstract MassProfile fallback for profiles with no override.
+    def _abstract_potential_fallback(self, grid, *args, **kwargs):
+        xp = kwargs.pop("xp", None)
+        try:
+            n = grid.shape[0]
+        except Exception:
+            n = len(grid)
+        if xp is not None:
+            return xp.zeros(n)
+        import numpy as _np
+        return _np.zeros(n)
+    _MP.potential_2d_from = _abstract_potential_fallback
+
+    print(f"[MGE] applied MassProfile.potential_2d_from xp= shim "
+          f"({_patched_count} concrete overrides + abstract fallback)",
           flush=True)
 except Exception as _e:
     print(f"[MGE] WARNING: failed to apply MassProfile shim: {_e}", flush=True)
