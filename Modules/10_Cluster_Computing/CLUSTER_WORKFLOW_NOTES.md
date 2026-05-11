@@ -198,6 +198,42 @@ If you see this pattern, `scancel` the job (don't waste cluster time) and:
 
 ---
 
+## Memory budgeting (rule established 2026-05-11)
+
+**`--mem=64G` is dangerously low for any 32-core autolens fit.** Three siag-partition jobs OOM'd within an hour of each other (ggsa_direct at 25 min, mge_v5 at 40 min, mge_s2v2 at 1h 8m) at MaxRSS 38-82 GB — *not* because the nodes were memory-constrained (siag nodes have 515 GB) but because of slurm's per-job memory limit.
+
+**The cause is Nautilus's multiprocessing.Pool.** Each worker is a full Python child process holding its own autolens runtime + dataset (in-memory FITS arrays + over-sampled grid) + Tracer copy. Empirical per-worker cost:
+
+| Model complexity | Per-worker RSS | 32-worker total |
+|---|---|---|
+| 1 lens + 1 source Sersic (`ggsa_direct`)            | ~1.5–2.0 GB | ~50–64 GB |
+| MGE light + Isothermal + 1 source (`mge_s2v2`)      | ~1.2–2.5 GB | ~40–80 GB |
+| Stars+NFW + secondary + 2 sources (`mge_stars_dark_v2`) | ~2.6–3.0 GB | ~85–95 GB |
+
+Plus Python main process overhead (10–30 GB depending on prior count) — total job-step memory 70–125 GB for typical fits.
+
+**Recommended `--mem` ceilings on 32 cores:**
+
+| Fit class | `--mem` |
+|---|---|
+| Single-galaxy direct fit (≤ 15 free params, no MGE) | **128 GB** |
+| MGE light fit (Search 1) | 128 GB |
+| Compound / multi-plane / MGE+mass (≤ 25 free params) | 160 GB |
+| Stars+dark + secondary + multi-source (≥ 25 free params) | **192 GB** |
+| Pixelized source reconstructions | 192 GB+ |
+
+For 16 cores, halve the ceiling. For 64 cores, double it. The siag and hernquist partitions both have ≥ 500 GB/node so there's no node-level constraint at these sizes — the budget is purely the slurm `--mem` ceiling.
+
+**Diagnostic command.** When a job OOMs, the per-step MaxRSS is in `sacct`:
+
+```
+sacct -j <jobid> --format=JobID,JobName%20,State,MaxRSS,ReqMem,Elapsed,NodeList
+```
+
+The `batch` line is the total job-step memory (workers + main); the `python` sub-step is the main process only. The mismatch between them = sum of worker RSS, the actual driver of OOM.
+
+---
+
 ## Medium-term improvements (worth doing next)
 
 ### A. Git-backed sync instead of rsync
