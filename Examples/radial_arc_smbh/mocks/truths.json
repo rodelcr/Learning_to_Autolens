@@ -1,0 +1,92 @@
+{
+  "framework": "PyAutoLens 2026.4.13.6 (native simulator)",
+  "scenario": "Einstein-spiral analog with embedded SMBH (depth B)",
+  "generated_date": "2026-05-14",
+  "imaging": {
+    "shape_native": [
+      80,
+      80
+    ],
+    "pixel_scales_arcsec": 0.05,
+    "exp_time_s": 1000.0,
+    "background_rms": 0.01,
+    "psf_fwhm_arcsec": 0.12
+  },
+  "redshifts": {
+    "lens": 0.7,
+    "source": 1.5
+  },
+  "cosmology": {
+    "H0": 70.0,
+    "Om": 0.3,
+    "w": -1.0
+  },
+  "lens": {
+    "bulge": {
+      "type": "al.lp.Sersic",
+      "centre": [
+        0.0,
+        0.0
+      ],
+      "ell_comps": [
+        0.1,
+        0.05
+      ],
+      "intensity": 1.0,
+      "effective_radius": 0.8,
+      "sersic_index": 4.0
+    },
+    "mass": {
+      "type": "al.mp.PowerLaw",
+      "centre": [
+        0.0,
+        0.0
+      ],
+      "ell_comps": [
+        0.1,
+        0.05
+      ],
+      "einstein_radius": 1.0,
+      "slope": 1.95
+    },
+    "smbh": {
+      "type": "al.mp.PointMass",
+      "centre": [
+        0.0,
+        0.0
+      ],
+      "einstein_radius": 0.08,
+      "note": "Pedagogically-large BH for imaging-only detection. Real AGEL UMBHs have theta_E_BH ~ 0.02; v0.97+ real-data follow-up requires kinematics."
+    },
+    "shear": {
+      "type": "al.mp.ExternalShear",
+      "gamma_1": 0.025,
+      "gamma_2": -0.015
+    }
+  },
+  "source": {
+    "bulge": {
+      "type": "al.lp.Sersic",
+      "centre": [
+        0.06,
+        0.03
+      ],
+      "ell_comps": [
+        0.05,
+        0.02
+      ],
+      "intensity": 0.5,
+      "effective_radius": 0.18,
+      "sersic_index": 1.5
+    }
+  },
+  "kinematics": {
+    "framework": "synthetic Jeans aperture measurement",
+    "R_eff_arcsec": 0.8,
+    "aperture_kind": "Reff-circular",
+    "sigma_v_obs_kms": 278.57641157298053,
+    "sigma_v_err_kms": 10.0,
+    "sigma_v_truth_kms": 280.0,
+    "notes": "Truth sigma_v computed from PL+BH cumulative mass at R_eff via isotropic Jeans. Real-data pipeline: ppxf on KCWI/LLAMAS IFU spectra, aperture matched to R_eff or Sersic kernel."
+  }
+}

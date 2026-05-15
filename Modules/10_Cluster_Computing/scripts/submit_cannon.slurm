@@ -138,6 +138,10 @@ if [[ -n "${EXAMPLE:-}" ]]; then
             DATASET_ROOT="${REPO_ROOT}/Examples/galaxy_galaxy_single_arc/mocks"
             FIT_SCRIPT="${REPO_ROOT}/Modules/10_Cluster_Computing/scripts/fit_example_galaxy_galaxy_single_arc.py"
             ;;
+        radial_arc_smbh)
+            DATASET_ROOT="${REPO_ROOT}/Examples/radial_arc_smbh/mocks"
+            FIT_SCRIPT="${REPO_ROOT}/Modules/10_Cluster_Computing/scripts/fit_example_radial_arc_smbh.py"
+            ;;
         *) echo "unknown EXAMPLE=${EXAMPLE}"; exit 2 ;;
     esac
 else

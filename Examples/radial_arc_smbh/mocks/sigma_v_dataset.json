@@ -1,0 +1,9 @@
+{
+  "framework": "synthetic Jeans aperture measurement",
+  "R_eff_arcsec": 0.8,
+  "aperture_kind": "Reff-circular",
+  "sigma_v_obs_kms": 278.57641157298053,
+  "sigma_v_err_kms": 10.0,
+  "sigma_v_truth_kms": 280.0,
+  "notes": "Truth sigma_v computed from PL+BH cumulative mass at R_eff via isotropic Jeans. Real-data pipeline: ppxf on KCWI/LLAMAS IFU spectra, aperture matched to R_eff or Sersic kernel."
+}
