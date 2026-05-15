@@ -100,17 +100,25 @@ g1, g2 = _shear_gamma_psi_to_components(float(sh["gamma_ext"]),
 
 # autolens convention: ell_comps = (e1, e2) with same parameterization as
 # lenstronomy's SIE/EPL e1, e2 (Wright-Brainerd). Direct copy.
+# NOTE 2026-05-15: autolens centre convention is (y, x) — first component
+# is y, second is x. Lenstronomy uses (center_x, center_y) — first x then y.
+# We must SWAP: autolens centre = (lenstronomy center_y, lenstronomy center_x).
+# Earlier version of this script passed (center_x, center_y) which produced
+# axis-swapped mock vs lenstronomy convention; the driver's hardcoded truth
+# values then mismatched, producing the v0.95 chi²/N=6+ on the regenerated
+# mock. (The lens at (0,0) hides the bug; the secondary at non-zero offsets
+# exposes it.)
 lens_l1 = al.Galaxy(
     redshift=z_l1,
     mass=al.mp.PowerLaw(
-        centre=(float(mass_l1["center_x"]), float(mass_l1["center_y"])),
+        centre=(float(mass_l1["center_y"]), float(mass_l1["center_x"])),
         ell_comps=(float(mass_l1["e1"]), float(mass_l1["e2"])),
         einstein_radius=float(mass_l1["theta_E"]),
         slope=float(mass_l1["gamma"]),
     ),
     shear=al.mp.ExternalShear(gamma_1=g1, gamma_2=g2),
     bulge=al.lp.Sersic(
-        centre=(float(light_l1["center_x"]), float(light_l1["center_y"])),
+        centre=(float(light_l1["center_y"]), float(light_l1["center_x"])),
         ell_comps=(float(light_l1["e1"]), float(light_l1["e2"])),
         intensity=float(light_l1["amp"]),
         effective_radius=float(light_l1["R_sersic"]),
@@ -126,7 +134,7 @@ mass_l2 = TRUTHS["kwargs_lens"][2]
 lens_l2 = al.Galaxy(
     redshift=z_l2,
     mass=al.mp.PowerLaw(
-        centre=(float(mass_l2["center_x"]), float(mass_l2["center_y"])),
+        centre=(float(mass_l2["center_y"]), float(mass_l2["center_x"])),
         ell_comps=(float(mass_l2["e1"]), float(mass_l2["e2"])),
         einstein_radius=float(mass_l2["theta_E"]),
         slope=float(mass_l2["gamma"]),
@@ -140,14 +148,14 @@ src_b = TRUTHS["kwargs_source"][1]
 source = al.Galaxy(
     redshift=z_s,
     bulge=al.lp.Sersic(
-        centre=(float(src_a["center_x"]), float(src_a["center_y"])),
+        centre=(float(src_a["center_y"]), float(src_a["center_x"])),
         ell_comps=(float(src_a["e1"]), float(src_a["e2"])),
         intensity=float(src_a["amp"]),
         effective_radius=float(src_a["R_sersic"]),
         sersic_index=float(src_a["n_sersic"]),
     ),
     disk=al.lp.Sersic(
-        centre=(float(src_b["center_x"]), float(src_b["center_y"])),
+        centre=(float(src_b["center_y"]), float(src_b["center_x"])),
         ell_comps=(float(src_b["e1"]), float(src_b["e2"])),
         intensity=float(src_b["amp"]),
         effective_radius=float(src_b["R_sersic"]),
@@ -209,7 +217,7 @@ autolens_truths = {
     "lens_primary": {
         "mass": {
             "type": "al.mp.PowerLaw",
-            "centre": [float(mass_l1["center_x"]), float(mass_l1["center_y"])],
+            "centre": [float(mass_l1["center_y"]), float(mass_l1["center_x"])],
             "ell_comps": [float(mass_l1["e1"]), float(mass_l1["e2"])],
             "einstein_radius": float(mass_l1["theta_E"]),
             "slope": float(mass_l1["gamma"]),
@@ -221,7 +229,7 @@ autolens_truths = {
         },
         "bulge": {
             "type": "al.lp.Sersic",
-            "centre": [float(light_l1["center_x"]), float(light_l1["center_y"])],
+            "centre": [float(light_l1["center_y"]), float(light_l1["center_x"])],
             "ell_comps": [float(light_l1["e1"]), float(light_l1["e2"])],
             "intensity": float(light_l1["amp"]),
             "effective_radius": float(light_l1["R_sersic"]),
@@ -231,7 +239,7 @@ autolens_truths = {
     "lens_secondary": {
         "mass": {
             "type": "al.mp.PowerLaw",
-            "centre": [float(mass_l2["center_x"]), float(mass_l2["center_y"])],
+            "centre": [float(mass_l2["center_y"]), float(mass_l2["center_x"])],
             "ell_comps": [float(mass_l2["e1"]), float(mass_l2["e2"])],
             "einstein_radius": float(mass_l2["theta_E"]),
             "slope": float(mass_l2["gamma"]),
@@ -240,7 +248,7 @@ autolens_truths = {
     "source": {
         "bulge": {
             "type": "al.lp.Sersic",
-            "centre": [float(src_a["center_x"]), float(src_a["center_y"])],
+            "centre": [float(src_a["center_y"]), float(src_a["center_x"])],
             "ell_comps": [float(src_a["e1"]), float(src_a["e2"])],
             "intensity": float(src_a["amp"]),
             "effective_radius": float(src_a["R_sersic"]),
@@ -248,7 +256,7 @@ autolens_truths = {
         },
         "disk": {
             "type": "al.lp.Sersic",
-            "centre": [float(src_b["center_x"]), float(src_b["center_y"])],
+            "centre": [float(src_b["center_y"]), float(src_b["center_x"])],
             "ell_comps": [float(src_b["e1"]), float(src_b["e2"])],
             "intensity": float(src_b["amp"]),
             "effective_radius": float(src_b["R_sersic"]),
