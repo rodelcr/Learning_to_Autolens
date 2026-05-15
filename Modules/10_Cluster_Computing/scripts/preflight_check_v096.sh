@@ -159,8 +159,8 @@ echo "=== Step 7: mge regen axis-swap convention (2026-05-15 fix) ==="
 mge_regen="Examples/mge_to_physical/mocks/regenerate_in_autolens.py"
 # All 10 centre sites (5 simulator constructors + 5 JSON dump lines) must
 # use (center_y, center_x). Count both orderings.
-new_count=$(grep -cE 'center_y"\]\),[[:space:]]*float\([a-z0-9_]+\["center_x"\]' "$mge_regen" 2>/dev/null || echo 0)
-old_count=$(grep -cE 'center_x"\]\),[[:space:]]*float\([a-z0-9_]+\["center_y"\]' "$mge_regen" 2>/dev/null || echo 0)
+new_count=$(grep -cE 'center_y"\]\),[[:space:]]*float\([a-z0-9_]+\["center_x"\]' "$mge_regen" 2>/dev/null); new_count=${new_count:-0}
+old_count=$(grep -cE 'center_x"\]\),[[:space:]]*float\([a-z0-9_]+\["center_y"\]' "$mge_regen" 2>/dev/null); old_count=${old_count:-0}
 if [ "$old_count" -gt 0 ]; then
     print_fail "mge regen has $old_count remaining (center_x, center_y) sites (should be 0)"
 elif [ "$new_count" -lt 10 ]; then

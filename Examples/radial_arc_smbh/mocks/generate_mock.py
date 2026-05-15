@@ -155,17 +155,30 @@ print(f"[mock] wrote {noise_path.relative_to(OUT.parents[2])}")
 print(f"[mock] wrote {psf_path.relative_to(OUT.parents[2])}")
 
 # --- Synthetic sigma_v aperture measurement -------------------------------
-# Module 13 Jeans theory: sigma_v(R_eff) is computed from the cumulative
-# mass profile + lens light Sersic R_eff. For a power-law M(<r) ~ r^(3-gamma)
-# + point mass M_BH, sigma_v at R_eff is dominated by the PL contribution
-# plus a modest BH boost. Compute analytically (simplified, isotropic Jeans):
-#   sigma_v^2 ~ G M_enc(R_eff) / R_eff
-# at R_eff = 0.8" the PL mass dominates (M_BH contribution is tiny since
-# r/theta_E_BH = 10, kappa_BH at this radius is 0.01 << kappa_PL ~ 1).
-# Use a synthetic "measured" value that matches the truth model + adds noise:
-#   sigma_v_truth = 280 km/s (typical for SLACS-like elliptical, M_E ~ 5e11 Msun)
-#   sigma(sigma_v_obs) = 10 km/s (KCWI / LLAMAS IFU pipeline precision)
-sigma_v_truth = 280.0
+# Module 13 Jeans theory: sigma_v(R_eff) is computed by spherical isotropic
+# Jeans solver in `_jeans_sigma_v.py` (v0.97 Phase 3 deliverable). For a
+# power-law M(<r) ~ r^(3-gamma) + point mass M_BH and a Sersic n=4 tracer
+# of R_eff=0.8", aperture-weighted sigma_v ~ 1.10 × sigma_SIS for this
+# geometry. Compute self-consistently here so the fit-time AnalysisKinematics
+# class — which uses the SAME solver — can recover truth at the σ_v_err
+# precision level.
+import sys as _sys
+from pathlib import Path as _Path
+_sys.path.insert(0, str(_Path(__file__).resolve().parents[3]
+                         / "Modules" / "10_Cluster_Computing" / "scripts"))
+from _jeans_sigma_v import sigma_v_aperture_isotropic
+
+_cosmo_truth = al.cosmo.FlatLambdaCDM(H0=70.0, Om0=0.30)
+_D_l = float(_cosmo_truth.angular_diameter_distance_kpc_z1z2(0.0, z_l))
+_D_s = float(_cosmo_truth.angular_diameter_distance_kpc_z1z2(0.0, z_s))
+_D_ls = float(_cosmo_truth.angular_diameter_distance_kpc_z1z2(z_l, z_s))
+sigma_v_truth = sigma_v_aperture_isotropic(
+    theta_E_arcsec=theta_E_PL, slope=slope_truth,
+    R_eff_arcsec=0.8, sersic_index=4.0,
+    R_aperture_arcsec=0.8,
+    D_l_kpc=_D_l, D_s_kpc=_D_s, D_ls_kpc=_D_ls,
+    theta_E_BH_arcsec=theta_E_BH,
+)
 sigma_v_err = 10.0
 np.random.seed(99)
 sigma_v_obs = sigma_v_truth + np.random.normal(0, sigma_v_err)
@@ -176,10 +189,12 @@ sigma_v_dataset = {
     "aperture_kind": "Reff-circular",
     "sigma_v_obs_kms": float(sigma_v_obs),
     "sigma_v_err_kms": float(sigma_v_err),
-    "sigma_v_truth_kms": sigma_v_truth,
-    "notes": "Truth sigma_v computed from PL+BH cumulative mass at R_eff "
-             "via isotropic Jeans. Real-data pipeline: ppxf on KCWI/LLAMAS "
-             "IFU spectra, aperture matched to R_eff or Sersic kernel.",
+    "sigma_v_truth_kms": float(sigma_v_truth),
+    "notes": "Truth sigma_v computed self-consistently via "
+             "_jeans_sigma_v.sigma_v_aperture_isotropic with the same "
+             "PowerLaw+PointMass+Sersic parameters used to simulate the "
+             "imaging. Real-data pipeline: ppxf on KCWI/LLAMAS IFU "
+             "spectra, aperture matched to R_eff or Sersic kernel.",
 }
 sigma_v_path = OUT / "sigma_v_dataset.json"
 sigma_v_path.write_text(json.dumps(sigma_v_dataset, indent=2))

@@ -206,22 +206,93 @@ def build_with_pointmass_fit(dataset, output_root: Path, n_live: int = 250,
     return search.fit(model=model, analysis=analysis)
 
 
-def build_with_kinematics_fit(dataset, output_root: Path, n_live: int = 250,
+def build_with_kinematics_fit(dataset, output_root: Path, n_live: int = 300,
+                              dataset_root: Path | None = None,
                               tag_suffix: str = ""):
-    """--part=with_kinematics: STUB. Ships in v0.97 once the shared Jeans
-    AnalysisKinematics class lands. See V095_PIPELINE_PLAN §4.3."""
-    raise NotImplementedError(
-        "with_kinematics requires a custom al.AnalysisKinematics subclass\n"
-        "wrapping a Jeans-σ_v likelihood (Module 13 theory). Status:\n"
-        "  - The shared analysis ships as Modules/10_Cluster_Computing/\n"
-        "    scripts/_jeans_sigma_v.py in v0.97\n"
-        "  - Consumed here AND by fit_example_quad_time_delay.py\n"
-        "    --part=joint_fit_h0_kin (V095_PIPELINE_PLAN Stage 4 #3).\n"
-        "  - Tracked as task #122 in the v0.96 design.\n"
-        "\nFor v0.96 use --part=with_pointmass — γ′ + M_BH joint posterior\n"
-        "with the degeneracy visible (the headline pedagogical result).\n"
-        "When v0.97 lands, this --part will demonstrate the kinematic break."
+    """--part=with_kinematics: PowerLaw + shear + source + PointMass + Jeans σ_v.
+
+    Joint AnalysisImaging + AnalysisKinematics via af.FactorGraphModel.
+    The kinematic likelihood breaks the γ′–M_BH degeneracy that imaging
+    alone cannot resolve (Δlog_Z = +1.71 in `with_pointmass`).
+
+    Phase 3 shipped 2026-05-15 (task #122). The Analysis class lives in
+    `_jeans_sigma_v.py` next to this driver and is also consumed by
+    `fit_example_quad_time_delay.py --part=joint_fit_h0_kin`.
+    """
+    import autofit as af
+    import autolens as al
+
+    if dataset_root is None:
+        raise ValueError("with_kinematics requires --dataset-root for "
+                         "the sigma_v_dataset.json sidecar.")
+
+    # Import the shared Jeans module (sits in this scripts/ dir).
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    from _jeans_sigma_v import AnalysisKinematics, KinematicDataset
+
+    kin_path = Path(dataset_root) / "sigma_v_dataset.json"
+    if not kin_path.exists():
+        raise FileNotFoundError(
+            f"kinematic dataset missing: {kin_path}\n"
+            f"Re-run mocks/generate_mock.py to write sigma_v_dataset.json"
+        )
+    kin_ds = KinematicDataset.from_json(kin_path)
+    print(f"[RARC/with_kinematics] kinematic dataset: "
+          f"σ_v_obs = {kin_ds.sigma_v_obs_kms:.2f} ± "
+          f"{kin_ds.sigma_v_err_kms:.2f} km/s at R = "
+          f"{kin_ds.R_aperture_arcsec:.2f}″", flush=True)
+
+    # Same model as --part=with_pointmass (free PowerLaw slope + PointMass).
+    lens = _build_lens_galaxy_model(slope_pinned=None, include_pointmass=True)
+    source = _build_source_galaxy_model()
+    model = af.Collection(galaxies=af.Collection(lens=lens, source=source))
+    print(f"[RARC/with_kinematics] free params: {model.prior_count}", flush=True)
+
+    # Two analyses — imaging (autolens-native) + kinematics (our subclass).
+    analysis_imaging = al.AnalysisImaging(dataset=dataset, use_jax=False)
+    analysis_kin = AnalysisKinematics(
+        dataset=kin_ds,
+        z_lens=0.7, z_source=1.5,
+        cosmology=al.cosmo.FlatLambdaCDM(H0=70.0, Om0=0.30),
+        lens_galaxy_index=0,
+        use_smbh=True,
     )
+
+    # FactorGraphModel pattern (proven in fit_example_quad_time_delay.py
+    # build_joint_fit, commit 8e4e9bb): both factors wrap the SAME global
+    # model and Nautilus sees the joint log-likelihood (a sum).
+    af_imaging = af.AnalysisFactor(prior_model=model,
+                                    analysis=analysis_imaging,
+                                    name="imaging")
+    af_kin = af.AnalysisFactor(prior_model=model,
+                                analysis=analysis_kin,
+                                name="kinematic")
+    factor_graph = af.FactorGraphModel(af_imaging, af_kin)
+
+    print(f"[RARC/with_kinematics] global model summary:", flush=True)
+    print(factor_graph.global_prior_model.info, flush=True)
+
+    search = af.Nautilus(
+        path_prefix=output_root,
+        name="rarc_with_kinematics",
+        unique_tag=f"rarc_with_kinematics{tag_suffix}",
+        n_live=n_live,
+        n_batch=50,
+        iterations_per_update=5000,
+        number_of_cores=int(os.environ.get("SLURM_CPUS_PER_TASK", "1")),
+    )
+
+    t0 = time.time()
+    result_list = search.fit(
+        model=factor_graph.global_prior_model, analysis=factor_graph
+    )
+    print(f"[RARC/with_kinematics] done in {(time.time()-t0)/60:.1f} min",
+          flush=True)
+    try:
+        print(result_list[0].info, flush=True)
+    except Exception:
+        pass
+    return result_list
 
 
 def main():
@@ -264,7 +335,8 @@ def main():
     if args.part in ("with_pointmass", "all"):
         build_with_pointmass_fit(dataset, args.output_root, n_live=250)
     if args.part == "with_kinematics":
-        build_with_kinematics_fit(dataset, args.output_root)
+        build_with_kinematics_fit(dataset, args.output_root,
+                                   dataset_root=args.dataset_root)
 
     print(f"\nTotal wall time: {(time.time()-t_start)/3600:.2f} h", flush=True)
 
