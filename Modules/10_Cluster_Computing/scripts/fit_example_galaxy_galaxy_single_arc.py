@@ -94,7 +94,7 @@ def build_direct_fit(dataset, output_root: Path, n_live: int = 150,
 
     print(f"[GGSA/direct] free params: {model.prior_count}", flush=True)
 
-    analysis = al.AnalysisImaging(dataset=dataset)
+    analysis = al.AnalysisImaging(dataset=dataset, use_jax=False)
     search = af.Nautilus(
         path_prefix=output_root,
         name="ggsa_direct",
@@ -150,7 +150,7 @@ def build_truth_anchored_fit(dataset, output_root: Path, n_live: int = 100,
 
     print(f"[GGSA/truth] free params: {model.prior_count}", flush=True)
 
-    analysis = al.AnalysisImaging(dataset=dataset)
+    analysis = al.AnalysisImaging(dataset=dataset, use_jax=False)
     search = af.Nautilus(
         path_prefix=output_root,
         name="ggsa_truth_anchored",

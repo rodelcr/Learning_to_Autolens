@@ -58,6 +58,15 @@ The minimum-viable two-fit Bayes-factor demo exists; the **upgrade** is the Vege
 - New `--part=grid_search` in `fit_example_subhalo_sensitivity.py`
 - ~50 Cannon submits (one per grid cell) at 4h each, total ~200 CPU-days. **Defer to v0.96** unless someone has a real subhalo claim to test.
 
+### #5.5 — Multi-GPU JAX speedup test for MGE fits (task #127)
+
+Per `project_multigpu_jax_idea.md` memory: single-GPU JAX was 4× *slower* than numpy on our typical MGE fits. Multi-GPU data-parallel + SLURM-array + per-process JAX have NOT been tested. Open question whether (a) `jax.pmap` across 2–4 GPUs on a `fasrc-cannon-gpu` node, or (b) a SLURM array with N tasks each on 1 GPU, gives a speedup relative to the numpy 32-core baseline.
+
+**Deliverables:**
+- Adapt `fit_example_mge_to_physical.py` with a `--use-jax-pmap` flag (or new driver `fit_example_mge_to_physical_gpu.py`).
+- Benchmark wall + chi²/N landed vs numpy baseline on the autolens-native regenerated mock.
+- Deferred priority — only valuable if numpy stops fitting in `--mem=192G` envelope or wall times exceed 24h. Currently mge fits complete in ~25min.
+
 ## Tier 3 — production AGEL-realistic
 
 ### #6 — `multi_band_joint_fit` (NEW example)

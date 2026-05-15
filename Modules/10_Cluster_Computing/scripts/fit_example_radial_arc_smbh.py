@@ -145,7 +145,7 @@ def build_direct_fit(dataset, output_root: Path, n_live: int = 200,
     model = af.Collection(galaxies=af.Collection(lens=lens, source=source))
     print(f"[RARC/direct] free params: {model.prior_count}", flush=True)
 
-    analysis = al.AnalysisImaging(dataset=dataset)
+    analysis = al.AnalysisImaging(dataset=dataset, use_jax=False)
     search = af.Nautilus(
         path_prefix=output_root,
         name="rarc_direct",
@@ -169,7 +169,7 @@ def build_no_pointmass_fit(dataset, output_root: Path, n_live: int = 150,
     model = af.Collection(galaxies=af.Collection(lens=lens, source=source))
     print(f"[RARC/no_pointmass] free params: {model.prior_count}", flush=True)
 
-    analysis = al.AnalysisImaging(dataset=dataset)
+    analysis = al.AnalysisImaging(dataset=dataset, use_jax=False)
     search = af.Nautilus(
         path_prefix=output_root,
         name="rarc_no_pointmass",
@@ -193,7 +193,7 @@ def build_with_pointmass_fit(dataset, output_root: Path, n_live: int = 250,
     model = af.Collection(galaxies=af.Collection(lens=lens, source=source))
     print(f"[RARC/with_pointmass] free params: {model.prior_count}", flush=True)
 
-    analysis = al.AnalysisImaging(dataset=dataset)
+    analysis = al.AnalysisImaging(dataset=dataset, use_jax=False)
     search = af.Nautilus(
         path_prefix=output_root,
         name="rarc_with_pointmass",
