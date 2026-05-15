@@ -1,0 +1,49 @@
+Total Free Parameters = 21
+
+model                                                                           Collection (N=21)
+    galaxies                                                                    Collection (N=21)
+        lens                                                                    Galaxy (N=14)
+            mass                                                                PowerLaw (N=6)
+            shear                                                               ExternalShear (N=2)
+            smbh                                                                PointMass (N=3)
+        source                                                                  Galaxy (N=7)
+        lens - source
+            bulge                                                               Sersic (N=7)
+
+galaxies
+    lens
+        redshift                                                                0.7
+        bulge - smbh
+            centre
+                centre_0                                                        GaussianPrior [7], mean = 0.0, sigma = 0.2
+                centre_1                                                        GaussianPrior [8], mean = 0.0, sigma = 0.2
+        bulge
+            ell_comps
+                ell_comps_0                                                     GaussianPrior [2], mean = 0.0, sigma = 0.3
+                ell_comps_1                                                     GaussianPrior [3], mean = 0.0, sigma = 0.3
+            intensity                                                           UniformPrior [9], lower_limit = 0.0, upper_limit = 3.0
+            effective_radius                                                    UniformPrior [10], lower_limit = 0.3, upper_limit = 2.0
+            sersic_index                                                        UniformPrior [11], lower_limit = 2.0, upper_limit = 6.0
+        mass
+            ell_comps
+                ell_comps_0                                                     TruncatedGaussianPrior [14], mean = 0.0, sigma = 0.3, lower_limit = -1.0, upper_limit = 1.0
+                ell_comps_1                                                     TruncatedGaussianPrior [15], mean = 0.0, sigma = 0.3, lower_limit = -1.0, upper_limit = 1.0
+            einstein_radius                                                     UniformPrior [18], lower_limit = 0.5, upper_limit = 2.0
+            slope                                                               UniformPrior [19], lower_limit = 1.6, upper_limit = 2.4
+        shear
+            gamma_1                                                             GaussianPrior [22], mean = 0.0, sigma = 0.05
+            gamma_2                                                             GaussianPrior [23], mean = 0.0, sigma = 0.05
+        smbh
+            einstein_radius                                                     UniformPrior [27], lower_limit = 0.001, upper_limit = 0.2
+    source
+        redshift                                                                1.5
+        bulge
+            centre
+                centre_0                                                        GaussianPrior [35], mean = 0.0, sigma = 0.3
+                centre_1                                                        GaussianPrior [36], mean = 0.0, sigma = 0.3
+            ell_comps
+                ell_comps_0                                                     GaussianPrior [30], mean = 0.0, sigma = 0.3
+                ell_comps_1                                                     GaussianPrior [31], mean = 0.0, sigma = 0.3
+            intensity                                                           UniformPrior [37], lower_limit = 0.0, upper_limit = 2.0
+            effective_radius                                                    UniformPrior [38], lower_limit = 0.05, upper_limit = 0.5
+            sersic_index                                                        UniformPrior [39], lower_limit = 0.5, upper_limit = 4.0

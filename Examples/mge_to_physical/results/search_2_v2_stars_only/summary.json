@@ -1,10 +1,10 @@
 {
   "search_name": "search_2_v2_stars_only",
-  "source_dir": "output/lmp_sersic_2src_secondary_no_dark/search_2_v2_stars_only/8e4d7009de59c3ee9ca2c19835c86ea4",
-  "max_log_likelihood": 28533.193993802008,
-  "log_evidence": 28415.408642365383,
-  "chi_squared_total": 17132.127913764984,
-  "chi_squared_per_pixel": 1.867058403854074,
+  "source_dir": "output/lmp_sersic_2src_secondary_no_dark_autolens_v2/search_2_v2_stars_only/a2fb67871257063431e465aa732164a8",
+  "max_log_likelihood": -10349.27133468979,
+  "log_evidence": -10548.374019392746,
+  "chi_squared_total": 42216.76402429583,
+  "chi_squared_per_pixel": 4.600780734993006,
   "n_unmasked_pixels": 9176,
-  "max_abs_normalized_residual": 9.702710148553779
+  "max_abs_normalized_residual": 30.36441720887246
 }

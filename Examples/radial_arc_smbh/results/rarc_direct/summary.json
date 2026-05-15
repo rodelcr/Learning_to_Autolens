@@ -1,0 +1,10 @@
+{
+  "search_name": "rarc_direct",
+  "source_dir": "output/rarc_direct/rarc_direct/1b64fc6310c713a270bcdbab6993ca53",
+  "max_log_likelihood": 8848.46601865325,
+  "log_evidence": 8725.87020882132,
+  "chi_squared_total": 4138.28800019634,
+  "chi_squared_per_pixel": 1.0192827586690494,
+  "n_unmasked_pixels": 4060,
+  "max_abs_normalized_residual": 4.272555425291097
+}

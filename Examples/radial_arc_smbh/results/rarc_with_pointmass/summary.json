@@ -1,0 +1,10 @@
+{
+  "search_name": "rarc_with_pointmass",
+  "source_dir": "output/rarc_with_pointmass/rarc_with_pointmass/1823a3198366efc1e63748f353918808",
+  "max_log_likelihood": 8848.77635583463,
+  "log_evidence": 8724.160966462383,
+  "chi_squared_total": 4137.667325833578,
+  "chi_squared_per_pixel": 1.019129883210241,
+  "n_unmasked_pixels": 4060,
+  "max_abs_normalized_residual": 4.234373049245231
+}

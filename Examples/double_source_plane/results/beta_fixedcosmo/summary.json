@@ -1,0 +1,10 @@
+{
+  "search_name": "beta_fixedcosmo",
+  "source_dir": "output/double_source_plane/mock_1_v0_96/beta_fixedcosmo/1c21bc28ca2c351c9058d41c3ce304f5",
+  "max_log_likelihood": 29175.104555183436,
+  "log_evidence": 29039.845442655973,
+  "chi_squared_total": 9759.074829160532,
+  "chi_squared_per_pixel": 0.9901658714651514,
+  "n_unmasked_pixels": 9856,
+  "max_abs_normalized_residual": 3.971961525597683
+}

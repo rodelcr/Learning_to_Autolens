@@ -1,0 +1,10 @@
+{
+  "search_name": "beta_freecosmo_v3",
+  "source_dir": "output/double_source_plane/mock_1_v0_96_chain/beta_freecosmo_v3/1a7869b92184f30115255e004537f0ed",
+  "max_log_likelihood": 29174.81025876901,
+  "log_evidence": 29036.341413235645,
+  "chi_squared_total": 9759.663421989388,
+  "chi_squared_per_pixel": 0.9902255907050921,
+  "n_unmasked_pixels": 9856,
+  "max_abs_normalized_residual": 3.976243294277632
+}
