@@ -270,7 +270,7 @@ def build_beta_fixedcosmo_fit(dataset, output_root: Path, dataset_root: Path,
     search = af.Nautilus(
         path_prefix=output_root / "double_source_plane",
         name="beta_fixedcosmo",
-        unique_tag="mock_1_v0_94",
+        unique_tag="mock_1_v0_96",
         n_live=n_live, n_batch=50, iterations_per_update=30000,
         number_of_cores=int(os.environ.get("SLURM_CPUS_PER_TASK", "1")),
     )
@@ -329,9 +329,9 @@ def build_beta_freecosmo_v3_fit(dataset, output_root: Path, dataset_root: Path,
           f"src2={source_2.prior_count}, cosmo={cosmology.prior_count})", flush=True)
 
     analysis = al.AnalysisImaging(dataset=dataset, use_jax=False)
-    # Fresh unique_tag (v0_94) so this run does NOT pick up the deadlocked
+    # Fresh unique_tag (v0_96) so this run does NOT pick up the deadlocked
     # 2026-05-01-era checkpoints under the original "mock_1" tag (task #111).
-    tag = "mock_1_v0_94_chain" if stage1_result is not None else "mock_1_v0_94_standalone"
+    tag = "mock_1_v0_96_chain" if stage1_result is not None else "mock_1_v0_96_standalone"
     search = af.Nautilus(
         path_prefix=output_root / "double_source_plane",
         name="beta_freecosmo_v3",
