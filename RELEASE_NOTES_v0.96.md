@@ -1,6 +1,6 @@
-# Release Notes — v0.96-alpha (DRAFT)
+# Release Notes — v0.96-alpha
 
-**Status:** draft. Tag pending `mge_s3v2` (Cannon job 13058789) audit and `preflight_check_v096.sh` clean PASS once that lands.
+**Status:** tagged 2026-05-15. All four v0.96 ship-set fits audited; `mge_to_physical` remains research-in-progress with 50% chi²/N improvement from the axis-swap fix.
 
 **Predecessor:** `v0.95-alpha` (2026-05-13)
 **Author:** Rodrigo Córdova Rosado (rodrigo.cordova_rosado@cfa.harvard.edu, Harvard CfA)
@@ -60,7 +60,9 @@ The bug hid for 9 days (2026-05-09 to 2026-05-15) because the lens light + mass 
 
 **Detection methodology:** *driver-truth check*. The internal chi²-at-truth assertion at the end of `regenerate_in_autolens.py` passed (1.003) — the simulator and verifier read the same dict. But the **driver's hardcoded prior means** (centred on `(centre_0, centre_1)`) did not match the swapped mock positions; the fit-time driver was anchored on the wrong basin. The fix: at the same 10 sites in the regen script, swap `(center_x, center_y)` → `(center_y, center_x)`. Driver-truth on the corrected mock: chi²/N = 1.007 ✓.
 
-**search_2_v2_stars_only** on the corrected mock landed chi²/N = 4.60 — improved from pre-fix 7.07 (32% reduction), but the stars-only model is **structurally incomplete by design** (no dark halo, no secondary deflector). The s2 result here is not a strict-PASS retry; the strict-PASS verdict awaits `search_3_v2_stars_dark` (still running as of tag-day).
+**search_2_v2_stars_only** on the corrected mock landed chi²/N = 4.60 — improved from pre-fix 7.07 (32% reduction), but the stars-only model is **structurally incomplete by design** (no dark halo, no secondary deflector).
+
+**search_3_v2_stars_dark** (full model: Sersic stellar mass + NFW halo + secondary deflector + 2 sources) landed chi²/N = 3.16, max\|res\| = 27σ — improved from pre-fix 6.44 (50% reduction), confirming the axis-fix accounts for half the residual budget. However the model **still shows coherent ring-shaped structure** in the normalised residual map and does not meet the strict-PASS bar (chi²/N ≤ 1.3, max\|res\| ≤ 6σ). Likely remaining issues: the v0.92 `lp_linear` source decomposition convention vs. simple Sersic, or untreated source-plane multiplicity. **mge_to_physical retains research-in-progress status; the v0.97 follow-on is to substitute al.lp_linear.Sersic + MGE light in line with Module 09 methodology and rerun.**
 
 ### 5. New methodology: chi²-at-truth **+** driver-truth (two-check)
 
@@ -85,7 +87,7 @@ Extends v0.94's 9-step preflight with two mock-hygiene steps (6, 7) and a tag-aw
 | `double_source_plane/beta_freecosmo_v3` | strict-PASS (chain) | 45 min | 29036.34 | 0.990 | 3.98σ |
 | `radial_arc_smbh/rarc_direct` | strict-PASS | 1h 18m | 8725.87 | 1.019 | 4.27σ |
 | `radial_arc_smbh/rarc_with_pointmass` | strict-PASS | 1h 19m | 8724.16 | 1.019 | 4.23σ |
-| `mge_to_physical/search_3_v2_stars_dark` | _PENDING_ | _TBD_ | _TBD_ | _TBD_ | _TBD_ |
+| `mge_to_physical/search_3_v2_stars_dark` | research-in-progress | 4h 47m | −3978.74 | 3.16 | 27.2σ |
 
 ---
 
