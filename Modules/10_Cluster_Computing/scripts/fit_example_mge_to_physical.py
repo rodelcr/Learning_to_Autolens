@@ -591,7 +591,7 @@ def main():
             effective_prefix = "autolens"
         else:
             effective_prefix = "lenstronomy"
-    tag_suffix = "_autolens" if effective_prefix == "autolens" else ""
+    tag_suffix = "_autolens_v2" if effective_prefix == "autolens" else ""
     print(f"Effective mock prefix: {effective_prefix} "
           f"(unique_tag suffix: '{tag_suffix}')", flush=True)
 
