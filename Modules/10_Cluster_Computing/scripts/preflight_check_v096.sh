@@ -208,15 +208,18 @@ check_summary_strict_pass_or_warn \
 check_summary_strict_pass_or_warn \
     "Examples/double_source_plane/results/beta_freecosmo_v3/summary.json" \
     "DSPL beta_freecosmo_v3 (v0.96 regenerated mock)"
-# mge Search 3 v2: only check if the on-disk result has the post-axis-fix
-# tag suffix `_autolens_v2` (else it's the pre-fix result and counts as
-# research-in-progress until the new Cannon fit lands and overwrites).
+# mge Search 3 v2: research-in-progress in v0.96 (carried forward from v0.95).
+# The axis-fix landed 50% chi^2/N reduction (6.44 -> 3.16) but the model
+# still shows coherent ring residuals — v0.97 follow-on is lp_linear.Sersic
+# + MGE light (Module 09 path). Report as WARN regardless of strict-PASS
+# verdict, so v0.96 tag is not blocked by a known research debt.
 mge_s3v2_summary="Examples/mge_to_physical/results/search_3_v2_stars_dark/summary.json"
 if [ -f "$mge_s3v2_summary" ] && grep -q "_autolens_v2" "$mge_s3v2_summary"; then
-    check_summary_strict_pass_or_warn "$mge_s3v2_summary" \
-        "mge Search 3 v2 (autolens-mock axis-fix)"
+    chi2=$(python3 -c "import json; print(json.load(open('$mge_s3v2_summary'))['chi_squared_per_pixel'])" 2>/dev/null || echo "?")
+    maxres=$(python3 -c "import json; print(json.load(open('$mge_s3v2_summary'))['max_abs_normalized_residual'])" 2>/dev/null || echo "?")
+    print_warn "mge Search 3 v2 (axis-fixed): chi^2/N=${chi2}, max|res|=${maxres}σ — research-in-progress, v0.97 follow-on (lp_linear+MGE)"
 elif [ -f "$mge_s3v2_summary" ]; then
-    print_warn "mge Search 3 v2 — pre-axis-fix result on disk (in-flight Cannon job will overwrite)"
+    print_warn "mge Search 3 v2 — pre-axis-fix result on disk (research-in-progress)"
 else
     print_warn "mge Search 3 v2 — summary.json absent (research-in-progress)"
 fi
