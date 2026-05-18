@@ -20,6 +20,7 @@ SDSSJ0946+1006 is the canonical "Jackpot" lens (Gavazzi+2008). Initially a DSPL,
 - **Data Availability statement** (verbatim from MNRAS 528:4): *"Supporting research data are available on request from the corresponding author and from the HST and VLT archives."* — i.e., we download HST + MUSE directly from MAST + ESO; the posterior chains require an email to Ballard if a direct posterior comparison is desired.
 - **Related follow-on**: Enzi+2025 ([MNRAS 540:1](https://academic.oup.com/mnras/article/540/1/247/8123410)) re-interprets the same J0946 subhalo as evidence for self-interacting dark matter (SIDM). Cite as a forward reference in our §11.1 Module 14 extension; out of scope for the primary reproduction.
 - **TSPL geometry baseline**: Smith+2024 establishes the 3-source-plane redshifts ((z_s1, z_s2, z_s3) ≈ (0.609, 2.035, 5.975)) — that's the dataset our P2 fit consumes via Spec 00's `j0946_data_loader.py`.
+- **HST data preparation matches the AGEL group's Watson pipeline** (Spec 00 §6.9). For J0946 modelling: re-drizzle raw FLT files from proposals 10886 + 11701 with AstroDrizzle + Tweakreg using Watson's AGEL-tuned parameters, then build cutouts via Watson notebook 3 + 7. This ensures cosmic-ray rejection + WCS alignment match what Ferrami+24 and other AGEL papers used; the AGEL-consistent reduction is what allows cross-paper comparison without reduction-systematics confusion. The HLA DRC products we already pulled are the fallback / baseline-for-comparison only.
 
 ## 2. Goals
 

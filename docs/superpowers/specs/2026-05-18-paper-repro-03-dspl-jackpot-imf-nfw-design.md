@@ -20,6 +20,7 @@ If **yes**, our autolens DSPL infrastructure is validated against an external gr
 - **Example notebooks** live in [github.com/Herculens/herculens_workspace](https://github.com/Herculens/herculens_workspace). 13 notebooks cover gradient descent / Fisher / HMC / pixelated wavelets / dark-satellite detection / multi-band etc. **None reproduce J0946 directly** — we build that pipeline ourselves on top of the Herculens primitives.
 - **Tool stack reported in Li+2026**: Herculens, JAX, NumPyro, **Colossus** (cosmology — Diemer 2018), **JamPy** (axisymmetric Jeans — Cappellari 2008), **pPXF v8.2.6** (spectral fitting — Cappellari & Emsellem 2004; Cappellari 2023), **XSL DR3** (X-shooter Spectral Library). All public.
 - **Data Availability statement** in the MNRAS published version was truncated in our automated fetch — to be re-checked when we have a non-paywalled HTML or the journal data portal access. Worst case: HST + VLT archive direct download (same as P2).
+- **HST data preparation matches the AGEL group's Watson pipeline** (Spec 00 §6.9). For the DSPL J0946 model, we need careful cosmic-ray rejection because the M/L gradient + γ_inner fits are sensitive to low-amplitude residuals in the lens-light wings. Use Watson notebook 2 (Drizzler) + 3 (cutouts) + 7 (offset aligner) to produce the AGEL-consistent reduction. The MGE light decomposition (which feeds the M/L gradient) requires this clean reduction — HLA's generic CR-rejection parameters can leave hot pixels that the MGE will absorb as "stellar light", biasing the M/L gradient.
 
 ## 2. Goals
 

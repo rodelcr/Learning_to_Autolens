@@ -155,6 +155,46 @@ Related-work code worth knowing about for the dual-stack effort:
 
 `code/build_structural_enrichment.py` (renamed from `build_catalogue.py`) — keeps Vizier-based R_eff / n_sersic enrichment by cross-match.
 
+### 6.9 AGEL-consistent HST reduction (Watson pipeline)
+
+**The pipeline.** Courtney B. Watson maintains the AGEL HST reduction pipeline ([Harvard Dataverse DOI 10.7910/DVN/SPDDCE](https://doi.org/10.7910/DVN/SPDDCE), local copy at `~/Documents/AGEL/CWatson_AGEL_HST_reduction_scripts/`). Seven notebooks in run order:
+
+1. `1-Downloader.ipynb` — MAST query by Proposal ID, fetches raw `_flt.fits` / `_flc.fits` exposures
+2. `2-Drizzler_Rewritten.ipynb` — **the core reduction**: AstroDrizzle + Tweakreg from raw FLT files. Cosmic-ray rejection happens here (AstroDrizzle's `driz_cr_*` parameters); the dataset-specific tuning of those parameters is critical and Watson's notebook documents the AGEL choices.
+3. `3-Build_cutouts.ipynb` — per-target cutouts for lens modelling
+4. `4-Pix_scale_change_reprojection.ipynb` — reproject UVIS onto IR WCS (or vice versa)
+5. `5-Green_image.ipynb` — synthetic green channel for RGB
+6. `6-Postage_stamp_RGB.ipynb` — RGB visualisation
+6.5. `6.5-Reproject_and_Rescale.ipynb` — IR rescaled to UVIS in special cases
+7. `7-Offset_Aligner.ipynb` — fine WCS offset fits (for modelling)
+
+Tool stack: `drizzlepac` (AstroDrizzle + Tweakreg), `reproject`, `astroalign`, `astropy`.
+
+**Why this matters for our paper repros.** The DRC/DRZ products on MAST were produced by HLA's automated pipeline with generic parameters — these can leave residual cosmic rays, sub-optimal sky subtraction, and stale WCS alignment relative to what a per-target tuned drizzle would produce. Ferrami+24 and the rest of the AGEL group use Watson's pipeline because the per-target tuning yields a cleaner data product than HLA defaults, especially for the radial-arc + central-region work where cosmic rays mimic substructure signatures.
+
+**Our current state.** The 2026-05-18 background download fetched HLA + HST archive DRC products to `private/2309_04535_ballard2023_tspl_jackpot/data/hst/` (9.8 GB). This is the **fallback** data product. For the actual P2 + P3 reproductions, we should ALSO run Watson's pipeline on the raw FLT files for J0946+1006 to produce an AGEL-consistent reduction.
+
+**Action items for shared infra:**
+
+- `code/agel_hst_reduction/` — copies of Watson notebooks 2, 3, 4, 7 (the ones relevant to lens modelling — skip 5, 6, 6.5 which are RGB visualisation), with the data-root path adapted to point at `private/00_shared_infrastructure/data/j0946/`
+- `code/agel_hst_reduction/run_j0946_drizzle.py` — wrapper that:
+  1. Re-runs `1-Downloader` for proposal IDs 10886 (ACS F814W) + 11701 (WFC3-UVIS F336W + F438W)
+  2. Runs `2-Drizzler_Rewritten` with Watson's AGEL parameters
+  3. Stages cutouts for the J0946 modelling pipeline
+- `code/agel_hst_reduction/compare_hla_vs_agel.py` — for transparency: drop HLA DRC + AGEL DRC of the same band side-by-side, image their difference, quantify cosmic-ray residual + WCS drift. Becomes a data-quality story in the eventual public `Examples/dspl_jackpot_imf_nfw/README.md`.
+- `code/cosmic_ray_audit.py` — applies the AstroDrizzle CR-mask to compare the cosmic-ray flagged pixel count between HLA and AGEL reductions; surfaces any pixels we should additionally mask in modelling.
+
+**Validation:**
+- AGEL-reduced J0946 F814W image should have **fewer cosmic-ray-shaped 1-pixel spikes** in the lens-light wings than the HLA product (visually verifiable + quantifiable via the mask diff)
+- WCS alignment between F814W and F336W after Watson's notebook 7 should be sub-pixel (< 0.05″ RMS, per Watson's documented tolerance)
+- Sky subtraction residual variance should match Watson's typical AGEL post-reduction numbers (~ noise-floor consistent)
+
+**Cross-reference:** Ferrami's `~/Documents/AGEL/AGEL_0206_ApJL_Figures/align_hst_images.py` is the worked example of Watson-pipeline-output → modelling-ready cutout on the AGEL0206 target. Same pattern applies to J0946+1006.
+
+### 6.10 AGEL-consistent KCWI / LLAMAS data prep (forward reference)
+
+P3 (Li+2026) uses kinematic σ_v measurements from MUSE on J0946+1006. We won't reproduce a KCWI / LLAMAS reduction in this program (different instruments). But for any AGEL DR2 follow-on (Spec 04 §7.1 promotion items), the AGEL spectral pipeline lives at `~/Documents/AGEL/20250910-keerthi-Keck-AGELDR2-main/` and `~/Documents/AGEL/AGEL_LLAMAS_reduction/`. Mention this in the eventual `HERCULENS_INTEGRATION.md` as the pre-req for taking the methodology from J0946 to AGEL targets.
+
 ### 6.8 Standing protocol — code/data discovery for any future paper
 
 Before scaffolding ANY new paper reproduction (this program or future), run the discovery checklist. The 2026-05-18 mistake here (assuming the 161-lens sample was a SLACS/SL2S/BELLS union when the published Data Availability statement points to Chen+2019) cost us a wrong-direction build of `build_catalogue.py`. Don't repeat it.
