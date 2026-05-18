@@ -417,6 +417,19 @@ class AnalysisKinematics:
         """No-op hook autofit may call after the fit completes."""
         return result
 
+    def save_results(self, paths, result) -> None:
+        """No-op: scalar σ_v factor has no derived products to serialise.
+
+        autofit's `FactorGraphModel` calls this after Nautilus returns. Without
+        a stub, both v0.97 Cannon jobs (13649652, 13649870) crashed AFTER the
+        46-min fit completed — see cannon log post-mortem 2026-05-18.
+        """
+        return None
+
+    def save_results_combined(self, paths, result) -> None:
+        """No-op companion to save_results — autofit calls this too."""
+        return None
+
 
 class AnalysisKinematicsFreeCosmology(AnalysisKinematics):
     """Variant that reads the cosmology *from the model instance* each call.
