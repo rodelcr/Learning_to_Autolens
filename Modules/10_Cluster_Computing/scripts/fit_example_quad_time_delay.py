@@ -32,6 +32,17 @@ provides BOTH a PointDataset and an Imaging FITS triplet):
                                   positions+delays jointly with extended
                                   host arc constrain H0.
 
+    --part joint_fit_h0_kin       joint_fit_h0_free + AnalysisKinematics via
+                                  af.FactorGraphModel. Adds a Jeans σ_v
+                                  aperture likelihood from
+                                  `mocks_with_host/sigma_v_dataset.json`
+                                  using `_jeans_sigma_v.AnalysisKinematicsFreeCosmology`.
+                                  Breaks the mass-sheet degeneracy that biases
+                                  joint_fit_h0_free's H0 by +5 km/s/Mpc.
+                                  ~15 free params, n_live=300, ~18-24 h on
+                                  32 cores. Birrer+ 2020 TDCOSMO IV
+                                  methodology.
+
 The joint analyses combine the two likelihoods via PyAutoFit's
 `af.FactorGraphModel`: each analysis is wrapped in an `af.AnalysisFactor`
 that pairs it with the same global model (a single Collection with a
@@ -639,6 +650,151 @@ def build_joint_fit(dataset_point, dataset_imaging, output_root: Path,
     return result_list
 
 
+def _build_lens_kinematic_bulge():
+    """Attach a Sersic 'lens light' to the lens galaxy purely for the
+    AnalysisKinematics Jeans tracer density.
+
+    The qtd mock has NO actual lens-light component (the imaging arc is
+    rendered on top of a flat sky). But the Jeans solver needs R_eff +
+    sersic_index to deproject the stellar tracer. We attach a FIXED
+    Sersic at R_eff=1.0″, n=4 (typical SLACS-class elliptical lens at
+    z_l=0.5) with intensity=1e-9 so it contributes negligibly to the
+    image likelihood while exposing the right (R_eff, n) to
+    `_get_powerlaw_params` in `_jeans_sigma_v.AnalysisKinematics`.
+
+    In a real-data application this would be set from photometric
+    measurements (HST or KCWI white-light continuum), not assumed.
+    """
+    import autofit as af
+    import autolens as al
+    bulge = af.Model(al.lp.Sersic)
+    bulge.intensity = 1.0e-9
+    bulge.effective_radius = 1.0
+    bulge.sersic_index = 4.0
+    bulge.centre.centre_0 = 0.0
+    bulge.centre.centre_1 = 0.0
+    bulge.ell_comps.ell_comps_0 = 0.0
+    bulge.ell_comps.ell_comps_1 = 0.0
+    return bulge
+
+
+def build_joint_fit_h0_kin(dataset_point, dataset_imaging, output_root: Path,
+                            dataset_root: Path,
+                            n_live: int = 300, use_jax: bool = False):
+    """Joint AnalysisPoint + AnalysisImaging + AnalysisKinematics fit,
+    H0 free, Om0 fixed at 0.30.
+
+    The kinematic term breaks the mass-sheet degeneracy that leaves
+    `--part=joint_fit_h0_free` with a +5 km/s/Mpc H0 bias on the v0.96
+    mock (75.0 ± 2.6 km/s/Mpc vs truth 70.0).
+
+    Uses `_jeans_sigma_v.AnalysisKinematicsFreeCosmology`, which reads
+    `instance.cosmology` each call so H0's evolution through the chain
+    is reflected in the predicted σ_v.
+
+    Birrer+ 2020 TDCOSMO IV methodology.
+    """
+    import autofit as af
+    import autolens as al
+
+    # Import the shared Jeans module (sits in this scripts/ dir).
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    from _jeans_sigma_v import AnalysisKinematicsFreeCosmology, KinematicDataset
+
+    kin_path = Path(dataset_root) / "sigma_v_dataset.json"
+    if not kin_path.exists():
+        raise FileNotFoundError(
+            f"sigma_v_dataset.json missing at {kin_path}. Generate via the "
+            f"snippet in NEXT_STEPS.md or rerun mocks_with_host/generate_mock.py "
+            f"(future v0.97 work) to embed it."
+        )
+    kin_ds_raw = KinematicDataset.from_json(kin_path)
+    # qtd's sigma_v_dataset.json uses 'R_aperture_arcsec' field, which
+    # KinematicDataset.from_json understands. Reaffirm here for clarity.
+    print(f"[QTD/joint_fit_h0_kin] kinematic: "
+          f"σ_v_obs = {kin_ds_raw.sigma_v_obs_kms:.2f} ± "
+          f"{kin_ds_raw.sigma_v_err_kms:.2f} km/s at R = "
+          f"{kin_ds_raw.R_aperture_arcsec:.2f}″", flush=True)
+
+    # Build (lens, source) with lens.bulge attached for Jeans tracer.
+    lens, source = _build_joint_lens_source()
+    lens.bulge = _build_lens_kinematic_bulge()
+
+    # Free H0 in the cosmology af.Model.
+    cosmology = af.Model(al.cosmo.FlatLambdaCDM)
+    cosmology.H0 = af.UniformPrior(lower_limit=40.0, upper_limit=120.0)
+    cosmology.Om0 = 0.30
+    model = af.Collection(
+        galaxies=af.Collection(lens=lens, source=source),
+        cosmology=cosmology,
+    )
+    print(f"[QTD/joint_fit_h0_kin] free params: {model.prior_count}", flush=True)
+
+    # Three analyses. Cosmology is None on imaging/point because it comes
+    # from the model collection (instance.cosmology).
+    solver = build_solver(use_jax=use_jax)
+    analysis_point = _make_robust_analysis_point(
+        dataset=dataset_point, solver=solver, cosmology=None, use_jax=use_jax,
+    )
+    analysis_imaging = _make_robust_analysis_imaging(
+        dataset=dataset_imaging, cosmology=None, use_jax=use_jax,
+    )
+    analysis_kin = AnalysisKinematicsFreeCosmology(
+        dataset=kin_ds_raw,
+        z_lens=0.5, z_source=2.0,
+        cosmology=al.cosmo.FlatLambdaCDM(H0=70.0, Om0=0.30),
+        lens_galaxy_index=0,
+        use_smbh=False,
+    )
+
+    # FactorGraphModel pattern (proven in build_joint_fit). Three factors,
+    # all wrapping the same global model.
+    af_point   = af.AnalysisFactor(prior_model=model, analysis=analysis_point,
+                                    name="point")
+    af_imaging = af.AnalysisFactor(prior_model=model, analysis=analysis_imaging,
+                                    name="imaging")
+    af_kin     = af.AnalysisFactor(prior_model=model, analysis=analysis_kin,
+                                    name="kinematic")
+    factor_graph = af.FactorGraphModel(af_point, af_imaging, af_kin)
+
+    print(f"[QTD/joint_fit_h0_kin] global model summary:", flush=True)
+    print(factor_graph.global_prior_model.info, flush=True)
+
+    search = af.Nautilus(
+        path_prefix=output_root,
+        name="quad_joint_fit",
+        unique_tag="phase_joint_h0_kin",
+        n_live=n_live,
+        n_batch=50,
+        iterations_per_update=5000,
+        number_of_cores=int(os.environ.get("SLURM_CPUS_PER_TASK", "1")),
+    )
+
+    t0 = time.time()
+    result_list = search.fit(
+        model=factor_graph.global_prior_model, analysis=factor_graph,
+    )
+    print(f"[QTD/joint_fit_h0_kin] done in {(time.time()-t0)/60:.1f} min",
+          flush=True)
+
+    try:
+        for i, r in enumerate(result_list):
+            _force_visualize(
+                [analysis_point, analysis_imaging, analysis_kin][i], r,
+                tag=f"joint_h0_kin_factor{i}",
+            )
+    except Exception as e:
+        print(f"[QTD/joint_fit_h0_kin] warning: visualize loop failed: {e}",
+              flush=True)
+
+    try:
+        print(result_list[0].info, flush=True)
+    except Exception:
+        pass
+
+    return result_list
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--part",
@@ -646,6 +802,7 @@ def main():
                             "direct_h0_free_tight",
                             "positions_only",
                             "joint_fit", "joint_fit_h0_free",
+                            "joint_fit_h0_kin",
                             "all"),
                    default="direct")
     p.add_argument("--output-root", type=Path,
@@ -682,7 +839,7 @@ def main():
 
     t_start = time.time()
 
-    is_joint = args.part in ("joint_fit", "joint_fit_h0_free")
+    is_joint = args.part in ("joint_fit", "joint_fit_h0_free", "joint_fit_h0_kin")
 
     if is_joint:
         # Joint parts need BOTH point + imaging from mocks_with_host/.
@@ -723,6 +880,14 @@ def main():
         build_joint_fit(dataset_point, dataset_imaging, args.output_root,
                         n_live=args.n_live_joint_h0, use_jax=args.use_jax,
                         h0_free=True)
+
+    if args.part == "joint_fit_h0_kin":
+        build_joint_fit_h0_kin(
+            dataset_point, dataset_imaging, args.output_root,
+            dataset_root=args.dataset_root,
+            n_live=300,
+            use_jax=args.use_jax,
+        )
 
     print(f"\nTotal wall time: {(time.time()-t_start)/3600:.2f} h", flush=True)
 

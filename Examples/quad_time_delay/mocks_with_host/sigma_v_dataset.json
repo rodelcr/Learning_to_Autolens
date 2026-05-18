@@ -1,0 +1,11 @@
+{
+  "framework": "synthetic Jeans aperture measurement (PowerLaw isothermal)",
+  "R_eff_arcsec": 1.0,
+  "sersic_index_lens_light": 4.0,
+  "aperture_kind": "Reff-circular",
+  "R_aperture_arcsec": 1.0,
+  "sigma_v_obs_kms": 282.43969999851583,
+  "sigma_v_err_kms": 10.0,
+  "sigma_v_truth_kms": 283.8632884255353,
+  "notes": "Truth sigma_v computed via _jeans_sigma_v.sigma_v_aperture_isotropic with PowerLaw mass (theta_E=1.2, slope=2.0 isothermal) and assumed Sersic lens light (R_eff=1.0 arcsec, n=4) at z_l=0.5, z_s=2.0. The real-data analog: KCWI/LLAMAS IFU sigma_v with aperture matched to the photometric R_eff."
+}
