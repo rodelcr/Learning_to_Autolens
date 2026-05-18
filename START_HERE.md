@@ -1,4 +1,4 @@
-# Start Here — Learning to Autolens v0.92-alpha
+# Start Here — Learning to Autolens v0.96-alpha
 
 **You're new. This page tells you exactly what to read and run, in what order. ~30 min to get oriented; ~3 hours to be productive on a real fit.**
 
@@ -8,17 +8,20 @@
 
 A 14-module tutorial series teaching computational strong gravitational lens modeling with [PyAutoLens](https://github.com/Jammy2211/PyAutoLens), from grids and ray-tracing through full SLaM-pipeline fits of real HST data. Each module is a Jupyter notebook with detailed physics commentary; each example in `Examples/` is a different lens architecture (compound multi-plane, double source-plane, group-scale BGG+satellites, real AGEL HST data, etc.). The point is to teach the **methodology**, not just the API — every fit is audited, every failure mode catalogued.
 
-## What v0.92-alpha contains
+## What v0.96-alpha contains
 
 **Audited and ready for students:**
 
-- ✓ **Modules 01-10**: the full curriculum, from grids to cluster computing
+- ✓ **Modules 01–15**: the full curriculum, from grids and ray-tracing through cluster computing, physical mass models, time-delay cosmography (Mod 12), Jeans kinematics (Mod 13), multi-plane lensing (Mod 14), and **radial arcs + γ′–M_BH degeneracy (Mod 15)** — the theory underpinning AGEL's Einstein-spiral SMBH programme
+- ✓ **Phase 3 shared module**: `_jeans_sigma_v.py` + `AnalysisKinematics` for joint imaging + kinematics fits (Module 13 theory operationalised)
 - ✓ **3 recipe notebooks**: pixelization (Mod 05), MGE light (Mod 09), SLaM staging (Examples/compound_lens_zoo)
-- ✓ **4 climb bridge notebooks**: from single-deflector to compound, group, and double-source-plane architectures
+- ✓ **5 climb bridge notebooks**: from single-deflector to compound, group, double-source-plane architectures
 - ✓ **3 cluster docs**: SETUP_NEW_USER, STUDENT_QUICKSTART, RECIPES — full Cannon workflow without needing AI assistance
-- ✓ **5 audited example fits**: compound_lens, compound_lens_zoo R0-R5 ladder, double_source_plane, disky_spiral_lens, group_scale truth_anchored
+- ✓ **6 audited STRICT-PASS example fits**: compound_lens, cluster_scale, agel_real_target (direct_clean), galaxy_galaxy_single_arc, double_source_plane (Stage 1 + 2 cosmography), radial_arc_smbh (direct + with_pointmass)
+- ✓ **Joint cosmography**: `Examples/cosmography_joint_posterior/` — DSPL × TDCOSMO combination (Birrer+2020 §4)
+- ✓ **Methodology codified**: chi²-at-truth + driver-truth two-check; `(y, x)` axis-swap bug class; `preflight_check_v096.sh` (28/1/0)
 
-**Marked as "research-in-progress"** (visible but not expected to converge for you): cluster_scale, mge_to_physical, agel_real_target post-hot-pixel-cleanup, several other examples. See [`V092_SCOPE.md`](V092_SCOPE.md) for the full ship/defer breakdown.
+**Marked as "research-in-progress"** (visible but not expected to converge for you out of the box): `mge_to_physical` (chi²/N=3.16 on the v0.96 axis-fixed mock; v0.97 lp_linear + MGE light follow-on), `quad_time_delay` H0 (biased high by MSD; v0.97 kinematics-break addresses this). See [`RELEASE_NOTES_v0.96.md`](RELEASE_NOTES_v0.96.md) for the full ship/defer breakdown.
 
 ---
 

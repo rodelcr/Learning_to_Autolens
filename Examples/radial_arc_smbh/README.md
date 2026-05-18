@@ -2,7 +2,12 @@
 
 ## Status
 
-◐ **In progress 2026-05-14** — mock + driver + dispatcher wiring shipped, with imaging-only parts (`direct`, `no_pointmass`, `with_pointmass`) ready for Cannon. The kinematic-break part (`with_kinematics`) is a STUB pending the shared Jeans `AnalysisKinematics` class (v0.97). Tutorial notebook pending.
+✓ **Shipped v0.96 (2026-05-15)** — mock + driver + 4-rung dispatcher + tutorial notebook + STRICT-PASS Cannon results all in tree.
+
+- `--part=direct` (PowerLaw + shear, no BH): chi²/N = 1.019, max\|res\| = 4.27σ, γ′ recovered 1.959 ± 0.015 (truth 1.95) ✓ strict-PASS
+- `--part=with_pointmass` (+ central PointMass): chi²/N = 1.019, θ_E_BH = 0.073 (-0.05, +0.04) 3σ, **Δlog_Z = +1.71 favouring no-BH** — γ′–M_BH degeneracy demonstrated; BH NOT detected by imaging alone (the headline pedagogical result).
+- `--part=with_kinematics` (joint AnalysisImaging + AnalysisKinematics via FactorGraphModel): driver wired in v0.96 against the new `_jeans_sigma_v.py` (Phase 3). Cannon submit deferred to v0.97 ship cycle.
+- See `01_radial_arc_smbh.ipynb` for the 8-section walkthrough.
 
 ## Why this example exists
 

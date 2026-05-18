@@ -2,17 +2,23 @@
 
 **Strong Gravitational Lens Modeling with PyAutoLens — A Step-by-Step Tutorial Suite**
 
-A 14-module tutorial series teaching computational strong lens modeling from first principles through publication-ready results, with a dedicated cluster-computing module (Mod 10) showing how to run the heavy searches on Harvard FASRC Cannon, and a parallel **`Examples/`** practice gym of 10 lens architectures (compound multi-plane, double-source-plane, group-scale, quad time delays, real AGEL HST data, etc.). Each module pairs detailed **Jupyter notebooks** (with thorough physics commentary) with **LaTeX theory notes** and optional **Wolfram Mathematica** scripts for symbolic verification.
+A 15-module tutorial series teaching computational strong lens modeling from first principles through publication-ready results, with a dedicated cluster-computing module (Mod 10) showing how to run the heavy searches on Harvard FASRC Cannon, and a parallel **`Examples/`** practice gym of 14+ lens architectures (compound multi-plane, double-source-plane, group-scale, quad time delays, radial-arc + SMBH detection, real AGEL HST data, etc.). Each module pairs detailed **Jupyter notebooks** (with thorough physics commentary) with **LaTeX theory notes** and optional **Wolfram Mathematica** scripts for symbolic verification.
 
 This project is a companion to [Learning to Lens](https://github.com/rodelcr/Learning_to_Lens) (GR & lensing theory in Mathematica), but is fully self-contained — all necessary theory is developed inline with references to the primary literature.
 
 > ### New to this repo? → **Read [`START_HERE.md`](START_HERE.md) first.** ~30 min orientation, ~3 hours to be productive on a real fit.
 >
-> **Current release: v0.92-alpha** (2026-05-03) — first student-handoff-ready alpha. Strict ship discipline: only material audited PASS or borderline-PASS by `/autolens-fit-diagnostics` is in the v0.92 ship-set; the rest is visible but flagged "research-in-progress" with banners on every README. See [`RELEASE_NOTES_v0.92.md`](RELEASE_NOTES_v0.92.md) for the full ship/defer breakdown and [`V092_SCOPE.md`](V092_SCOPE.md) for the per-component audit.
+> **Current release: v0.96-alpha** (2026-05-15) — AGEL-science-aligned phase. Strict ship discipline maintained: only fits audited STRICT-PASS by `/autolens-fit-diagnostics` are in the ship-set. See [`RELEASE_NOTES_v0.96.md`](RELEASE_NOTES_v0.96.md) for the full ship/defer breakdown.
 >
-> What's new in v0.92: 3 student-targeted recipe notebooks (pixelization, MGE, SLaM staging); 4 climb bridge notebooks (single-deflector → compound / group / DSPL); 3 cluster docs that work without AI assistance (`SETUP_NEW_USER`, `STUDENT_QUICKSTART`, `RECIPES`); a pre-flight verification script. Pre-flight result: **31 PASS / 0 FAIL.**
+> What's new in v0.96:
+> - **Module 15 — Radial Arcs & Caustic Topology** (5 sections, <60 s execute) — the γ′–M_BH degeneracy theory underlying AGEL's Einstein-spiral SMBH-detection programme.
+> - **`Examples/radial_arc_smbh/`** (Einstein-spiral mock, BH NOT imaging-detected at θ_E_BH=0.08″ — publication-grade γ′–M_BH degeneracy demonstration).
+> - **`Examples/double_source_plane/`** STRICT-PASS cosmography: Ωₘ=0.30±0.05, w₀=−1.00±0.05 at 3σ recovers truth.
+> - **`Examples/cosmography_joint_posterior/`** — Birrer+2020 §4 joint DSPL×TDCOSMO posterior.
+> - **`_jeans_sigma_v.py` + `AnalysisKinematics`** (Phase 3) — shared isotropic Jeans solver consumed by `radial_arc_smbh --part=with_kinematics` and `quad_time_delay --part=joint_fit_h0_kin`.
+> - **`(y, x)` axis-swap bug class** documented + **chi²-at-truth + driver-truth two-check methodology** codified in `preflight_check_v096.sh` (28 PASS / 1 WARN / 0 FAIL).
 >
-> Modules 01-14 are curriculum-listed. v0.92 ships Modules 01-10 + 5 audited example architectures. Modules 11 and 12 are shipped (✓) as pedagogical-only notebooks (no Cannon dependency, no new fits); Modules 13-14 are in a similar state but not yet listed in the v0.92 curriculum table below. Feedback welcome at rodrigo.cordova_rosado@cfa.harvard.edu.
+> Curriculum: **Modules 01–15** all shipped (✓). v0.96 ships strict-PASS fits across 6 examples (compound_lens, cluster_scale, agel_real_target, galaxy_galaxy_single_arc, double_source_plane, radial_arc_smbh). `mge_to_physical` and `quad_time_delay` retain research-in-progress status. Feedback welcome at rodrigo.cordova_rosado@cfa.harvard.edu.
 
 ---
 
