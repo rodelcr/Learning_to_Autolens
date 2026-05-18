@@ -374,6 +374,49 @@ class AnalysisKinematics:
         # Drop the constant -0.5 log(2π σ²) term — autofit doesn't care.
         return float(-0.5 * residual ** 2)
 
+    # ----- autofit `af.Analysis` API surface --------------------------------
+    # When wrapped in `af.AnalysisFactor` inside a `FactorGraphModel`, autofit
+    # calls these methods on each factor. None of them are needed for the
+    # kinematic likelihood (which is a scalar comparison, not a fit-on-grid),
+    # so they're no-ops here — but they MUST exist or autofit crashes with
+    # AttributeError before the chain even starts. See cannon job 13649023
+    # (2026-05-18) for the original crash trace.
+
+    def save_attributes(self, paths) -> None:
+        """No-op: nothing to save per-iteration for a scalar σ_v likelihood."""
+        return None
+
+    def visualize(self, paths, instance, during_analysis: bool = True) -> None:
+        """No-op: no per-iteration visualisation."""
+        return None
+
+    def visualize_before_fit(self, paths, model) -> None:
+        return None
+
+    def make_result(self, samples_summary, paths, samples=None,
+                    search_internal=None, analysis=None):
+        """Return a thin result wrapper (autofit ResultAnalysis-compatible).
+
+        Most callers iterate result_list and visualise each factor; for the
+        kinematic factor we return a SimpleNamespace with the bare minimum
+        attrs so `_force_visualize` and `result.info` don't crash.
+        """
+        import types
+        return types.SimpleNamespace(
+            samples_summary=samples_summary,
+            samples=samples,
+            paths=paths,
+            info="(kinematic factor — scalar σ_v likelihood)",
+        )
+
+    def modify_before_fit(self, paths, model):
+        """No-op hook autofit may call to let the analysis mutate the model."""
+        return model
+
+    def modify_after_fit(self, paths, model, result):
+        """No-op hook autofit may call after the fit completes."""
+        return result
+
 
 class AnalysisKinematicsFreeCosmology(AnalysisKinematics):
     """Variant that reads the cosmology *from the model instance* each call.
