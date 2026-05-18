@@ -15,6 +15,12 @@ SDSSJ0946+1006 is the canonical "Jackpot" lens (Gavazzi+2008). Initially a DSPL,
 
 **Cross-validation stake:** Multi-plane lensing is a strength of both stacks. Reproducing in BOTH PyAutoLens (Nautilus) and Herculens (NUTS on A100) tests whether the Bayes-factor methodology produces sampler-stable inferences — a question Ballard+2023 doesn't explicitly address.
 
+**Data + code sources (audit 2026-05-18):**
+- **No paper-specific code repo** — Ballard+2023 does not deposit code on github/zenodo. Reproduction is from scratch using our autolens + Herculens infrastructure.
+- **Data Availability statement** (verbatim from MNRAS 528:4): *"Supporting research data are available on request from the corresponding author and from the HST and VLT archives."* — i.e., we download HST + MUSE directly from MAST + ESO; the posterior chains require an email to Ballard if a direct posterior comparison is desired.
+- **Related follow-on**: Enzi+2025 ([MNRAS 540:1](https://academic.oup.com/mnras/article/540/1/247/8123410)) re-interprets the same J0946 subhalo as evidence for self-interacting dark matter (SIDM). Cite as a forward reference in our §11.1 Module 14 extension; out of scope for the primary reproduction.
+- **TSPL geometry baseline**: Smith+2024 establishes the 3-source-plane redshifts ((z_s1, z_s2, z_s3) ≈ (0.609, 2.035, 5.975)) — that's the dataset our P2 fit consumes via Spec 00's `j0946_data_loader.py`.
+
 ## 2. Goals
 
 - Reproduce 5.9σ perturber detection on J0946+1006 in BOTH stacks; (M_sub, c_sub) posteriors agree at <1σ

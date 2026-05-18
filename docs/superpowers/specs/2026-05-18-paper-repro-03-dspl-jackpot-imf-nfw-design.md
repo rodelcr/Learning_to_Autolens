@@ -15,6 +15,12 @@ Our v0.96 ships an autolens-native DSPL example with strict-PASS chi²/N=0.99 on
 
 If **yes**, our autolens DSPL infrastructure is validated against an external groups' result. If **no**, the disagreement is itself a publication-grade methodology finding (which sampler is right? which model parameterisation? where is the bias?).
 
+**Data + code sources (audit 2026-05-18):**
+- **Herculens** is open-source: [github.com/Herculens/herculens](https://github.com/Herculens/herculens). Install via `conda create -n herculens-env python=3.12 && pip install -e .` after cloning. Note the env name conflict with our Cannon convention `herculens312`; Spec 00 standardises on `herculens312`.
+- **Example notebooks** live in [github.com/Herculens/herculens_workspace](https://github.com/Herculens/herculens_workspace). 13 notebooks cover gradient descent / Fisher / HMC / pixelated wavelets / dark-satellite detection / multi-band etc. **None reproduce J0946 directly** — we build that pipeline ourselves on top of the Herculens primitives.
+- **Tool stack reported in Li+2026**: Herculens, JAX, NumPyro, **Colossus** (cosmology — Diemer 2018), **JamPy** (axisymmetric Jeans — Cappellari 2008), **pPXF v8.2.6** (spectral fitting — Cappellari & Emsellem 2004; Cappellari 2023), **XSL DR3** (X-shooter Spectral Library). All public.
+- **Data Availability statement** in the MNRAS published version was truncated in our automated fetch — to be re-checked when we have a non-paywalled HTML or the journal data portal access. Worst case: HST + VLT archive direct download (same as P2).
+
 ## 2. Goals
 
 - Reproduce **M_* = 4.4×10¹¹, M_h = 1.11×10¹³, α ≈ 0, γ_inner ≈ 1, Salpeter IMF** in BOTH stacks

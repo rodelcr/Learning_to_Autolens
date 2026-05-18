@@ -15,7 +15,11 @@ The maths is unambiguous; the implementation is a sampling-stack choice. The pap
 
 ## 2. Goals
 
-- Reproduce **w = −0.96 ± 0.46** on the 161-lens sample, with autofit-Nautilus AND NumPyro-NUTS, agreeing at < 0.1σ on (w, Ωₘ).
+- Reproduce **w = −0.96 ± 0.46** on the 161-lens sample (Chen+2019; see Spec 00 §6.5 for acquisition), with autofit-Nautilus AND NumPyro-NUTS, agreeing at < 0.1σ on (w, Ωₘ).
+- **Data sources (corrected 2026-05-18 after MNRAS data-availability lookup):**
+  - 161 lens (θ_E, σ_v, z_l, z_s) parameters from **Chen+2019**, arxiv [1809.09845](https://arxiv.org/abs/1809.09845), MNRAS 488:3
+  - Forecast lens populations (Euclid, LSST, DES) from **Collett 2015**'s [LensPop github](https://github.com/tcollett/LensPop) — for the 10⁴-lens forecast extension
+  - Li+2023 model-posterior chains: "from the corresponding author on request" — email if needed for direct comparison; not strictly required for the reproduction (we generate our own chain)
 - Establish a **reusable hierarchical-cosmography template** for future AGEL multi-target analyses.
 - Validate Phase 3 `_jeans_sigma_v` solver in a population context (per-system sensitivity is weak — Δlog_L ~ 0.4 per system — so 161-lens aggregation is the test).
 

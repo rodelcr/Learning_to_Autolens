@@ -37,11 +37,12 @@ private/00_shared_infrastructure/
 │   │   ├── spec_z.json                     ← curated source redshifts
 │   │   └── README.md                       ← provenance, download date, program IDs
 │   └── lens_catalogs/
-│       ├── catalogue_161.csv               ← P1 unified table
-│       ├── slacs_auger10.csv               ← SLACS source
-│       ├── sl2s_sonnenfeld13.csv           ← SL2S source
-│       ├── bells_brownstein12.csv          ← BELLS source (PDF-table extraction)
-│       └── README.md
+│       ├── chen2019_table1.csv             ← canonical 161-lens (θ_E, σ_v, z_l, z_s)
+│       ├── catalogue_161.csv               ← enriched with R_eff + n_sersic from auxiliary sources
+│       ├── auger2010_slacs_re.csv          ← R_eff / n_sersic enrichment (SLACS)
+│       ├── sonnenfeld2013_sl2s_re.csv      ← R_eff / n_sersic enrichment (SL2S)
+│       ├── brownstein2012_bells_re.csv     ← R_eff / n_sersic enrichment (BELLS)
+│       └── README.md                       ← cites Chen+2019 as primary source
 ├── code/
 │   ├── validation_framework.py             ← posterior-vs-published
 │   ├── crossval_framework.py               ← autolens-vs-Herculens
@@ -121,11 +122,52 @@ Wraps the existing `submit_cannon.slurm` mechanism for Herculens jobs:
 
 ### 6.5 Catalogue assembly
 
-`data/lens_catalogs/catalogue_161.csv` produced by extending today's working Vizier query (85 SLACS-Auger10 + 56 SL2S-Sonnenfeld13 = 141) with:
-- BELLS Brownstein+2012 Table 3 (≥20 lenses) via PDF text extraction or a manual hand-curated CSV
-- Cross-match dedupe by RA/Dec
-- Quality cuts: σ_v error < 25 km/s, R_eff > 0, defined z_l + z_s
-- Target: 161 lenses with complete (id, z_l, z_s, θ_E_arcsec, σ_v_kms, σ_v_err_kms, R_eff_arcsec, n_sersic, source_catalog)
+`data/lens_catalogs/catalogue_161.csv` produced from **Chen et al. 2019** (MNRAS 488:3, [arxiv 1809.09845](https://arxiv.org/abs/1809.09845), DOI 10.1093/mnras/stz1902 — "Assessing the effect of lens mass model in cosmological application with updated galaxy-scale strong gravitational lensing sample"). This is the canonical 161-lens compilation cited by Li+2023's data availability statement.
+
+Acquisition steps:
+1. Download Chen+2019 Table 1 / supplementary material from MNRAS supplementary materials portal
+2. If only the published PDF is available: extract the table via `pdftotext` or `tabula-py`
+3. Schema: (id, z_l, z_s, θ_E_arcsec, σ_v_kms, σ_v_err_kms) — Chen+2019 has all six fields per system
+4. R_eff_arcsec + n_sersic enrichment: cross-match with Auger+2010 (SLACS structural decomp), Sonnenfeld+2013 (SL2S), Brownstein+2012 (BELLS) via Vizier lookups on (RA, Dec)
+5. Quality cuts: σ_v error < 25 km/s, R_eff > 0; document any rows dropped
+
+**Today's existing `build_catalogue.py`** (141 lenses from Vizier SLACS-Auger10 + SL2S-Sonnenfeld13) should be **refactored**: keep as the structural-data source (R_eff, n_sersic enrichment) but use Chen+2019 as the primary (θ_E, σ_v) source — not the union of catalogs.
+
+### 6.6 Data discovery — per-paper code/data source audit (2026-05-18)
+
+What each paper has published or pointed at:
+
+| Paper | Code repo | Data source | Public posteriors | Per-paper notes |
+|---|---|---|---|---|
+| **P1 Li+2023** | None paper-specific; forecast lens population at [github.com/tcollett/LensPop](https://github.com/tcollett/LensPop) (Collett 2015) | **Chen+2019 161-lens parameters** (MNRAS 488:3) | On request from corresponding author | Forecast uses LensPop; real-data test uses Chen+2019 |
+| **P2 Ballard+2023** | None | HST + VLT (MUSE) archives | "from corresponding author on request" | Manual email needed for posterior chains; Smith+2024 cited for the TSPL geometry |
+| **P3 Li+2026** | [github.com/Herculens/herculens](https://github.com/Herculens/herculens) | HST + VLT archives | Data Availability section truncated in our fetch; check the MNRAS published version | Uses Herculens + NumPyro + Colossus + JamPy + pPXF v8.2.6 + XSL DR3 |
+
+Related-work code worth knowing about for the dual-stack effort:
+- [github.com/Herculens/herculens_workspace](https://github.com/Herculens/herculens_workspace) — official Herculens example notebooks (13 examples; none specifically reproduce J0946 but #4 NumPyro-VI and #6 dark-satellite detection are template-relevant)
+- [github.com/lenstronomy/JAXtronomy](https://github.com/lenstronomy/JAXtronomy) — alternative JAX lensing stack (lenstronomy port; not in our spec but worth knowing)
+- [Caustics](https://joss.theoj.org/papers/10.21105/joss.07081.pdf) — third JAX lensing tool (JOSS 2025); out of scope for this spec
+- Follow-on to P2: Enzi+2025 ("self-interacting dark matter" interpretation of the J0946 subhalo, [MNRAS 540:1](https://academic.oup.com/mnras/article/540/1/247/8123410)) — cite in Spec 02 references
+
+### 6.7 Catalogue assembly script changes
+
+`code/build_chen2019_catalog.py` (NEW) — primary script for P1 input. Replaces the role of `build_catalogue.py` from today's prototype.
+
+`code/build_structural_enrichment.py` (renamed from `build_catalogue.py`) — keeps Vizier-based R_eff / n_sersic enrichment by cross-match.
+
+### 6.8 Standing protocol — code/data discovery for any future paper
+
+Before scaffolding ANY new paper reproduction (this program or future), run the discovery checklist. The 2026-05-18 mistake here (assuming the 161-lens sample was a SLACS/SL2S/BELLS union when the published Data Availability statement points to Chen+2019) cost us a wrong-direction build of `build_catalogue.py`. Don't repeat it.
+
+**Discovery checklist:**
+
+1. Fetch the published-version (NOT arxiv preprint) page from the journal — for MNRAS, the Oxford Academic URL. Use WebFetch with a prompt focused on the **"Data Availability"** and **"Code Availability"** sections.
+2. Verbatim-quote both statements into the per-paper `PAPER_NOTES.md`. Note any URLs (github.com, zenodo.org, figshare.com, doi.org, journal-specific portals).
+3. If the paper cites a *different* paper for its input data, follow that citation chain to ground truth. Example: Li+2023 cites Chen+2019 for the 161-lens sample; **don't** rebuild Chen+2019's compilation work from scratch.
+4. For each tool the paper names (lens-modelling code, samplers, spectral libraries, etc.), check whether it has a github repo. If not previously known to us, add to `private/00_shared_infrastructure/docs/dual_stack_conventions.md` with version + install notes.
+5. If the Data Availability statement points to "from the corresponding author on request" (P2's case), draft an email to the corresponding author before starting the reproduction. Don't block on the email — proceed with public-data-only reproduction in parallel — but get the request in early.
+6. Cross-reference the **Related Work / Citations** section: a paper often has a follow-on or companion paper that exposes more code (e.g., P2 Ballard+2023 → Enzi+2025 self-interacting DM follow-on).
+7. Search arxiv for the same author's other papers — they often share a code repo across multiple papers (e.g., Collett's [LensPop](https://github.com/tcollett/LensPop) is the forecast-simulator dependency for Li+2023, but Collett uses it across his publications).
 
 ## 7. Error handling
 
