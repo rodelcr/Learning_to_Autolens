@@ -58,6 +58,7 @@ Learning_to_Autolens/
 | 12 | Time-Delay Cosmography & MSD | ✓ ship — Fermat potential, $D_{\Delta t} \propto 1/H_0$ vs $w$ numerical comparison, mass-sheet degeneracy ($\kappa \to \lambda\kappa + (1-\lambda)$) derived analytically and verified numerically on an SIE quad (image positions, flux ratios, time delays), TDCOSMO chain, hand-off to Module 13 (kinematics) and Module 14 (multi-plane) | Refsdal 1964, S92 Ch.5+11, Wong+20, Birrer+20, Treu & Marshall 2016 |
 | 13 | TDCOSMO with Kinematics | Anisotropic Jeans, σ_v aperture projection, internal vs external MST, λ_int | B&T 2008 §4, Mamon & Łokas 2005, Birrer+20 (TDCOSMO IV), Schneider & Sluse 2013 |
 | 14 | Compound (Multi-Plane) Lensing | Recursive multi-plane lens equation, distance ratios β_jk, multi-plane Fermat cross-terms | S92 Ch.9, Blandford & Narayan 1986, Schneider 2019, McCully+ 2014, Keeton 2001 |
+| 15 | Radial Arcs & Caustic Topology | ✓ ship (v0.96) — Jacobian eigenvalues λ_t / λ_r, radial vs tangential critical curves, magnification asymptotics (1/d vs 1/√d), γ′ constraint from radial-arc position, γ′–M_BH degeneracy, hand-off to `Examples/radial_arc_smbh` for the AGEL Einstein-spiral methodology | C&K Ch.6, S92 §5, Sonnenfeld+13, Auger+10, Shajib+ (1st Einstein spiral), Ferrami+24 (DESJ0206) |
 
 **Key:** C&K = Congdon & Keeton (2018), N&B = Narayan & Bartelmann (1997), S92 = Schneider Ehlers Falco (1992), B&T = Binney & Tremaine (2008)
 

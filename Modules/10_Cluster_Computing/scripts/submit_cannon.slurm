@@ -237,10 +237,24 @@ cd "${REPO_ROOT}"
 # pedagogical chain section (which is prone to Nautilus f_live=1.0 stalls
 # on the wide-prior source_bulge — see the pipeline comments in
 # fit_module04.py).
+# Compute a per-example / per-module output subdir so that every fit's
+# Nautilus output lands under ${OUTPUT_ROOT}/<scope>/, never directly in
+# ${OUTPUT_ROOT}/. This prevents the cross-example pollution that the
+# 2026-05-18 cleanup uncovered: when a driver wrote to
+# ${OUTPUT_ROOT}/<unique_tag>/... AND another example reused the same tag,
+# the export step (which scans ${OUTPUT_ROOT} recursively) would pull
+# every other example's outputs into the current example's results/.
+if [[ -n "${EXAMPLE:-}" ]]; then
+    SCOPED_OUTPUT_ROOT="${OUTPUT_ROOT}/${EXAMPLE}"
+else
+    SCOPED_OUTPUT_ROOT="${OUTPUT_ROOT}/module_${MODULE}"
+fi
+mkdir -p "${SCOPED_OUTPUT_ROOT}"
+
 srun python "${FIT_SCRIPT}" \
     --repo-root    "${REPO_ROOT}" \
     --dataset-root "${DATASET_ROOT}" \
-    --output-root  "${OUTPUT_ROOT}" \
+    --output-root  "${SCOPED_OUTPUT_ROOT}" \
     ${FIT_EXTRA_ARGS:-}
 
 echo "End time: $(date -Is)"
@@ -250,28 +264,18 @@ echo "End time: $(date -Is)"
 #   info.txt, summary.json, samples.csv}
 # These are small and git-trackable, so a user can view finished results
 # without needing the full Nautilus output tree.
+#
+# The export scan is bounded to ${SCOPED_OUTPUT_ROOT} so it only picks up
+# fits produced by THIS job, not cross-example artifacts.
 echo "Exporting lightweight result artifacts..."
 if [[ -n "${EXAMPLE:-}" ]]; then
-    # Example-mode: Some drivers write to ${OUTPUT_ROOT}/<example>/... (e.g.
-    # compound_lens, disky_spiral_lens), others write directly to
-    # ${OUTPUT_ROOT}/<unique_tag>/<search_name>/... (e.g. quad_time_delay,
-    # mge_to_physical, compound_lens_zoo). Try the example-subdir first
-    # for backward compat, then fall back to scanning the whole
-    # ${OUTPUT_ROOT} so newer drivers also export cleanly.
-    if [[ -d "${OUTPUT_ROOT}/${EXAMPLE}" ]]; then
-        python "${REPO_ROOT}/Modules/10_Cluster_Computing/scripts/export_results.py" \
-            --output-root "${OUTPUT_ROOT}/${EXAMPLE}" \
-            --example     "${EXAMPLE}" \
-            --repo-root   "${REPO_ROOT}" || echo "(export_results.py failed — see above)"
-    else
-        python "${REPO_ROOT}/Modules/10_Cluster_Computing/scripts/export_results.py" \
-            --output-root "${OUTPUT_ROOT}" \
-            --example     "${EXAMPLE}" \
-            --repo-root   "${REPO_ROOT}" || echo "(export_results.py failed — see above)"
-    fi
+    python "${REPO_ROOT}/Modules/10_Cluster_Computing/scripts/export_results.py" \
+        --output-root "${SCOPED_OUTPUT_ROOT}" \
+        --example     "${EXAMPLE}" \
+        --repo-root   "${REPO_ROOT}" || echo "(export_results.py failed — see above)"
 else
     python "${REPO_ROOT}/Modules/10_Cluster_Computing/scripts/export_results.py" \
-        --output-root "${OUTPUT_ROOT}/module_${MODULE}" \
+        --output-root "${SCOPED_OUTPUT_ROOT}" \
         --module      "${MODULE}" \
         --repo-root   "${REPO_ROOT}" || echo "(export_results.py failed — see above)"
 fi

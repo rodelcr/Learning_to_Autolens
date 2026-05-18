@@ -1,96 +1,106 @@
-# Next Steps — Curriculum Gaps for New Lens Modelers
+# Next Steps — v0.97 Roadmap
 
-**Date drafted:** 2026-05-11
+**Date drafted:** 2026-05-18 (post v0.96-alpha tag)
 **Author:** Rodrigo Córdova Rosado
-**Status:** roadmap; deliverables tracked individually below.
+**Predecessor:** the v0.95→v0.96 roadmap, fully closed. v0.96-alpha tagged 2026-05-15.
 
-After 13 audited examples + 14 modules, the gap analysis for what a *new* lens modeler still needs:
+What v0.96 closed: galaxy_galaxy_single_arc (Tier-1 #1), positions_modeling (#2), kinematic_h0_break driver shipped via Phase 3 `_jeans_sigma_v.py` + `AnalysisKinematics` (#3), bayesian_model_comparison empirical fill-in (#4), cosmography_joint_posterior (#7), Module 15 (Radial Arcs), Examples/radial_arc_smbh (depth B), DSPL Stage 1+2 STRICT-PASS cosmography, mge axis-swap fix, chi²-at-truth + driver-truth two-check methodology, preflight_check_v096.sh.
 
-## Tier 1 — biggest pedagogical gaps
+---
 
-### #1 — `galaxy_galaxy_single_arc` (NEW example, in progress)
+## Tier 1 — v0.97 substantial deliverables
 
-A **clean SLACS-style single-lens / single-source ring/arc** — the canonical first fit. Every existing Example starts with compounds (`compound_lens`), DSPL, TDCOSMO, multi-plane, or real data; a new modeler going from Module 03's toy mocks straight to `agel_real_target` skips the textbook starting point. Auger+10 / Bolton+08 SLACS setup: 1 SIE+shear deflector, 1 Sersic source, ~0.5–2.0 arcsec Einstein ring. Single-search audited fit.
+### #1 — `Examples/radial_arc_smbh/ --part=with_kinematics` Cannon ship
 
-**Deliverables:**
-- `Examples/galaxy_galaxy_single_arc/mocks/generate_mock.py` (autolens-native)
-- `Examples/galaxy_galaxy_single_arc/01_galaxy_galaxy_single_arc.ipynb` (pedagogical walkthrough)
-- `Examples/galaxy_galaxy_single_arc/README.md` + `Modules/10_Cluster_Computing/scripts/fit_example_galaxy_galaxy_single_arc.py`
-- Single Cannon submit: `--part=direct`, ~2h on 32 cores → strict-PASS target
+The driver is wired against `_jeans_sigma_v.py` and the smoke-tested AnalysisKinematics class. Need a single Cannon submit (~12 h, `--mem=192G`, 32 cores) to produce the joint imaging + Jeans σ_v posterior. The pedagogical payoff: imaging-only Δlog_Z = +1.71 in favour of no-BH → joint should land **with kinematics breaking the γ′–M_BH degeneracy** so M_BH posterior tightens to truth.
 
-### #2 — `positions_modeling` (NEW example)
+**Deliverables:** Cannon result → strict-PASS audit → update `01_radial_arc_smbh.ipynb` §5 with the kinematic-break headline table.
 
-Currently position-likelihood coverage is **scattered**: 12 mentions in `Examples/compound_lens/01_compound_direct_fit.ipynb` §2 + §2.5 (API contract + sanity check) and the 3-rung H0 chain in `Examples/quad_time_delay/`. **No dedicated tutorial** walking through:
-- Why positions complement imaging (resampling-from-source constraint vs pixel-level constraint)
-- The API: `al.Grid2DIrregular` → `al.PositionsLH(positions=..., threshold=...)`
-- How positions enter the plotter, the analysis, and the likelihood
-- Threshold sensitivity (empirical: ≥0.1″ converges to v4 PASS basin; 0.01″ over-constrains)
-- The 3-rung H0 chain (pos-only / image-only / joint) as the headline pedagogical demo
+### #2 — `fit_example_quad_time_delay.py --part=joint_fit_h0_kin`
 
-**Deliverables:**
-- `Examples/positions_modeling/01_positions_tutorial.ipynb` — consolidates the §2.5 compound_lens sanity check + the qtd H0 chain into a standalone walkthrough.
-- No new Cannon work — reuses landed posteriors from `compound_lens/results/pos_lh_sweep_*/` and `quad_time_delay/results/phase_4_*+phase_3_*+joint_h0_free`.
+Same `_jeans_sigma_v.AnalysisKinematicsFreeCosmology` instance + the existing AnalysisPoint + AnalysisImaging via `af.FactorGraphModel`. Adds Jeans σ_v to the TDCOSMO joint fit. **Goal:** breaks the +5 km/s/Mpc H₀ bias seen in v0.96 (`joint_h0_free`: 75.0 ± 2.6 vs truth 70.0). Birrer+ 2020 IV methodology.
 
-### #3 — `kinematic_h0_break` (extends `quad_time_delay`)
+**Deliverables:** new `--part=joint_fit_h0_kin` rung in the driver; Cannon submit; expected H₀ recovered at 70 ± few; update `Examples/cosmography_joint_posterior/` to remove the independence approximation.
 
-Stage 4 v0.95 deliverable from `V095_PIPELINE_PLAN.md`. Extend the joint TDCOSMO fit with a σ_v aperture-projected likelihood term using **Module 13's anisotropic Jeans theory** (already shipped). The current Track D joint fit lands H0 = 74.95 ± 2.3 with +5 bias from un-broken MSD; kinematics should close that.
+### #3 — `mge_to_physical` lp_linear.Sersic + MGE light follow-on
 
-**Deliverables:**
-- New `--part=joint_fit_h0_kin` in `fit_example_quad_time_delay.py` — wraps `AnalysisPoint + AnalysisImaging + AnalysisKinematics` via `af.FactorGraphModel`
-- Kinematic mock: σ_v(R_eff) = 280 km/s ± 10 km/s (mock truth from Module 13 stellar mass)
-- Target: H0 bias drops from +5 → ~+1, σ stays ~2.3 km/s/Mpc
-- Single Cannon submit, ~12h on 32 cores
+v0.96 axis-fix landed 50% chi²/N reduction (6.44 → 3.16) but `search_3_v2_stars_dark` still shows coherent ring-shaped residuals. Suspected root cause: `lp_linear.Sersic` source decomposition convention vs simple Sersic, OR untreated 2-source-plane multiplicity. Replace simple Sersic with `al.lp_linear.Sersic` + MGE light per Module 09 methodology.
 
-## Tier 2 — completes existing scaffolds
+**Deliverables:** updated driver, Cannon retry, strict-PASS audit. Promotes mge_to_physical from research-in-progress to ✓ shipped.
 
-### #4 — `bayesian_model_comparison` empirical numerics
+### #4 — DSPL × TDCOSMO single-likelihood fully-joint-fit
 
-Already scaffolded; ~20 audited fits with `log_evidence` values exist across the curriculum (compound_lens v4 / direct_epl / slam_*, mge_to_physical Search 2 vs Search 3, agel_real_target direct_clean, quad_time_delay Phase 3 vs Track D joint). Populate the worked-example tables in the existing notebook. Pure laptop work, ~2h, no Cannon.
+`Examples/cosmography_joint_posterior/` v0.96 used the independence approximation. The full Birrer+ 2020 §4 implementation runs `af.FactorGraphModel(DSPL_imaging, TDCOSMO_imaging, TDCOSMO_point, TDCOSMO_kinematic)` with a shared cosmology model. Removes the approximation.
 
-**Deliverables:**
-- `Examples/bayesian_model_comparison/01_bayesian_model_comparison.ipynb` — fill in the empirical log_Z table + Kass-Raftery classification (decisive / strong / substantial / barely-worth-mentioning) for each pair.
+**Deliverables:** new combined-fit driver; Cannon ship (~24 h); single posterior on (Ωₘ, w₀, H₀) without independence.
 
-### #5 — `subhalo_sensitivity` full grid-search SLaM
+---
 
-The minimum-viable two-fit Bayes-factor demo exists; the **upgrade** is the Vegetti+ 2010 / Despali+ 2018 full grid-search SLaM. Walks a (M_sub, R_sub) grid and computes the per-cell Bayes factor → derives the (M_sub, R_sub) detection limit at a given confidence level.
+## Tier 2 — depth-C real-data application
 
-**Deliverables:**
-- New `--part=grid_search` in `fit_example_subhalo_sensitivity.py`
-- ~50 Cannon submits (one per grid cell) at 4h each, total ~200 CPU-days. **Defer to v0.96** unless someone has a real subhalo claim to test.
+### #5 — `Examples/agel_spiral_real_target/` (NEW example, depth C)
 
-### #5.5 — Multi-GPU JAX speedup test for MGE fits (task #127)
+Apply the v0.96 `radial_arc_smbh` methodology to a real AGEL Einstein-spiral target. Baseline candidate: DESJ0206 (Ferrami+ 2024 ApJL). The 8-item bridge checklist is in `Examples/radial_arc_smbh/README.md` §"Bridge to depth-C":
 
-Per `project_multigpu_jax_idea.md` memory: single-GPU JAX was 4× *slower* than numpy on our typical MGE fits. Multi-GPU data-parallel + SLURM-array + per-process JAX have NOT been tested. Open question whether (a) `jax.pmap` across 2–4 GPUs on a `fasrc-cannon-gpu` node, or (b) a SLURM array with N tasks each on 1 GPU, gives a speedup relative to the numpy 32-core baseline.
+- [ ] HST imaging cutout from MAST (ACS WFC F606W + WFC3-IR F125W minimum)
+- [ ] Empirical PSF (not Gaussian — `tinytim` or stars-in-field)
+- [ ] Real `tinytim`/empirical PSF kernel pipeline
+- [ ] Lens-light decomposition: MGE basis vs simple Sersic ablation
+- [ ] Hot-pixel + cosmic-ray cleanup (reuse `Examples/agel_real_target` pipeline)
+- [ ] σ_v from KCWI / LLAMAS IFU via ppxf, aperture-matched to lensing R_eff
+- [ ] Photometric or spectroscopic z_l, z_s with marginalisation
+- [ ] Multi-band joint fit if both HST and JWST available
 
-**Deliverables:**
-- Adapt `fit_example_mge_to_physical.py` with a `--use-jax-pmap` flag (or new driver `fit_example_mge_to_physical_gpu.py`).
-- Benchmark wall + chi²/N landed vs numpy baseline on the autolens-native regenerated mock.
-- Deferred priority — only valuable if numpy stops fitting in `--mem=192G` envelope or wall times exceed 24h. Currently mge fits complete in ~25min.
+This is the v0.97 stretch goal — production-grade real-target paper-ready fit.
 
-## Tier 3 — production AGEL-realistic
+### #6 — `Examples/multi_band_joint_fit/` (NEW example)
 
-### #6 — `multi_band_joint_fit` (NEW example)
+HST WFC3 (F814W) + JWST NIRCam (F200W) on the same lens. AGEL DR2 targets have multi-band imaging. The autolens API supports multi-dataset fits via `af.FactorGraphModel` — same pattern as TDCOSMO joint but with two AnalysisImaging factors. Demonstrates wavelength-dependent source structure.
 
-HST WFC3 (F814W) + JWST NIRCam (F200W) joint fit on the same lens. AGEL DR2 targets all have multi-band imaging. The autolens API supports multi-dataset fits via `af.FactorGraphModel` — same pattern as the TDCOSMO joint fit, but with two imaging analyses instead of imaging + point-source. Demonstrates wavelength-dependent source structure (older stellar populations in NIR, star-forming regions in optical).
+**Deliverables:** 2-band mocks generator, driver, notebook, Cannon submit (~8 h).
 
-**Deliverables:** mocks generator for 2 bands, driver, notebook, Cannon submit (~8h).
+---
 
-### #7 — `cosmography_joint_posterior` (NEW example)
+## Tier 3 — methodology / infrastructure
 
-Combine the **DSPL Stage 2** posterior on (Ωₘ, w₀) (when `dspl_beta_chain` lands) + the **TDCOSMO chain** posterior on H0 into a joint 3D constraint following **Birrer+ 2020 §4** methodology. Demonstrates the cross-link between Stages 1 and 4 of the pipeline plan — DSPL pins (Ωₘ, w₀) without H0; TDCOSMO pins H0 with weak (Ωₘ, w₀) dependency; jointly they're tighter than either alone.
+### #7 — Cannon submit script: prevent cross-example output pollution
 
-**Deliverables:** notebook that loads the two posteriors and renders the joint corner. Pure laptop work once Cannon results land.
+Root cause of the 124-untracked-dir cleanup on 2026-05-18: `submit_cannon.slurm` writes outputs to `Examples/<EXAMPLE>/results/<search_name>/` based on `EXAMPLE` env var, but the rsync pulls EVERY `Examples/*/results/<search_name>/` dir from Cannon. When several drivers wrote search_names that collide across examples (e.g. `composite_mass` exists under multiple Example output trees because Module 06 fits write there), the rsync replicates them under every example's local results tree.
+
+**Investigate:** is the issue in `submit_cannon.slurm`, in `export_results.py`, or in `pull_from_cannon.sh`'s rsync include rules? Cannon-side fix preferred over client-side cleanup script.
+
+**Deliverables:** documented root cause + Cannon-side fix + regression test that pulls fresh and asserts zero cross-example duplication.
+
+### #8 — Multi-GPU JAX MGE benchmark (task #127)
+
+Per `project_multigpu_jax_idea.md` memory: single-GPU JAX was 4× *slower* than numpy. Multi-GPU data-parallel + SLURM-array have not been tested. Open question.
+
+**Deliverables:** adapt `fit_example_mge_to_physical.py` with `--use-jax-pmap` flag, benchmark wall + chi²/N on 2–4 GPUs vs numpy 32-core baseline. Deferred priority — only valuable if numpy stops fitting in `--mem=192G` envelope.
+
+### #9 — Anisotropy β(r) extension to `_jeans_sigma_v.py`
+
+Phase 3 starter is isotropic only (β=0). Mamon & Łokas 2005 provides an anisotropy-kernel extension that slots into `_jeans_inner_integral` without API change. v0.98 scope. Adds 1 free param to AnalysisKinematics; β prior from Cappellari+13 OM model.
+
+---
 
 ## Sequencing
 
-Work order under auto-mode (no Cannon dependency for #1, #2, #4):
+Work order assuming v0.97 completes within ~6 weeks:
 
-1. **#1 `galaxy_galaxy_single_arc`** (in progress today)
-2. **#2 `positions_modeling`** (laptop only, reuses landed results)
-3. **#4 `bayesian_model_comparison` empirical** (laptop only)
-4. **#3 `kinematic_h0_break`** (depends on Module 13 Jeans theory consolidation + Cannon)
-5. **#6 `multi_band_joint_fit`** (depends on mock design choices)
-6. **#7 `cosmography_joint_posterior`** (depends on `dspl_beta_chain` Cannon result)
-7. **#5 `subhalo_sensitivity` grid SLaM** (v0.96)
+1. **Week 1**: #7 Cannon submit root cause (1-2 days) + #1 radial_arc_smbh with_kinematics submit (~12 h Cannon)
+2. **Week 2**: #2 joint_fit_h0_kin driver + Cannon submit; #1 audit + notebook update
+3. **Week 3**: #3 mge_to_physical lp_linear retry; #2 audit + cosmography update
+4. **Week 4-5**: #5 agel_spiral_real_target (DESJ0206) or #4 DSPL × TDCOSMO single-likelihood
+5. **Week 6**: #6 multi_band_joint_fit or #8 Multi-GPU JAX benchmark
+6. Tag v0.97-alpha when #1, #2, #3, #7 land strict-PASS + #5 or #4 lands depth-C
 
-The first three close the biggest pedagogical gap for new modelers without any new Cannon CPU spend.
+Critical path: #7 first (prevents recurring cleanup overhead). Then #1, #2, #3 unlock the kinematic-break + lp_linear methodology shipping. Then real-target application (#5).
+
+---
+
+## What's deferred to v0.98+
+
+- #9 anisotropic Jeans
+- `subhalo_sensitivity` full Vegetti+10 grid SLaM
+- Mathematica companion Module 15 in Learning_to_Lens
+- AGEL DR2 multi-target stack: ≥ 5 DSPL targets for competitive cosmographic precision
