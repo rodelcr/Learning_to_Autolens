@@ -1,0 +1,10 @@
+{
+  "search_name": "ggsa_direct",
+  "source_dir": "output/ggsa_direct/ggsa_direct/17fb723a110c80a524c6b00090315ee5",
+  "max_log_likelihood": 7315.458734742206,
+  "log_evidence": 7199.5751463285505,
+  "chi_squared_total": 3445.814894630847,
+  "chi_squared_per_pixel": 0.9571708040641241,
+  "n_unmasked_pixels": 3600,
+  "max_abs_normalized_residual": 3.884083467037628
+}
