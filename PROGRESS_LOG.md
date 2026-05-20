@@ -1366,3 +1366,88 @@ Plus three more headline notebooks:
 4. **Nautilus f_live stuck at 1.0 + N_eff at 1-2 after 100K+ calls signals posterior pathology.** Informed (Gaussian-anchored) priors with ~5× reduced search volume substantially help — see v3 vs v2.
 5. **Per-paper citation register is critical infrastructure.** PAPER_NOTES transcription doesn't substitute for body-anchored section/figure citations. The verification workflow (WebFetch → cross-check → tag verified) caught the σ_v misframing before it propagated.
 
+---
+
+## 2026-05-20 — A1201 Stage 1 succeeded with 3-Sersic; Phase 4.5 mass-model variants in flight; Herculens kicked off
+
+### Stage 1 success: v4 (3-Sersic light) converges where v2/v3 (1-Sersic) failed
+
+After v2 (uniform 1-Sersic, 21h) and v3 (informed-prior 1-Sersic, 5.5h) both
+landed pathological broken fits — v2 with extreme shear γ≈0.94 + railing 4
+priors + chi²-map peak 39,317; v3 with slope=1, zero ellipticity, figure-8
+model + chi²-map peak 285 — we resubmitted as **v4 with `--n-light=3`**
+(N+23 Table 1's 3-Sersic light model).
+
+**v4 result** (Cannon job 14015488, 6h09m):
+- lnZ = **+174,904** (vs v2 +172,973, v3 +172,238 — ΔlnZ +1,932 / +2,667
+  respectively — decisive Bayes-factor preference for 3-Sersic light,
+  exactly mirroring N+23 Table 1)
+- Visual diagnostic (`Figures/spec05_a1201_diagnostics/v4_3sersic_fit.png`):
+  model image traces the actual data arc as a crescent; lens-light
+  subtraction is clean; source-plane reconstruction is a physical extended
+  source; chi²-map peak ~180 (216× better than v2's 39K).
+
+**Key methodology lesson**: lens-light model flexibility is the **critical
+bottleneck** for BCG-scale lenses, NOT source-plane flexibility. With a
+properly subtracted BCG, even a parametric Sersic source can fit. This
+matches N+23's pipeline ordering (Light pipeline runs BEFORE Mass pipeline
+and selects 3-Sersic as prerequisite to Mass pipeline).
+
+### Stage 2 (PL + SMBH, 3-Sersic light) launched
+
+`a1201_with_smbh_3s` (job 14066124, RUNNING since 2026-05-20 ~16:00 EDT, ~12h
+expected wall). Chained from v4. **First M_BH posterior attempt.**
+
+### Phase 4.5 — N+23 §3.8 / §4.3 mass-model alternatives
+
+Verified via ar5iv that N+23's "additional tests" are §3.8 Mass Pipeline
+variants: PL/BPL/decomposed × ±SMBH. Wrote
+`docs/superpowers/plans/2026-05-20-paper-repro-05-a1201-mass-model-variants.md`
+(10 tasks, ~55 steps).
+
+Implementation shipped (`a1201_lens_model.py`):
+- `_build_lens_galaxy_bpl` + `build_bpl_fit` + `build_bpl_smbh_fit` —
+  O'Riordan, Warren & Mortlock BPL parameterization (`al.mp.PowerLawBroken`,
+  verified class name 2026-05-20). `free_mass_centre` flag for the
+  §4.3 / Appendix D coaxiality reproduction.
+- `_build_lens_galaxy_decomposed` + `build_decomposed_fit` +
+  `build_decomposed_smbh_fit` — Sersic stellar mass + standard NFW + shear.
+- New `--part={bpl,bpl_smbh,decomp,decomp_smbh}` + `--free-mass-centre` CLI.
+- 23/23 tests pass (7 new for Phase 4.5).
+
+**6 Cannon variants submitted 2026-05-20** chained from v4:
+
+| Job | Variant |
+|---|---|
+| 14068551 | a1201_bpl_3s (BPL tied, no SMBH) |
+| 14068552 | a1201_bpl_smbh_3s (BPL tied, +SMBH) |
+| 14068556 | a1201_bpl_free (BPL free, no SMBH) |
+| 14068557 | a1201_bpl_smbh_free (BPL free, +SMBH) |
+| 14068559 | a1201_decomp_3s |
+| 14068560 | a1201_decomp_smbh_3s |
+
+Plus the running Stage 2 (14066124). Seven A1201 jobs in flight on siag_lab.
+
+### Herculens kicked off (Spec 03 / Spec 04 prerequisite)
+
+Started both local + Cannon `herculens312` conda envs (Python 3.12).
+Installing `jax`, `jaxlib`, `numpyro`, `herculens` (from
+`github.com/Herculens/herculens` — not yet on PyPI), and the optional
+`jaxinterp2d` fast bilinear interpolation dependency. CPU JAX for first
+pass on both sides; GPU JAX for Cannon will be a follow-on.
+
+Next milestones (per Spec 00 §Herculens-install + Spec 03 plan):
+1. Smoke-import test both envs
+2. Inspect Herculens API (`MassModel`, `LightModel`, `LensImage`,
+   NumPyro NUTS) — no usable docs publicly; need to introspect once installed
+3. Write `autolens → Herculens` model bridge for the DSPL example
+4. Smoke-fit `Examples/double_source_plane/mocks/` via Herculens NUTS;
+   verify posterior consistent with our autolens DSPL strict-PASS
+
+### Commits this arc
+
+- `ca46cf9` — A1201 paper-repro infrastructure + N+23 citation correction
+- `f22a482` — v2/v3 diagnostic figures (catastrophic-fit evidence)
+- `196711b` — v4 diagnostic figure (real-fit evidence)
+- `212f58b` — Phase 4.5 mass-model variants plan
+
