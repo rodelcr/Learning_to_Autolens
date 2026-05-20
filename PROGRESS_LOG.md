@@ -1294,3 +1294,75 @@ The PositionsLH research batch was conceived this morning (user request: "any ot
 
 The Track D result is particularly notable: it's the first time the H0LiCOW XIII / TDCOSMO IV joint methodology is exercised end-to-end in the curriculum. Module 12 §5 references this — now there's an audited example fit to point at.
 
+---
+
+## 2026-05-18 / 2026-05-19 — Paper-reproduction program kicked off (Spec 05 A1201 in flight)
+
+Long arc spanning end-of-day 2026-05-18 through 2026-05-19. Headline:
+
+- **First real-paper reproduction Cannon job in flight** — Stage 1 of the
+  Nightingale+2023 Abell 1201 ultramassive black-hole reproduction (Spec 05).
+  Two parallel attempts: v2 (job 13822696, uniform priors, 9h+ elapsed,
+  plateauing convergence) and v3 (job 13868426, N+23-anchored Gaussian priors,
+  newer, expected to land first).
+- **All four paper-reproduction headline notebooks scaffolded** (A1201, P1 Li+23
+  population cosmography, P2 Ballard+23 TSPL Jackpot subhalo, P3 Li+26 DSPL
+  IMF/NFW). Each ~7–9 cells, follows a common template (citation register,
+  per-stage results, methodology divergences, headline figure).
+- **Critical citation correction** for N+23 — verified via ar5iv: the paper
+  does **NOT** use σ_v in its likelihood; γ′-M_BH degeneracy is broken by
+  counter-image morphology (§4.2) + mass-light coaxiality (§4.3), both
+  imaging-only arguments. Our Phase 3 σ_v Jeans factor is OUR methodology
+  extension, not a reproduction of the paper. Spec 05 design + plan rewritten
+  to reflect this. `feedback_no_fabricated_citations` discipline validated.
+
+### Cannon job slate (in chronological order)
+
+| Job | Name | Wall | Outcome | Note |
+|---|---|---|---|---|
+| 13649652 | rarc_kin2 | 47:39 | FAILED | AnalysisKinematics SimpleNamespace stub missing save_attributes |
+| 13649870 | qtd_h0_kin | 46:31 | FAILED | same stub crash |
+| 13685089 | rarc_kin3 | 10:03 | COMPLETED (resumed from rarc_kin2 ckpt) | **v0.97 headline**: γ′=1.949 vs truth 1.95, M_BH θ_E=0.059 vs truth 0.08; kinematic factor demonstrably breaks γ′-M_BH degeneracy beyond v0.96 imaging-only result |
+| 13685104 | qtd_h0_kin2 | 7:24 | COMPLETED + visualize crash | SimpleNamespace stub now fixed in `_jeans_sigma_v.py`; resubmit parked |
+| 13690686 | p1_pop_autofit | 0:04 | FAILED | Personal `~/miniforge3` path in slurm — fixed to Cannon-canonical Miniforge |
+| 13747394 | p1_pop_autofit (re) | 2:11 | "COMPLETED" max_log_L=0.0 | Prior-only sampling — `run_sampler_cannon.py` likelihood not evaluated. Spec 01 Phase 2 work needed |
+| 13747801 | a1201_lp v1 | 2:39 | CANCELLED (by us) | False alarm: cutout was actually correctly built |
+| 13748339 | a1201_lp v1 (re) | 1:04:27 | COMPLETED but rails 4 priors | 8″ cutout chopped tangential arc; mass.centre untied → drifted 0.6″ |
+| 13822696 | a1201_lp v2 | 9h+ ongoing | RUNNING, convergence concern | 16″ cutout, mask r=6″, tied mass.centre=bulge.centre, widened priors. logZ +172,570 (positive evidence vs v1's −13,269) but f_live stuck 1.0 / N_eff 1-2 |
+| 13868426 | a1201_lp_informed v3 | just started | RUNNING (parallel) | N+23-anchored Gaussian priors, ~5× tighter prior volume. Different output dir |
+
+### Infrastructure shipped this arc (`private/2303_15514_nightingale2023_abell1201/`)
+
+- **`code/a1201_lens_model.py`** — added `--chain-from`, `--n-light={1,2,3}` (N+23 Table 1 ladder), `--informed-priors`, multi-Sersic with tied centres
+- **`code/chain_priors_from_lp.py`** + 4 tests — Stage-N → Stage-(N+1) prior chainer
+- **`code/prep_a1201_dataset.py`** — `--band={f390w,f814w}` + `--per-band-subdir`; both bands' 16″×16″ cutouts built (F390W is N+23's primary band, ΔlnZ=+100.58 per Table 4)
+- **`code/audit_stage1.py`** — automated prior-railing + mass-light coaxiality + θ_E sanity → PASS/SUSPECT/FAIL
+- **`code/compute_bayes_factor.py`** — ΔlnZ + Jeffreys + N+23 §3.9 3σ-threshold (ΔlnZ=4.5) + σ-equiv
+- **`code/extract_mbh.py`** — θ_E_BH → M_BH (M☉) via point-mass lens equation
+- **`submit_a1201.slurm`** — 4-stage chained; `INFORMED_PRIORS` + `OUTPUT_SUFFIX` env vars for parallel runs
+- **`notebooks/03_a1201_mbh_recovery.ipynb`** — 9-cell headline notebook
+- **Tests**: 13/13 PASS
+- **`PAPER_NOTES.md`** rewritten with ar5iv-anchored citations
+- **`STAGE_COMMANDS.md`** — exact sbatch invocations per stage
+- **`/private/COMPARISON_TEMPLATE.md`** — per-paper scoreboard template
+
+Plus three more headline notebooks:
+
+- `private/2307_.../notebooks/01_p1_w_recovery.ipynb` (Li+23, w = −0.96 ± 0.46 target)
+- `private/2309_.../notebooks/01_p2_subhalo_bayes.ipynb` (Ballard+23, 5.9σ subhalo)
+- `private/2602_.../notebooks/01_p3_imf_nfw_recovery.ipynb` (Li+26 DSPL IMF, M_*=4.4e11)
+
+### Repo-wide
+
+- **`_jeans_sigma_v.AnalysisKinematics`** stub fix: SimpleNamespace `make_result` forwards `max_log_likelihood_instance` from samples_summary. Fixes the v0.97 post-fit visualize crash that killed jobs 13649652 + 13649870.
+- **CLAUDE.md rewritten**: dropped stale lenstronomy boilerplate, added Cannon SSH alias + ControlMaster + cannon.env documentation; codified account/partition routing policy (siag_lab primary / hernquist student; `scontrol update` to fix mis-routed pending).
+- **Spec 05 design + plan** rewritten with verified N+23 methodology — Stage 4 (`adapt`) is paper-faithful track; Stage 3 (`with_kin`) explicitly labeled our extension.
+
+### Methodology lessons
+
+1. **Cutout sizing matters.** Stage 1 v1's 8″ cutout chopped the tangential arc at θ_E ≈ 3.8″. Fix: 16″ cutout + mask r=6″ includes the arc visibly in the BCG-subtracted residual.
+2. **Tied mass-light centres are critical for radial-arc methodology.** Untied `mass.centre` drifts to fit contaminating flux; fit converges to false solution.
+3. **N+23's headline driver is light-model flexibility + pixelised source — NOT σ_v.** 3-Sersic + F390W + Voronoi+`reg.Adapt` → ΔlnZ=+100.58; 1-Sersic + F814W → marginal ΔlnZ≈3.
+4. **Nautilus f_live stuck at 1.0 + N_eff at 1-2 after 100K+ calls signals posterior pathology.** Informed (Gaussian-anchored) priors with ~5× reduced search volume substantially help — see v3 vs v2.
+5. **Per-paper citation register is critical infrastructure.** PAPER_NOTES transcription doesn't substitute for body-anchored section/figure citations. The verification workflow (WebFetch → cross-check → tag verified) caught the σ_v misframing before it propagated.
+

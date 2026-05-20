@@ -400,14 +400,37 @@ class AnalysisKinematics:
         Most callers iterate result_list and visualise each factor; for the
         kinematic factor we return a SimpleNamespace with the bare minimum
         attrs so `_force_visualize` and `result.info` don't crash.
+
+        2026-05-18 fix: add `max_log_likelihood_instance` and `model` attrs
+        forwarded from samples_summary. Without these the qtd_h0_kin2 Cannon
+        job (13685104) crashed post-fit at the QTD driver's visualize step
+        with `'types.SimpleNamespace' object has no attribute
+        'max_log_likelihood_instance'`. Forwarding is best-effort; falls back
+        to None which is correct for callers that defensively `if instance:`.
         """
         import types
-        return types.SimpleNamespace(
+        ns = types.SimpleNamespace(
             samples_summary=samples_summary,
             samples=samples,
             paths=paths,
             info="(kinematic factor — scalar σ_v likelihood)",
+            max_log_likelihood_instance=None,
+            model=None,
         )
+        if samples_summary is not None:
+            for attr in ("max_log_likelihood_instance", "max_log_likelihood",
+                         "model"):
+                try:
+                    val = getattr(samples_summary, attr, None)
+                    if callable(val):
+                        val = val()
+                    if attr == "max_log_likelihood":
+                        setattr(ns, "max_log_likelihood_instance", val)
+                    elif val is not None:
+                        setattr(ns, attr, val)
+                except Exception:
+                    pass
+        return ns
 
     def modify_before_fit(self, paths, model):
         """No-op hook autofit may call to let the analysis mutate the model."""
