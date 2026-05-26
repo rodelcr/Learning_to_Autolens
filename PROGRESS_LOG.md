@@ -1539,9 +1539,46 @@ the multi-plane API:
 Nothing landed since the `HANDOFF_2026_05_26.md` snapshot — BPL/adapt are
 the next batch to audit.
 
+### Methodology correction (Rodrigo, 2026-05-26)
+
+> "Unless we have a FULLY CONVERGED (no residual) lens and light model
+> AND THEN a SMBH improves the model, we DO NOT HAVE A SMBH DETECTION."
+
+Codified as `feedback_smbh_detection_requires_converged_baseline.md` and
+linked in MEMORY.md. This downgrades the current A1201 status from
+"first M_BH detection" to "Bayes-factor improvement consistent with SMBH
+signal in two mass-model classes — methodology check (reproduces N+23
+§3.8 cross-class CONSISTENCY) but not yet an SMBH detection."
+
+The detection claim requires the converged Stage 4 adapt + multi-band
+ladder (Voronoi+AdaptSplit pixelised source eliminates parametric-source
+residuals; F390W adds wavelength coverage). The currently-running jobs
+(adapt_3s, F390W variants × 4, decomp_adapt × 2) are exactly that
+remediation path.
+
+The figure suite was regenerated to reflect this (commit `ecd9e55`):
+- `fig_bayes_matrix.png` — title is "Bayes-Factor Matrix" not "M_BH
+  Detection"; verdict column reads "improvement only (*)"; footer
+  enumerates the converged-baseline requirement.
+- `fig_mbh_posterior.png` — title flagged PRELIMINARY; caption lists
+  the three reasons this is not yet an SMBH detection.
+- `fig_slope_corner.png` — subtitle notes γ′ rails at 1.500.
+
+Memory amended: `project_a1201_first_mbh_detection.md` now opens with the
+correction note before the original headline (preserved for context).
+
 ### Commits this arc
 
 - `39269e4` — `HANDOFF_2026_05_26.md` (347 lines; full state snapshot)
 - `abc468a` — A1201 N+23 reproduction headline figure suite (4 figures)
-- (pending) — this PROGRESS_LOG entry
+- `65e3961` — PROGRESS_LOG: 2026-05-26 arc
+- `ecd9e55` — Figures reframed per methodology correction
+- (pending) — this addendum + Stage 2 v2 launch note
+
+### Cannon launches this session
+
+- `15969519` — `a1201_with_smbh` chained from `lp_3sersic_v5` (Stage 2 v2,
+  output suffix `_3sersic_v5chain`, 48h walltime). Expected to unrail γ′
+  and yield a trustworthy PL+SMBH posterior — the prerequisite for the
+  converged-baseline SMBH detection claim.
 
