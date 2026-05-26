@@ -1451,3 +1451,97 @@ Next milestones (per Spec 00 §Herculens-install + Spec 03 plan):
 - `196711b` — v4 diagnostic figure (real-fit evidence)
 - `212f58b` — Phase 4.5 mass-model variants plan
 
+---
+
+## 2026-05-26 — A1201 figure suite + Herculens DSPL bridge + diagnostics audit
+
+### Headline figure suite for the N+23 reproduction (commit `abc468a`)
+
+Built `private/2303_15514_nightingale2023_abell1201/code/make_figures.py`
+(gitignored generator, public figure outputs) emitting four publication-style
+figures into `Figures/spec05_a1201_diagnostics/`:
+
+1. **`fig_bayes_matrix.png`** — ΔlnZ table across mass-model classes.
+   Currently shows PL ΔlnZ=+21.29 (6.53σ), Decomp ΔlnZ=+29.87 (7.73σ);
+   BPL/adapt/Jeans rows tagged `(pending)` for the 12 Cannon jobs in flight.
+
+2. **`fig_mbh_posterior.png`** — M_BH posterior across +SMBH variants.
+   PL+SMBH: log10(M_BH/M⊙) = 9.89 ± 0.03 → ~7.7×10⁹ M⊙
+   Decomp+SMBH: log10(M_BH/M⊙) = 9.99 ± 0.03 → ~9.8×10⁹ M⊙
+   N+23 headline at 3.27×10¹⁰ M⊙ marked (~3.5× higher; expected for our
+   F814W-only + parametric source; closing via adapt + F390W in flight).
+
+3. **`fig_slope_corner.png`** — γ′ × θ_E × |γ_shear| posterior for PL+SMBH.
+   Honest diagnostic: γ′ rails at 1.5000 (prior lower bound). The rail is
+   benign for the differential M_BH detection (same rail in ±SMBH) but
+   forces a Stage 2 v2 chained from v5 to get a trustworthy γ′ value.
+
+4. **`fig_evidence_ladder.png`** — F814W v2→v5 Stage 1 ladder + F390W
+   anchor (split axes; cross-band lnZ not comparable). Quantifies the
+   light-model flexibility lesson: v4 (3-Sersic) gains +1,932 lnZ over
+   v2 (1-Sersic uniform); v5 (widened priors) adds another +624.
+
+Conversion θ_E,smbh → M_BH via standard point-mass Einstein-radius equation
+with FlatLambdaCDM(H0=70, Ωm=0.3), z_L=0.169, z_S=0.451.
+
+### `/autolens-fit-diagnostics` audit on the current best-basis
+
+Per skill protocol, ran the strict diagnostic on the three runs forming the
+current scientific basis:
+
+| Run | Standalone | Differential |
+|---|---|---|
+| `lp_3sersic_v5` | **PASS** (no rails; +624 lnZ over v4; clean chain anchor) | — |
+| `with_smbh_3sersic` | **SUSPECT** (γ′ rail at 1.5000; parametric-source arc residuals) | **PASS** (ΔlnZ=+21.29; 6.53σ M_BH detection) |
+| `decomp_smbh_3sersic` | **INCOMPLETE** (visualizer never rendered — NFW patch covers sampling not viz) | **PASS** (ΔlnZ=+29.87 and +20.55 vs PL+SMBH; cross-class consistency reproduces N+23 §3.8) |
+
+**Follow-ups to upgrade to full PASS**:
+1. Launch Stage 2 v2 chained from `lp_3sersic_v5` (widened-priors PL+SMBH) —
+   expected to unrail γ′ and update the figure suite.
+2. Render `fit_subplot.png` locally for `lp_3sersic_v5` and
+   `decomp_smbh_3sersic` (manual `aplt.FitImagingPlotter` with NFW
+   monkey-patch; bypass the autolens visualizer wrapper that crashes).
+3. The cross-class M_BH detection (Decomp vs PL, both +SMBH, ΔlnZ=+20.55)
+   IS the verdict-bearing scientific check — robust against the
+   standalone caveats. This is the headline N+23 §3.8 reproduction.
+
+### Herculens DSPL bridge (Spec 03 prerequisite)
+
+Single-plane forward smoke already passed 2026-05-20. This session decoded
+the multi-plane API:
+
+- `MPMassModel` requires `number_light_planes = number_mass_planes + 1`.
+  The mass list covers all planes EXCEPT the final source plane (which
+  has no plane past it to deflect through). For Li+26 DSPL jackpot, the
+  intermediate source plane carries a `['POINT_MASS']` deflector; for
+  pure DSPL it's `None`.
+- For 1 lens + 2 sources DSPL geometry: 2 mass planes (`[['EPL','SHEAR'], None]`)
+  + 3 light planes (lens light + source 1 + source 2).
+- `build_eta_matrix(cosmo, [z_L, z_s1, z_s2])` returns a 1-element flat
+  array of cosmological distance ratios for the standard convention.
+- Forward-image renders cleanly with non-trivial multi-arc structure.
+- File: `private/2602_20889_li2026_dspl_imf_nfw/code/herculens_dspl_smoke.py`.
+
+**Next Herculens layers**:
+1. NumPyro NUTS likelihood wrapper around `MPLensImage.model()`.
+2. Smoke fit on `Examples/double_source_plane/mocks/mock_truth.json` and
+   verify posterior consistency with our autolens DSPL strict-PASS.
+3. GPU JAX install on Cannon (currently `jax 0.10.1` CPU-only) for siag_gpu.
+
+### Cannon state at handover (2026-05-26 evening EDT)
+
+12 jobs in flight on `siag_lab`:
+- 6 RUNNING: BPL × 4 (v2, 48h walltime, ~30h left), adapt_3s (~30h left),
+  with_kin_3s_v2 (~23h left, fresh restart with `use_jax=False` fix)
+- 6 PENDING: F390W variants (with_smbh, decomp_smbh, bpl_smbh, adapt) +
+  decomp_adapt (F814W + F390W)
+
+Nothing landed since the `HANDOFF_2026_05_26.md` snapshot — BPL/adapt are
+the next batch to audit.
+
+### Commits this arc
+
+- `39269e4` — `HANDOFF_2026_05_26.md` (347 lines; full state snapshot)
+- `abc468a` — A1201 N+23 reproduction headline figure suite (4 figures)
+- (pending) — this PROGRESS_LOG entry
+
