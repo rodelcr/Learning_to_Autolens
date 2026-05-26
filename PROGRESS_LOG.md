@@ -1582,3 +1582,52 @@ correction note before the original headline (preserved for context).
   and yield a trustworthy PL+SMBH posterior — the prerequisite for the
   converged-baseline SMBH detection claim.
 
+### Local fit_subplot rendering closes the audit (commit `7b2f3b8`)
+
+Built `private/.../code/render_fit_subplot.py`: NFW monkey-patch + autofit
+SearchOutput rehydration + `aplt.subplot_fit_imaging`. Bypasses the
+slurm-side visualizer (disabled due to the NFW.potential_2d_from xp-kwarg
+bug). 5 fit_subplots rendered and committed to `Figures/spec05_a1201_diagnostics/`:
+`lp_3sersic_fit.png` (v4), `lp_3sersic_v5_fit.png`, `with_smbh_3sersic_fit.png`,
+`decomp_3sersic_fit.png`, `decomp_smbh_3sersic_fit.png`.
+
+**The audit is now decisive — and quantitatively confirms the correction:**
+
+| Variant | chi² peak | max\|res\| | lnZ |
+|---|---|---|---|
+| lp_3sersic (v4) | 177 | 13.3σ | 174,904 |
+| **lp_3sersic_v5 (widened, NO SMBH)** | **34.89** | **5.91σ** | **175,529** |
+| with_smbh_3sersic (PL+SMBH chained from v4) | 160 | 12.6σ | 174,926 |
+| decomp_3sersic | 178 | 13.3σ | 174,916 |
+| decomp_smbh_3sersic | 149 | 12.2σ | 174,946 |
+
+`lp_3sersic_v5` (NO SMBH, widened priors) has chi² peak **5× lower** than
+all four +SMBH variants. Direct evidence comparison:
+**v5 − with_smbh_3sersic = +603 in favor of NO-SMBH-with-better-priors**,
+dwarfing the +21.29 "M_BH detection" from the v4-priors comparison.
+
+The mechanism: v4's priors trapped the search in a sub-optimal mode (γ′
+railing at 1.5000). Adding SMBH let the point-mass parameters absorb
+radial-arc residual structure — winning ΔlnZ=+21 without a real central
+mass. v5's widened priors found a much better baseline (chi² 5× lower)
+**without any SMBH at all**.
+
+**The decisive test is Cannon job 15969519** (`with_smbh` chained from v5):
+- If lnZ ≈ v5's 175,529 → "M_BH detection" was spurious
+- If lnZ ≈ 175,550+ → real SMBH signal persists on converged baseline
+
+Audit verdict promotions:
+- `lp_3sersic_v5`: SUSPECT → **PASS** (chi² peak 35, no rails, best baseline)
+- `with_smbh_3sersic`: PASS (differential) → **SUSPECT both standalone AND differential**
+- `decomp_smbh_3sersic`: INCOMPLETE → **SUSPECT** (image now rendered, shows coherent arc dipoles + radial-arc residuals)
+
+### Commits this arc (final)
+
+- `39269e4` — `HANDOFF_2026_05_26.md`
+- `abc468a` — initial figure suite (4 figs)
+- `65e3961` — PROGRESS_LOG 2026-05-26
+- `ecd9e55` — figures reframed (not-yet-detection)
+- `a5de69a` — PROGRESS_LOG correction
+- `7b2f3b8` — 5 fit_subplots rendered + diagnostic comparison
+- (pending) — this addendum with chi² comparison table
+
