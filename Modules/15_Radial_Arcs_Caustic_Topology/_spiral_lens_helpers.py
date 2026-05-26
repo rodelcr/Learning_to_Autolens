@@ -37,6 +37,8 @@ __all__ = [
     "build_pl_nsc_tracer",
     "verify_alpha_matches_baseline",
     "render_image_log",
+    "critical_curves_caustics",
+    "plot_critical_curves",
 ]
 
 Z_LENS = 0.5
@@ -271,3 +273,108 @@ def render_image_log(
     ax.imshow(image, extent=extent, origin="lower", cmap=cmap,
               norm=LogNorm(vmin=vmin, vmax=vmax))
     return image, vmax
+
+
+def critical_curves_caustics(tracer: al.Tracer, *, fov: float, npix: int = 200):
+    """Compute tangential + radial critical curves and source-plane caustics
+    from a PyAutoLens tracer via numerical Hessian of the deflection field.
+
+    PyAutoLens 2026.4 doesn't expose a high-level caustic API on `al.Tracer`,
+    so we compute the Jacobian determinant + eigenvalues by finite-differencing
+    the deflection on a dense grid, then extract zero-contours via matplotlib.
+
+    Returns a dict:
+      'tang_crit':    list of (y, x) arrays — tangential critical curve segments (image plane)
+      'rad_crit':     list of (y, x) arrays — radial critical curve segments (image plane)
+      'tang_caustic': list of (y, x) arrays — tangential caustic segments (source plane)
+      'rad_caustic':  list of (y, x) arrays — radial caustic segments (source plane)
+    """
+    import matplotlib.pyplot as plt
+    grid = al.Grid2D.uniform(over_sample_size=1, shape_native=(npix, npix),
+                              pixel_scales=2 * fov / npix)
+    # Deflection field, native (ny, nx, 2) where last axis is (α_y, α_x)
+    alpha = tracer.deflections_yx_2d_from(grid=grid).native
+    pix_y, pix_x = grid.pixel_scales
+    # Hessian via numerical gradient
+    da_y_dy, da_y_dx = np.gradient(np.asarray(alpha[..., 0]), pix_y, pix_x)
+    da_x_dy, da_x_dx = np.gradient(np.asarray(alpha[..., 1]), pix_y, pix_x)
+    # Jacobian A = I - ∂α/∂θ
+    A_yy, A_xx = 1.0 - da_y_dy, 1.0 - da_x_dx
+    A_yx, A_xy = -da_y_dx,        -da_x_dy
+    trace = A_yy + A_xx
+    det   = A_yy * A_xx - A_yx * A_xy
+    disc  = np.maximum((trace / 2) ** 2 - det, 0.0)
+    sqrt_disc = np.sqrt(disc)
+    lambda_t = trace / 2 - sqrt_disc     # smaller eigenvalue
+    lambda_r = trace / 2 + sqrt_disc     # larger eigenvalue
+    # Coordinate axes (y from -fov to +fov, x from -fov to +fov)
+    edge = np.linspace(-fov, fov, npix)
+    yy, xx = np.meshgrid(edge, edge, indexing='ij')
+
+    # Extract zero contours of each eigenvalue
+    fig_tmp, ax_tmp = plt.subplots()
+    cs_t = ax_tmp.contour(xx, yy, lambda_t, levels=[0])
+    cs_r = ax_tmp.contour(xx, yy, lambda_r, levels=[0])
+    plt.close(fig_tmp)
+
+    def _segments(cs):
+        segs = []
+        for path in cs.allsegs[0]:
+            # path is array (N, 2) with columns (x, y)
+            if len(path) < 2:
+                continue
+            segs.append((path[:, 1].copy(), path[:, 0].copy()))   # → (y, x)
+        return segs
+
+    tang_crit = _segments(cs_t)
+    rad_crit  = _segments(cs_r)
+
+    # Map each critical-curve point to source plane via β = θ - α
+    def _trace_to_source(segs):
+        out = []
+        for ys, xs in segs:
+            irregular = al.Grid2DIrregular(
+                values=np.column_stack([ys, xs]).astype(np.float64)
+            )
+            a = np.asarray(tracer.deflections_yx_2d_from(grid=irregular))
+            beta_y = ys - a[:, 0]
+            beta_x = xs - a[:, 1]
+            out.append((beta_y, beta_x))
+        return out
+
+    try:
+        tang_caustic = _trace_to_source(tang_crit)
+        rad_caustic  = _trace_to_source(rad_crit)
+    except Exception as e:
+        print(f'  [critical_curves_caustics] caustic mapping failed: {type(e).__name__}: {e}')
+        tang_caustic, rad_caustic = [], []
+
+    return {
+        'tang_crit':    tang_crit,
+        'rad_crit':     rad_crit,
+        'tang_caustic': tang_caustic,
+        'rad_caustic':  rad_caustic,
+    }
+
+
+def plot_critical_curves(ax, curves: dict, *, on_source_plane: bool = False,
+                          tang_kw: dict | None = None, rad_kw: dict | None = None):
+    """Overlay critical curves (image plane) or caustics (source plane) on `ax`.
+
+    curves: output of critical_curves_caustics(tracer, fov=...)
+    on_source_plane: True → plot caustics; False → plot critical curves
+    """
+    if tang_kw is None:
+        tang_kw = dict(color='cyan',   lw=1.2, alpha=0.85)
+    if rad_kw is None:
+        rad_kw  = dict(color='magenta', lw=1.2, alpha=0.85)
+    if on_source_plane:
+        tang_segs = curves.get('tang_caustic', [])
+        rad_segs  = curves.get('rad_caustic',  [])
+    else:
+        tang_segs = curves.get('tang_crit', [])
+        rad_segs  = curves.get('rad_crit',  [])
+    for ys, xs in tang_segs:
+        ax.plot(xs, ys, **tang_kw)
+    for ys, xs in rad_segs:
+        ax.plot(xs, ys, **rad_kw)
