@@ -1631,3 +1631,56 @@ Audit verdict promotions:
 - `7b2f3b8` — 5 fit_subplots rendered + diagnostic comparison
 - (pending) — this addendum with chi² comparison table
 
+---
+
+## 2026-05-27 — Module 15 expansion: PyAutoLens conversion + mass-shape audit + NSC/SMBH/0206
+
+Single-session arc executing the approved spec at `~/.claude/plans/curious-yawning-torvalds.md`. Module 15 (Radial Arcs & Caustic Topology) went from 5 sections (analytic axisymmetric primer) to 10 sections (full pedagogical suite spanning analytic + PyAutoLens realistic spiral demos).
+
+### What shipped (in order of commit)
+
+1. **`45154d0` — §3.5**: simulated radial-arc image + source position/extent sweeps + γ′ slope sweeps. Pure-numpy ray-tracing on the existing analytic `alpha_pl`. Established the visualization style (image plane + critical curves overlaid).
+
+2. **`994f76e` — §3.5 Sweep A row**: converted the 2×5 image-plane grid into 3×5 with source plane on top.
+
+3. **`8083a3f` — §3.6/§3.7/§3.8 (original)**: same-mass PL vs PL+SMBH; joint tangential+radial constraint; axisymmetric cross-class comparison (PL/BPL/Decomp). All numpy.
+
+4. **`8d8b761` — §3.9 (original) + §4 rewrite**: lenstronomy-based S-shape spiral demo using student `SED_inferred_color_images` base_class 1–4. §4 reframed to acknowledge spiral lenses break the (γ′, M_BH) degeneracy from lensing alone.
+
+5. **`629754f` — PyAutoLens conversion + mass-shape fix**: built `_spiral_lens_helpers.py` (8 utilities). §3.8 replaced with 4-class PyAutoLens realistic spiral (PL γ-vary / BPL / NSC / SMBH); §3.9 rewritten in PyAutoLens (dropped lenstronomy); §3.9c added (NSC vs SMBH critical comparison); §3.10 added (fake DESJ0206, first attempt with SIE+1 elongated source — wrong morphology). 7 \arcsec KaTeX errors fixed.
+
+6. **`807af5f` — §3.10 rebuild**: per user feedback "fake 0206 looks nothing like the real image", rewrote with EPL γ=1.7 + 2 source blobs inside the radial caustic. Now matches the multi-arc spiral morphology qualitatively.
+
+7. **`ac659e2` — critical curves + caustics across PyAutoLens sections**: added `critical_curves_caustics` + `plot_critical_curves` to the helper module. PyAutoLens 2026.4.13.6 doesn't expose a tracer-level critical-curve API, so the helper computes Jacobian eigenvalues via numerical Hessian of the deflection field + extracts zero-contours via matplotlib + maps to source plane via `al.Grid2DIrregular`. Overlaid on §3.9b, §3.9c, §3.10.
+
+### Headline diagnostic findings
+
+**Mass-shape correctness audit** (user caught the original §3.9 lenstronomy version was adding extra gravity rather than redistributing mass):
+
+| Section | Outer-ring α match | Convention |
+|---|---|---|
+| §3.6 (axisym. PL+PointMass) | exact | `θ_E_pl = θ_E_target · (1−f_BH)^(1/(γ−1))` |
+| §3.9b (PyAutoLens SIE+PointMass, BC=2) | 0.94% deviation | `θ_E_SIE_new = θ_E_target − θ_E_BH²/θ_E_target` (linear) |
+| §3.10 (PyAutoLens EPL low-ellipticity) | 0.153% deviation | same linear formula |
+| §3.9c (PL+NSC matched-mass) | by construction | `θ_BH² = θ_NSC · θ_target` |
+
+Inside θ_E, all `M(<r)` differ by up to `f_BH · θ_E` — full M(<r) equality is mathematically impossible for point-mass-vs-smooth-PL comparison. Callout in §3.6 explains precisely.
+
+**NSC vs SMBH critical test** (§3.9c) — quantitative: matched total mass at outer arc, central-region RMS difference vs baseline:
+- +SMBH (PointMass):       RMS = 0.28
+- +NSC (core=0.02″):       RMS = 0.07 (4× weaker than SMBH)
+- +NSC (core=0.10″):       RMS = 0.06
+- +NSC (core=0.20″):       RMS = 0.04
+→ SMBH's divergent `1/r` deflection is sharper than even the most compact NSC. The bounded `α(r) → 0 as r → 0` of an IsothermalCore is the distinguishing physics.
+
+### Open items / deferred
+
+- **Fake DESJ0206 caustics still don't match Ferrami+** quantitatively — defer until the user shares the updated paper draft with the actual published lens + source kwargs.
+- **Pedagogical audit + Module 15 split into 15a/15b** — explicitly deferred to a follow-on spec per `curious-yawning-torvalds.md`. Module 15 has ~40 cells now; natural cleavage between analytic-axisymmetric (§1–§3.5) and PyAutoLens-realistic (§3.6–§3.10 + §4) tracks.
+- **Examples/radial_arc_smbh Nautilus posterior recovery** — TODO marked in §3.7/§3.8/§3.9c summaries. Belongs in Examples track.
+
+### Commits this arc (final)
+
+- `45154d0`, `994f76e`, `8083a3f`, `8d8b761`, `629754f`, `807af5f`, `ac659e2` — Module 15 work
+- (pending) — this PROGRESS_LOG entry + handoff doc + memory updates
+
