@@ -233,7 +233,9 @@ The repo runs on rolling handoff docs, not just git log.
 | 12 | Time-Delay Cosmography & MSD | ✓ shipped — Fermat potential, MSD on SIE quad, TDCOSMO chain |
 | 13 | TDCOSMO with Kinematics | in progress (Jeans solver shared in `_jeans_sigma_v.py`; `AnalysisKinematics` stubbed) |
 | 14 | Compound (Multi-Plane) Lensing | in progress |
-| 15 | Radial Arcs & Caustic Topology | ✓ shipped (v0.96) — λ_t/λ_r, γ′ from radial-arc position, γ′–M_BH degeneracy |
+| 15a | Radial Arcs Analytic Foundation | ✓ shipped (v0.96, split 2026-05-27) — numpy / analytic axisymmetric: λ_t/λ_r, $\beta_r(\gamma')$, 2D ray-traced source-position + γ′ sweeps, single-radius γ′–M_BH degeneracy |
+| 15b | Radial Arcs PyAutoLens Realistic | ✓ shipped (v0.96, split 2026-05-27) — PyAutoLens elliptical lens + extended source: same-mass-shape PL+SMBH, 4-class (PL γ-vary / BPL / NSC / SMBH) comparison, student `base_class 1-4` rotations, NSC vs SMBH, fake DESJ0206, lensing-alone (γ′, M_BH) constraint argument. Helpers in `_spiral_lens_helpers.py` |
+| 15 (combined) | Radial Arcs & Caustic Topology (legacy, retained) | ✓ shipped (v0.96) — full combined notebook kept for v0.96-era provenance; banner points to 15a + 15b |
 
 `Examples/` (ships independently of the modules): `agel_real_target`,
 `bayesian_model_comparison`, `cluster_scale`, `compound_lens`,
