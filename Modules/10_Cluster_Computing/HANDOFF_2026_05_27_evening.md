@@ -225,13 +225,36 @@ c0edc35  Notes: A1201 M_BH cross-class scoreboard + F390W anomaly
 
 ## What's blocked / waiting
 
-- **Spec 01 production** ← blocked on Spec 00 deliverable
-  (`catalogue_161.csv`). Subagent currently scaffolding (status: see
-  task #94).
+- **Spec 01 production headline (real w_0=−0.96±0.46 reproduction)** ←
+  blocked on REAL structural enrichment. Today's Spec 00 push shipped a
+  mock-enriched `catalogue_161.csv` (24/161 R_eff real from SLACS-X
+  Auger+2010, rest mock; n_sersic 100% mock — SLACS-X Vizier doesn't
+  publish it). Architecture is now runnable end-to-end via `--part
+  chen2019`; production reproduction needs Sonnenfeld+13 / Auger+2010
+  Table 4 enrichment.
 - **Spec 02/03 real-data fits** ← blocked on HST data download
   (`download_j0946.sh` needs Ballard+23 P2 paper-repro data pipeline).
 - **NUTS production on Herculens** ← blocked on Cannon GPU jax install
-  debug.
+  debug (2 attempts failed; root cause = jaxlib stayed CPU after
+  `python -m pip install -U 'jax[cuda12]'`; explicit jaxlib cuda12
+  reinstall pending next session).
+
+### Spec 00 (shared infrastructure) closure
+
+Spec 00 was ~70% built from 2026-05-18 (loaders, herculens bridge,
+crossval framework, tests, slurm runner). Today's Spec 00 push closed
+the Spec 01 catalogue blocker via mock-enrichment, leaving these
+deferred items for next session:
+
+- Real Sonnenfeld+13 / Auger+2010 Table 4 enrichment (the production gate)
+- J0946 HST + MUSE data verification
+- `herculens_bridge.py` per-profile pixel-level test certification
+- GPU runner end-to-end exercise
+- AGEL Watson HST reduction code skeleton
+- `dual_stack_conventions.md` + `data_provenance.md` doc population
+
+Cannon smoke job **16487819** added (Spec 01 cosmography on the
+mock-enriched catalogue, PART=smoke, 2h budget, PENDING).
 
 ## Memory updates
 
@@ -309,8 +332,8 @@ private/2303_15514_nightingale2023_abell1201/
 
 | Spec | Before today | After today |
 |---|---|---|
-| 00 | 0/N | scaffolding in flight (subagent) |
-| 01 | 0/23 | architecture wired, smoke queued, blocked on Spec 00 for production |
+| 00 | ~70% built (loaders/bridge/crossval pre-existing) | catalogue_161 mock-enriched, Spec 01 unblocked; real-enrichment deferred |
+| 01 | 0/23 | architecture wired, smoke queued (16475828), chen2019-PART now runnable end-to-end via mock-enriched catalogue (16487819) |
 | 02 | 0/25 | architecture wired, smoke queued |
 | 03 | 0/13 | 5+/8 done, Stage 1 queued |
 | 05 | 2/63 | 3 bugs fixed, Fig 5 shipped, v5chain v2 queued, BPL extbreak queued |
