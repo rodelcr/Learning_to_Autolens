@@ -1684,3 +1684,69 @@ Inside θ_E, all `M(<r)` differ by up to `f_BH · θ_E` — full M(<r) equality 
 - `45154d0`, `994f76e`, `8083a3f`, `8d8b761`, `629754f`, `807af5f`, `ac659e2` — Module 15 work
 - (pending) — this PROGRESS_LOG entry + handoff doc + memory updates
 
+
+---
+
+## 2026-05-28 — Curriculum complete (01–15) + F390W noise-map bug + paper-repro backlog draining
+
+### Curriculum: Modules 13 + 14 shipped → all of 01–15 now complete
+
+- **Module 13 (TDCOSMO + Kinematics)** shipped — `AnalysisKinematics` was
+  already production-wired (hardened through 6+ A1201 Cannon jobs); added §6
+  worked joint factor-graph fit (imaging-only vs imaging+σ_v), lens-only
+  γ′=2.0484±0.0093 → lens+kin γ′=2.0492±0.0085 (1.09× tighter). Commit `4392203`.
+- **Module 14 (Compound multi-plane)** shipped — §6 worked 2-deflector demo
+  (FG SIS z=0.3 + main SIE z=0.6 + src z=1.5), multi-plane vs single-plane
+  collapse (residual 78% of source peak), 1-param fit recovers θ_E=0.4501″.
+  Commit `10b01bb`. CLAUDE.md now reads "Modules 01–15 shipped".
+
+### A1201 F390W noise-map bug — diagnosed, fixed, re-fit queued
+
+- **Bug**: `prep_a1201_dataset.py` built the noise map as `1/sqrt(WHT)`, but
+  the HLA DRC WHT extension is an effective-EXPOSURE-TIME map (seconds), NOT
+  inverse-variance (verified: WHT.max()≈EXPTIME). This omitted the source-
+  photon term and over-estimated central RMS ~5.5× in the deep F390W band →
+  under-weighted the radial-arc/SMBH pixels ~30× in constraining power →
+  spurious F390W non-detection (ΔlnZ=+2 vs N+23's headline ~+100).
+- **Why F814W "survived"**: it's sky-dominated, so the broken map was ~right
+  there. The deep F390W is source-dominated → the bug bit hard.
+- **Fix**: CCD-equation `sqrt(max(SCI,0)/t_eff + σ_sky²)`. Re-prepped both
+  bands; F390W central peak SNR recovered 7.6→23.9 (predicted ~24 ✓).
+- **Re-fit queued** (Cannon, _v2 suffix preserves old fits): lp `16618030`
+  → with_smbh `16618033` + bpl_smbh `16618035` (both `afterok` chained).
+  Headline test: does corrected-noise F390W recover the ~+100 ΔlnZ?
+- **Caveat**: the bug affected BOTH bands; the committed F814W headline
+  numbers (PL+SMBH 7.71e9, decomp 9.82e9) used the broken map. F814W likely
+  shifts little (sky-dominated) but should be re-fit for self-consistency.
+- Details: `private/2303_.../NOTES_f390w_anomaly_2026_05_28.md`.
+
+### A1201 §4.3 reproduction complete + Fig 5 M_BH scoreboard
+
+- Free-centre BPL+SMBH (`16376589`) landed → §4.3 table complete: freeing
+  the mass centre costs ~70 lnZ regardless of SMBH (free-centre drifts to
+  unphysical θ_E=2.70). Reproduces N+23 §4.3: BPL-only alternative is
+  decisively disfavored unless mass-centre tied to light.
+- Cross-class M_BH Fig 5 + scoreboard shipped (commit `c0edc35`, lit review
+  §VI bis): PL+SMBH 7.71e9 (−1.2σ vs N+23), decomp 9.82e9 (in N+23 1σ).
+
+### v5chain bug fixes (2026-05-27 carryover)
+
+- `chain_priors_from_lp._extract_param_dict` missed a 2nd-level dict unwrap
+  (returned 0 leaves); patched. lp_v5 found to be a wrong-mode baseline
+  (θ_E=1.67, γ=1.57 vs N+23's 1.95/2.13) — the +624 lnZ over lp_orig is the
+  feedback_bayes_factor_vs_truth pattern. v5chain v2 (`16377115`) running.
+
+### Herculens bridge + Spec 03 DSPL + Spec 02 TSPL + Spec 01 cosmo
+
+- Herculens↔autolens bridge shipped + cross-validated to machine precision
+  (4 convention divergences cataloged). gNFW wrapper + DSPL driver wired;
+  Spec 03 Stage 1 (`16403803`) + Spec 02 TSPL smoke (`16404972`) now RUNNING.
+- Spec 01 cosmography scaffolded; Spec 00 catalogue mock-enriched (real
+  Sonnenfeld+13/Auger+2010 enrichment deferred — the gate to real w_0 repro).
+- NUTS GPU: package install fixed but runtime CUDA-context hang (driver-level)
+  → interactive gpu_test debug deferred; CPU bridge path validated.
+
+### Docs
+
+- Fixed `SETUP_NEW_USER.md` Step 2 (repo-on-Cannon ordering + lowercase
+  `learning_to_autolens` convention) per a student bug report. Commit `36ecc78`.
