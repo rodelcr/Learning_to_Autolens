@@ -231,7 +231,7 @@ The repo runs on rolling handoff docs, not just git log.
 | 10 | Cluster Computing | ✓ (this is the runbook) |
 | 11 | Physical Mass Models | ✓ shipped — 6-panel physical-bar audit, Pattern A–F catalogue, f_DM(<θ_E), γ′ vs Auger+10 |
 | 12 | Time-Delay Cosmography & MSD | ✓ shipped — Fermat potential, MSD on SIE quad, TDCOSMO chain |
-| 13 | TDCOSMO with Kinematics | in progress (Jeans solver shared in `_jeans_sigma_v.py`; `AnalysisKinematics` stubbed) |
+| 13 | TDCOSMO with Kinematics | ✓ shipped (2026-05-27) — `_jeans_sigma_v.AnalysisKinematics` production-wired (hardened through 6+ A1201 Cannon jobs); notebook §6 demos joint factor-graph fit (imaging+σ_v Nautilus); lens-only vs lens+kin γ′ comparison (1.09× tighter on single system); exercises point to TDCOSMO IV hierarchical for the dramatic-tightening case |
 | 14 | Compound (Multi-Plane) Lensing | in progress |
 | 15a | Radial Arcs Analytic Foundation | ✓ shipped (v0.96, split 2026-05-27) — numpy / analytic axisymmetric: λ_t/λ_r, $\beta_r(\gamma')$, 2D ray-traced source-position + γ′ sweeps, single-radius γ′–M_BH degeneracy |
 | 15b | Radial Arcs PyAutoLens Realistic | ✓ shipped (v0.96, split 2026-05-27) — PyAutoLens elliptical lens + extended source: same-mass-shape PL+SMBH, 4-class (PL γ-vary / BPL / NSC / SMBH) comparison, student `base_class 1-4` rotations, NSC vs SMBH, fake DESJ0206, lensing-alone (γ′, M_BH) constraint argument. Helpers in `_spiral_lens_helpers.py` |
