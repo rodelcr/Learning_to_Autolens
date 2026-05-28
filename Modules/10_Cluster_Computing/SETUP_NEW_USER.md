@@ -88,11 +88,21 @@ bash Miniforge3.sh -b -p "$HOME/miniforge3"
 source "$HOME/miniforge3/etc/profile.d/conda.sh"
 conda init bash && exec bash
 
+# Get the repo onto Cannon so requirements.txt is available.
+# Clone into the LOWERCASE dir name `learning_to_autolens` — this matches
+# CANNON_REPO_ROOT (Step 4) and the destination push_to_cannon.sh rsyncs
+# into (Step 5), so the later push just updates this same tree rather than
+# creating a second copy. (A bare `git clone <url>` would make
+# `Learning_to_Autolens` with capitals — the repo name — which would NOT
+# match the Cannon convention; pass the target dir explicitly.)
+git clone <repo-url> learning_to_autolens
+cd learning_to_autolens
+
 # Create the autolens312 env
 conda create -n autolens312 python=3.12 -y
 conda activate autolens312
 python -m pip install --upgrade pip            # NEVER bare `pip` — shadow on PATH
-python -m pip install -r learning_to_autolens/requirements.txt
+python -m pip install -r requirements.txt      # run from inside the repo (see clone above)
 python -c "import autolens as al; print(al.__version__)"  # expect 2026.4.13.x
 exit
 ```
@@ -174,6 +184,11 @@ This rsyncs the repo (plus the `autolens_workspace_original/dataset/`
 and `autolens_workspace_latest/dataset/` trees) to your
 `CANNON_REPO_ROOT`. Expect the first transfer to take 2–5 minutes
 depending on your network.
+
+Because `CANNON_REPO_ROOT` points at the lowercase `learning_to_autolens`
+you cloned in Step 2, this push **updates that same tree** — it does not
+create a second copy. From here on, the laptop is the source of truth and
+`push_to_cannon.sh` keeps Cannon in sync; you don't `git pull` on Cannon.
 
 Verify on Cannon:
 
