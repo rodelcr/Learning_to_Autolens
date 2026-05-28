@@ -170,6 +170,52 @@ of ΔlnZ +O(20) is only meaningful relative to a baseline that has
 NO competing inner-mass freedom (smooth PL, no BPL break, fully converged
 light + source models).
 
+### Cross-class M_BH posterior comparison (our 2026-05-27 reproduction)
+
+Full cross-class scoreboard from the A1201 Spec 05 reproduction. See
+`private/2303_.../results/figures/fig5_mbh_comparison_2026_05_27.{pdf,png}`
+for the visualisation; weighted posteriors with proper Nautilus weighting:
+
+| Fit class                       | M_BH (M_sun)                            | ΔlnZ vs no-SMBH | Notes |
+|---------------------------------|------------------------------------------|------------------|-------|
+| **PL + SMBH (orig, F814W)**     | **(7.71 +0.60 −0.51) × 10⁹**            | +21.3            | canonical N+23 mode (θ_E=1.95, γ=2.13) |
+| **Decomposed + SMBH (F814W)**   | **(9.82 +0.64 −0.59) × 10⁹**            | +29.9            | tightest detection on the board |
+| PL + SMBH (F390W)               | <4 × 10⁸ (95% UL)                        | +2.0             | **OPPOSITE of N+23 — flagged anomaly** |
+| PL + SMBH + σ_v Jeans (v2)      | <4 × 10⁸ (95% UL)                        | (no companion)   | kinematics did NOT break degeneracy |
+| BPL + SMBH (tied centre)        | <5 × 10⁸ (95% UL)                        | +1.7             | BPL r_break absorbs SMBH (see above) |
+| PL + SMBH (v5chain, wrong mode) | <5 × 10⁸ (95% UL)                        | unreliable †     | wrong-mode baseline; rail-pinned |
+
+† v5chain ΔlnZ unreliable because of mask-radius mismatch (lp_v5 used 6.0″,
+v5chain used 3.5″) — pixel-count normalisation dominates the comparison.
+
+**Quantitative comparison to N+23**:
+- N+23 reports M_BH = (3.27 ± 2.12) × 10¹⁰ M_sun
+- Our PL+SMBH = 7.71 × 10⁹ M_sun = 0.77 × 10¹⁰ → sits at N+23 -1.2σ
+- Our decomp+SMBH = 9.82 × 10⁹ M_sun → still inside N+23 1σ lower bound (1.15 × 10¹⁰)
+
+**Two real anomalies in our reproduction**:
+
+1. **F390W non-detection** (M_BH < 4 × 10⁸, ΔlnZ = +2 vs no-SMBH).
+   N+23's headline ΔlnZ ≈ +100 comes from F390W; we get a *qualitative
+   reversal*: F814W detects, F390W doesn't. Almost certainly a data-side
+   issue (our F390W cutout/PSF/noise-map preparation differs from N+23's
+   pipeline). The lensing-side model machinery is the same as F814W; the
+   imaging-side differs. To investigate: compare F390W noise map and PSF
+   to N+23's published equivalents, check for masking of the central
+   bright BCG saturation, verify dataset zero-point.
+
+2. **Kinematics didn't break the γ′-M_BH degeneracy in our reproduction**.
+   Stage 3 with σ_v Jeans factor (`with_kin_3sersic_v2`) gives the same
+   rail-pinned posterior as F390W. This is unexpected — Smith+2017 and
+   Melo-Carneiro+2025 both rely on kinematics to lift this degeneracy.
+   Possibilities: (a) our parametric source model under-fits the radial-
+   arc morphology that ties the kinematic constraint to M_BH; (b) our
+   σ_v measurement uncertainty is too wide to provide a useful pull;
+   (c) the FactorGraphModel wiring is correct but the prior-volume
+   penalty washes out the likelihood gain. **Resolving this requires
+   converging the source-side model first (pixelised + Adapt)** —
+   `adapt_3sersic` (running on Cannon, job 16376586) is the test.
+
 ---
 
 ## VI. Summary table of SMBH mass measurements from lensing
