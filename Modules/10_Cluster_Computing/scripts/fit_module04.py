@@ -149,6 +149,12 @@ def build_slam(dataset, dataset_name, output_root, slam_n_live):
     """
     import autofit as af
     import autolens as al
+    # slam_v2026.py lives at the REPOSITORY ROOT (not in this scripts/ dir).
+    # It bundles the five SLaM wrappers (source_lp/source_pix/light_lp/mass_total),
+    # each a SimpleNamespace exposing `.run`. Read that file to see exactly which
+    # params are fixed/free, the Nautilus/AnalysisImaging setup, and the
+    # pixelization/regularization. The repo root is put on sys.path via the
+    # driver's --repo-root arg (see main()).
     from slam_v2026 import source_lp, source_pix, light_lp, mass_total
 
     settings_search = af.SettingsSearch(

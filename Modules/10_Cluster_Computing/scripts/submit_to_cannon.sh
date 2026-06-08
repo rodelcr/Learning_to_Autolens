@@ -78,7 +78,10 @@ if git rev-parse --git-dir > /dev/null 2>&1; then
         echo "    git add Modules/10_Cluster_Computing/scripts/ && git commit -m '...'"
         echo
         read -r -p "  Continue with uncommitted changes? [y/N] " reply
-        [[ "${reply,,}" == "y" ]] || exit 1
+        # NB: ${reply,,} (bash-4 lowercasing) breaks on macOS's bash 3.2
+        # ("bad substitution"). [[ == [Yy] ]] is a bash-3.2-safe glob match
+        # that accepts y or Y (caught by Astrid Liu, 2026-06-08).
+        [[ "$reply" == [Yy] ]] || exit 1
     fi
     HEAD_COMMIT=$(git rev-parse --short HEAD)
     echo "[submit] Local HEAD: ${HEAD_COMMIT}"
