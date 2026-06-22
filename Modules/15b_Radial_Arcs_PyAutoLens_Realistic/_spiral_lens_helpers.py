@@ -33,6 +33,11 @@ __all__ = [
     "shrunk_einstein_radius",
     "build_sie_smbh_tracer",
     "build_pl_only_tracer",
+    "build_pl_smbh_tracer",
+    "build_spiral_source_galaxy",
+    "build_clumpy_spiral_source",
+    "spiral_source",
+    "analytic_axisym_caustics",
     "build_bpl_tracer",
     "build_pl_nsc_tracer",
     "verify_alpha_matches_baseline",
@@ -150,6 +155,154 @@ def build_pl_only_tracer(
     lens = _make_lens_galaxy(smooth_mass=smooth, lens_light=lens_light)
     source = _make_source_galaxy(source_kwargs)
     return al.Tracer(galaxies=[lens, source])
+
+
+def build_pl_smbh_tracer(
+    *,
+    theta_E_target: float = 1.0,
+    e1: float = 0.10,
+    e2: float = 0.05,
+    gamma: float = 1.8,
+    theta_E_BH: float = 0.08,
+    source_galaxy: "al.Galaxy | None" = None,
+    source_kwargs: dict | None = None,
+    include_lens_light: bool = False,
+) -> al.Tracer:
+    """SUB-ISOTHERMAL PowerLaw [+ optional central PointMass] + source.
+
+    The Einstein-spiral base model: a sub-isothermal (gamma < 2) total mass —
+    physically the DM-dominated, shallow-inner-slope environment where radial
+    critical curves exist (Cerny+2025) — plus an optional central point mass
+    (SMBH). The PowerLaw einstein_radius is shrunk via `shrunk_einstein_radius`
+    so the combined deflection at theta_E_target matches the no-BH baseline
+    (same tangential ring; the comparison isolates the INNER mass shape).
+
+    Pass a prebuilt `source_galaxy` (e.g. from `build_spiral_source_galaxy`) to
+    use a structured source; otherwise `source_kwargs` builds a single Sersic.
+    `include_lens_light` defaults False — figures expose the arcs cleanly.
+    """
+    if theta_E_BH > 0:
+        theta_E_pl = shrunk_einstein_radius(theta_E_target, theta_E_BH)
+    else:
+        theta_E_pl = theta_E_target
+    smooth = al.mp.PowerLaw(
+        centre=(0.0, 0.0), ell_comps=(e1, e2),
+        einstein_radius=theta_E_pl, slope=gamma,
+    )
+    compact = (al.mp.PointMass(centre=(0.0, 0.0), einstein_radius=theta_E_BH)
+               if theta_E_BH > 0 else None)
+    lens_light = _student_default_lens_light() if include_lens_light else None
+    lens = _make_lens_galaxy(smooth_mass=smooth, compact_mass=compact,
+                             lens_light=lens_light)
+    if source_galaxy is None:
+        source_galaxy = _make_source_galaxy(source_kwargs)
+    return al.Tracer(galaxies=[lens, source_galaxy])
+
+
+def build_spiral_source_galaxy(
+    *,
+    centre: tuple[float, float] = (0.0, 0.0),
+    bulge_Re: float = 0.05,
+    arm_Re: float = 0.06,
+    arm_offset: float = 0.30,
+    bulge_I: float = 0.8,
+    arm_I: float = 0.6,
+) -> al.Galaxy:
+    """Structured 'spiral' source: a central bulge + two off-axis arm blobs.
+
+    Built so the source straddles the radial caustic (arms reach |beta| ~
+    arm_offset) AND samples the centre — producing a tangential arc/ring from
+    the outer parts and a radial arc from the inner parts of the SAME source.
+    Returns an `al.Galaxy` with `bulge` + `arm_1`/`arm_2` SersicSph profiles.
+    """
+    cy, cx = centre
+    return al.Galaxy(
+        redshift=Z_SOURCE,
+        bulge=al.lp.SersicSph(centre=(cy, cx), intensity=bulge_I,
+                              effective_radius=bulge_Re, sersic_index=1.0),
+        arm_1=al.lp.SersicSph(centre=(cy + arm_offset, cx + 0.6 * arm_offset),
+                              intensity=arm_I, effective_radius=arm_Re,
+                              sersic_index=1.0),
+        arm_2=al.lp.SersicSph(centre=(cy - 0.9 * arm_offset, cx + 0.4 * arm_offset),
+                              intensity=arm_I, effective_radius=arm_Re,
+                              sersic_index=1.0),
+    )
+
+
+def build_clumpy_spiral_source(
+    *,
+    centre: tuple[float, float] = (0.0, 0.16),
+    disk_Re: float = 0.13,
+    disk_q: float = 0.45,
+    disk_phi: float = 0.2,
+    disk_I: float = 0.20,
+    arm_len: float = 0.40,
+    arm_curl: float = 2.6,
+    arm_phi0: float = 0.0,
+    n_knot: int = 5,
+    knot_Re: float = 0.11,
+    knot_I: float = 0.6,
+) -> al.Galaxy:
+    """A clumpy, star-forming 'Einstein-spiral' source à la AGEL0206 / DESJ0206.
+
+    The REAL AGEL0206 source is not a smooth Sersic — it is a clumpy blue
+    star-forming galaxy whose HII-region knots trace spiral arms. Lensed by a
+    sub-isothermal (γ<2) deflector this gives the characteristic barred-spiral
+    Einstein-ring IMAGE: a bright central (radial) arc + a long clumpy
+    tangential arc wrapping around the lens. Reproduces that morphology with an
+    elliptical disk + a log-spiral chain of compact knots straddling the
+    radial caustic. Returns an `al.Galaxy` (disk + knot_0..knot_{n-1}).
+    """
+    cy, cx = centre
+    e1, e2 = q_phi_to_ell_comps(q=disk_q, phi_rad=disk_phi)
+    comps = {"disk": al.lp.Sersic(centre=(cy, cx), ell_comps=(e1, e2),
+                                  intensity=disk_I, effective_radius=disk_Re,
+                                  sersic_index=1.2)}
+    for k in range(n_knot):
+        t = k / (n_knot - 1)
+        ang = arm_phi0 + arm_curl * t
+        r = arm_len * t
+        comps[f"knot_{k}"] = al.lp.SersicSph(
+            centre=(cy + r * np.sin(ang), cx + r * np.cos(ang)),
+            intensity=knot_I * (1.0 - 0.35 * t),
+            effective_radius=knot_Re, sersic_index=1.0)
+    return al.Galaxy(redshift=Z_SOURCE, **comps)
+
+
+def spiral_source(beta_x, beta_y):
+    """Spiral-like extended source brightness on a source-plane grid.
+
+    Bulge + two off-axis blobs (arms); total extent ~0.7", straddles
+    |beta_r| ~ 0.6. Lifted from the 15b notebook so the figure script and the
+    notebook share one definition. For PyAutoLens tracers prefer
+    `build_spiral_source_galaxy` (returns an al.Galaxy).
+    """
+    bulge = np.exp(-((beta_x) ** 2 + (beta_y) ** 2) / (2 * 0.10 ** 2))
+    arm_n = 0.6 * np.exp(-((beta_x - 0.35) ** 2 + (beta_y - 0.20) ** 2) / (2 * 0.08 ** 2))
+    arm_s = 0.6 * np.exp(-((beta_x + 0.30) ** 2 + (beta_y - 0.10) ** 2) / (2 * 0.08 ** 2))
+    return bulge + arm_n + arm_s
+
+
+def analytic_axisym_caustics(gamma: float, theta_E: float = 1.0) -> dict:
+    """Analytic radial/tangential critical radii + caustics for a circular
+    power law rho ∝ r^(-gamma), gamma < 2.
+
+    Robust replacement for the numerical Hessian extractor, which misses the
+    radial critical curve of SINGULAR power laws (found 2026-06-16: the
+    contour finder returns no radial caustic for cusped PLs at any gamma,
+    though it is real). For a circular PL with deflection
+    alpha(theta) = theta_E^(gamma-1) theta^(2-gamma):
+      - tangential crit: theta_t = theta_E  (alpha/theta = 1)
+      - radial crit:     theta_r = theta_E (2-gamma)^(1/(gamma-1))   (dalpha/dtheta = 1)
+      - radial caustic:  beta_r = |theta_r - alpha(theta_r)|
+    Returns radii in arcsec; beta_r is the source-plane radial-caustic radius.
+    Ellipticity widens these into curves but the radii set the scale.
+    """
+    if gamma >= 2.0:
+        return {"theta_t": theta_E, "theta_r": 0.0, "beta_r": 0.0}
+    theta_r = theta_E * (2.0 - gamma) ** (1.0 / (gamma - 1.0))
+    alpha_r = theta_E ** (gamma - 1.0) * theta_r ** (2.0 - gamma)
+    return {"theta_t": theta_E, "theta_r": theta_r, "beta_r": abs(theta_r - alpha_r)}
 
 
 def build_bpl_tracer(
@@ -378,3 +531,56 @@ def plot_critical_curves(ax, curves: dict, *, on_source_plane: bool = False,
         ax.plot(xs, ys, **tang_kw)
     for ys, xs in rad_segs:
         ax.plot(xs, ys, **rad_kw)
+
+
+def caustics_critical_native(mass_obj, *, fov_tangential: float = 4.0,
+                             fov_radial: float = 0.9,
+                             pixel_scale_tangential: float = 0.01,
+                             pixel_scale_radial: float = 0.0045):
+    """Tangential + radial critical curves and caustics via the NATIVE autolens
+    ``LensCalc`` (autogalaxy.operate.lens_calc), returning the same dict format as
+    ``critical_curves_caustics`` (tang_crit / rad_crit / tang_caustic / rad_caustic
+    — lists of (y, x) arrays) so it is a drop-in for ``plot_critical_curves``.
+
+    Why this exists: the hand-rolled ``critical_curves_caustics`` finite-differences
+    the deflection field, which BREAKS for singular power laws — the κ→∞ centre
+    inflates the numerical shear so the radial eigenvalue never crosses zero and the
+    radial caustic is silently dropped (and a central PointMass throws ±1.5" spurious
+    segments). The native routine computes the eigenvalues from the analytic Jacobian
+    + marching squares (the same code autolens uses for its own caustic plots) and is
+    robust. In autolens 2026.4 these methods were refactored OFF ``Galaxy``/``Tracer``
+    into the standalone ``LensCalc`` class — hence ``tracer.tangential_caustic_list_from``
+    no longer exists; use ``LensCalc.from_mass_obj`` / ``LensCalc.from_tracer``.
+
+    DUAL-SCALE EXTRACTION (important): for a shallow slope + ellipticity the
+    tangential critical curve is a large, elongated figure-8/dumbbell (it traces the
+    image positions, reaching several arcsec), while the radial critical curve is a
+    tiny central oval (~0.3"). A single uniform grid cannot resolve both — a grid
+    large enough for the tangential curve under-resolves the radial one (it vanishes),
+    and a small grid CLIPS the tangential curve (making it look tiny). So we extract
+    the tangential curve/caustic on a large grid (``fov_tangential``, match the image
+    panel) and the radial curve/caustic on a small fine grid (``fov_radial``).
+
+    Pass the SMOOTH mass component (e.g. the PowerLaw) — a central PointMass adds
+    spurious extra radial-caustic segments from its own divergence; the macro caustic
+    topology (dumbbell tangential + radial oval) is set by the smooth profile.
+    """
+    from autogalaxy.operate.lens_calc import LensCalc
+    lc = LensCalc.from_mass_obj(mass_obj)
+    grid_t = al.Grid2D.uniform(shape_native=(400, 400), pixel_scales=2 * fov_tangential / 400)
+    grid_r = al.Grid2D.uniform(shape_native=(400, 400), pixel_scales=2 * fov_radial / 400)
+
+    def _conv(lst):
+        out = []
+        for c in (lst or []):
+            a = np.asarray(c)
+            if a.ndim == 2 and a.shape[0] > 1:
+                out.append((a[:, 0].copy(), a[:, 1].copy()))   # (y, x)
+        return out
+
+    return {
+        'tang_crit':    _conv(lc.tangential_critical_curve_list_from(grid=grid_t, pixel_scale=pixel_scale_tangential)),
+        'rad_crit':     _conv(lc.radial_critical_curve_list_from(grid=grid_r, pixel_scale=pixel_scale_radial)),
+        'tang_caustic': _conv(lc.tangential_caustic_list_from(grid=grid_t, pixel_scale=pixel_scale_tangential)),
+        'rad_caustic':  _conv(lc.radial_caustic_list_from(grid=grid_r, pixel_scale=pixel_scale_radial)),
+    }
