@@ -441,9 +441,12 @@ def critical_curves_caustics(tracer: al.Tracer, *, fov: float, npix: int = 200):
     clipped) + a small fine radial grid. Original FD impl retained as
     ``_critical_curves_caustics_fd``.
     """
-    fov_t = max(float(fov), 4.0)
-    return caustics_critical_native(tracer, fov_tangential=fov_t,
-                                    fov_radial=min(float(fov), 1.0))
+    n = max(int(npix), 180)                 # keep ~old-FD grid size for tutorial speed
+    fov_r = min(float(fov), 0.9)
+    return caustics_critical_native(
+        tracer, fov_tangential=float(fov), fov_radial=fov_r,
+        pixel_scale_tangential=2.0 * float(fov) / n,
+        pixel_scale_radial=2.0 * fov_r / n)
 
 
 def _critical_curves_caustics_fd(tracer: al.Tracer, *, fov: float, npix: int = 200):
