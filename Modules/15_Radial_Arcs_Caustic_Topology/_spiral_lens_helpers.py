@@ -276,18 +276,29 @@ def render_image_log(
 
 
 def critical_curves_caustics(tracer: al.Tracer, *, fov: float, npix: int = 200):
-    """Compute tangential + radial critical curves and source-plane caustics
-    from a PyAutoLens tracer via numerical Hessian of the deflection field.
+    """Tangential + radial critical curves & source-plane caustics (dict of (y, x)
+    segment lists; drop-in for ``plot_critical_curves``). Backward-compatible signature.
 
-    PyAutoLens 2026.4 doesn't expose a high-level caustic API on `al.Tracer`,
-    so we compute the Jacobian determinant + eigenvalues by finite-differencing
-    the deflection on a dense grid, then extract zero-contours via matplotlib.
+    Now delegates to the NATIVE autolens ``LensCalc`` (dual-scale) — robust for
+    singular power laws, where the old finite-difference Hessian inflated the central
+    shear and SILENTLY DROPPED the radial caustic. Passing a tracer WITH a central
+    PointMass correctly shows the extra central radial-caustic structure the BH adds.
+    `npix` is accepted for backward compatibility but the native routine sets its own
+    (finer) resolution: a large tangential grid (the elongated tangential curve is not
+    clipped) + a small fine radial grid. Original FD impl retained as
+    ``_critical_curves_caustics_fd``.
+    """
+    fov_t = max(float(fov), 4.0)
+    return caustics_critical_native(tracer, fov_tangential=fov_t,
+                                    fov_radial=min(float(fov), 1.0))
 
-    Returns a dict:
-      'tang_crit':    list of (y, x) arrays — tangential critical curve segments (image plane)
-      'rad_crit':     list of (y, x) arrays — radial critical curve segments (image plane)
-      'tang_caustic': list of (y, x) arrays — tangential caustic segments (source plane)
-      'rad_caustic':  list of (y, x) arrays — radial caustic segments (source plane)
+
+def _critical_curves_caustics_fd(tracer: al.Tracer, *, fov: float, npix: int = 200):
+    """[LEGACY finite-difference] Tangential + radial critical curves & caustics via a
+    numerical Hessian of the deflection field. SUPERSEDED by the native-LensCalc
+    ``critical_curves_caustics`` above — the FD version silently drops the radial
+    caustic for singular power laws (κ→∞ centre inflates the numerical shear). Kept
+    for provenance / cross-checks.
     """
     import matplotlib.pyplot as plt
     grid = al.Grid2D.uniform(over_sample_size=1, shape_native=(npix, npix),
@@ -378,3 +389,52 @@ def plot_critical_curves(ax, curves: dict, *, on_source_plane: bool = False,
         ax.plot(xs, ys, **tang_kw)
     for ys, xs in rad_segs:
         ax.plot(xs, ys, **rad_kw)
+
+
+def caustics_critical_native(mass_obj, *, fov_tangential: float = 4.0,
+                             fov_radial: float = 0.9,
+                             pixel_scale_tangential: float = 0.01,
+                             pixel_scale_radial: float = 0.0045):
+    """Tangential + radial critical curves and caustics via the NATIVE autolens
+    ``LensCalc`` (autogalaxy.operate.lens_calc), returning the same dict format as
+    ``critical_curves_caustics`` (tang_crit / rad_crit / tang_caustic / rad_caustic
+    — lists of (y, x) arrays) so it is a drop-in for ``plot_critical_curves``.
+
+    Why this exists: the hand-rolled finite-difference Hessian BREAKS for singular
+    power laws — the κ→∞ centre inflates the numerical shear so the radial eigenvalue
+    never crosses zero and the radial caustic is silently dropped. The native routine
+    computes the eigenvalues from the analytic Jacobian + marching squares (the same
+    code autolens uses for its own caustic plots) and is robust. In autolens 2026.4
+    these methods were refactored OFF ``Galaxy``/``Tracer`` into the standalone
+    ``LensCalc`` class; use ``LensCalc.from_mass_obj`` (accepts a mass profile, galaxy,
+    or tracer — anything with ``deflections_yx_2d_from``).
+
+    DUAL-SCALE EXTRACTION: for a shallow slope + ellipticity the tangential critical
+    curve is a large, elongated figure-8 (reaching several arcsec) while the radial
+    critical curve is a tiny central oval (~0.3"). One uniform grid cannot resolve
+    both, so we extract the tangential curve/caustic on a large grid (``fov_tangential``)
+    and the radial one on a small fine grid (``fov_radial``).
+
+    Pass a SMOOTH mass profile for the clean macro topology; passing a full tracer
+    (with a central PointMass) additionally shows the extra central radial-caustic
+    structure the BH adds — useful for ±SMBH comparisons.
+    """
+    from autogalaxy.operate.lens_calc import LensCalc
+    lc = LensCalc.from_mass_obj(mass_obj)
+    grid_t = al.Grid2D.uniform(shape_native=(400, 400), pixel_scales=2 * fov_tangential / 400)
+    grid_r = al.Grid2D.uniform(shape_native=(400, 400), pixel_scales=2 * fov_radial / 400)
+
+    def _conv(lst):
+        out = []
+        for c in (lst or []):
+            a = np.asarray(c)
+            if a.ndim == 2 and a.shape[0] > 1:
+                out.append((a[:, 0].copy(), a[:, 1].copy()))   # (y, x)
+        return out
+
+    return {
+        'tang_crit':    _conv(lc.tangential_critical_curve_list_from(grid=grid_t, pixel_scale=pixel_scale_tangential)),
+        'rad_crit':     _conv(lc.radial_critical_curve_list_from(grid=grid_r, pixel_scale=pixel_scale_radial)),
+        'tang_caustic': _conv(lc.tangential_caustic_list_from(grid=grid_t, pixel_scale=pixel_scale_tangential)),
+        'rad_caustic':  _conv(lc.radial_caustic_list_from(grid=grid_r, pixel_scale=pixel_scale_radial)),
+    }

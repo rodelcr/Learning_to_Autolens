@@ -429,18 +429,29 @@ def render_image_log(
 
 
 def critical_curves_caustics(tracer: al.Tracer, *, fov: float, npix: int = 200):
-    """Compute tangential + radial critical curves and source-plane caustics
-    from a PyAutoLens tracer via numerical Hessian of the deflection field.
+    """Tangential + radial critical curves & source-plane caustics (dict of (y, x)
+    segment lists; drop-in for ``plot_critical_curves``). Backward-compatible signature.
 
-    PyAutoLens 2026.4 doesn't expose a high-level caustic API on `al.Tracer`,
-    so we compute the Jacobian determinant + eigenvalues by finite-differencing
-    the deflection on a dense grid, then extract zero-contours via matplotlib.
+    Now delegates to the NATIVE autolens ``LensCalc`` (dual-scale) — robust for
+    singular power laws, where the old finite-difference Hessian inflated the central
+    shear and SILENTLY DROPPED the radial caustic. Passing a tracer WITH a central
+    PointMass correctly shows the extra central radial-caustic structure the BH adds.
+    `npix` is accepted for backward compatibility but the native routine sets its own
+    (finer) resolution: a large tangential grid (the elongated tangential curve is not
+    clipped) + a small fine radial grid. Original FD impl retained as
+    ``_critical_curves_caustics_fd``.
+    """
+    fov_t = max(float(fov), 4.0)
+    return caustics_critical_native(tracer, fov_tangential=fov_t,
+                                    fov_radial=min(float(fov), 1.0))
 
-    Returns a dict:
-      'tang_crit':    list of (y, x) arrays — tangential critical curve segments (image plane)
-      'rad_crit':     list of (y, x) arrays — radial critical curve segments (image plane)
-      'tang_caustic': list of (y, x) arrays — tangential caustic segments (source plane)
-      'rad_caustic':  list of (y, x) arrays — radial caustic segments (source plane)
+
+def _critical_curves_caustics_fd(tracer: al.Tracer, *, fov: float, npix: int = 200):
+    """[LEGACY finite-difference] Tangential + radial critical curves & caustics via a
+    numerical Hessian of the deflection field. SUPERSEDED by the native-LensCalc
+    ``critical_curves_caustics`` above — the FD version silently drops the radial
+    caustic for singular power laws (κ→∞ centre inflates the numerical shear). Kept
+    for provenance / cross-checks.
     """
     import matplotlib.pyplot as plt
     grid = al.Grid2D.uniform(over_sample_size=1, shape_native=(npix, npix),
